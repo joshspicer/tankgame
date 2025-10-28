@@ -1,0 +1,26 @@
+{
+  "servers": {
+    "XcodeBuildMCP": {
+      "command": "npx",
+      "args": [
+        "-y",
+        "xcodebuildmcp@latest"
+      ],
+      "tools": [
+        "*"
+      ],
+      "env": {
+        "SENTRY_DISABLED": "true"
+      }
+    },
+    "apple-developer-docs": {
+      "command": "npx",
+      "tools": [
+        "*"
+      ],
+      "args": [
+        "apple-developer-docs-mcp"
+      ]
+    }
+  }
+}
