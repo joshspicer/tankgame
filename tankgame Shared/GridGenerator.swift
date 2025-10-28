@@ -61,6 +61,8 @@ struct SeededRandomNumberGenerator: RandomNumberGenerator {
     }
     
     mutating func nextDouble() -> Double {
-        return Double(next()) / Double(UInt32.max)
+        // Note: next() returns UInt64(state) where state is UInt32, so value is always <= UInt32.max
+        let value = next()
+        return Double(value) / Double(UInt32.max)
     }
 }
