@@ -18,25 +18,28 @@ struct GridGenerator {
             "6,6", "6,7", "7,6", "7,7"  // Bottom-right spawn area
         ]
         
-        // Add random walls (~20% density)
+        // Keep the border paths clear (row 0, row 7, col 0, col 7)
+        let borderCells: Set<String> = {
+            var cells = Set<String>()
+            for col in 0..<8 {
+                cells.insert("0,\(col)")
+                cells.insert("7,\(col)")
+            }
+            for row in 0..<8 {
+                cells.insert("\(row),0")
+                cells.insert("\(row),7")
+            }
+            return cells
+        }()
+        
+        // Add random walls (~20% density) only to interior cells
         for row in 0..<8 {
             for col in 0..<8 {
                 let key = "\(row),\(col)"
-                if !protectedCells.contains(key) && rng.next() < 0.20 {
+                if !protectedCells.contains(key) && !borderCells.contains(key) && rng.nextDouble() < 0.20 {
                     grid[row][col] = .wall
                 }
             }
-        }
-        
-        // Ensure guaranteed paths from (0,0) to (7,7)
-        // Clear vertical path down middle-left
-        for row in 0..<8 {
-            grid[row][2] = .empty
-        }
-        
-        // Clear horizontal path across middle
-        for col in 0..<8 {
-            grid[4][col] = .empty
         }
         
         return grid
@@ -57,7 +60,9 @@ struct SeededRandomNumberGenerator: RandomNumberGenerator {
         return UInt64(state)
     }
     
-    mutating func next() -> Double {
-        return Double(next() as UInt64) / Double(UInt64.max)
+    mutating func nextDouble() -> Double {
+        // Note: next() returns UInt64(state) where state is UInt32, so value is always <= UInt32.max
+        let value = next()
+        return Double(value) / Double(UInt32.max)
     }
 }
