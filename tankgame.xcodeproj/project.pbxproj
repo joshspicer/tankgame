@@ -7,9 +7,9 @@
 	objects = {
 
 /* Begin PBXFileReference section */
-		0AEBC8162EB14C4300890CC1 /* tankgame.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = tankgame.app; sourceTree = BUILT_PRODUCTS_DIR; };
-		0AEBC8272EB14C4300890CC1 /* tankgame.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = tankgame.app; sourceTree = BUILT_PRODUCTS_DIR; };
-		0AEBC8372EB14C4300890CC1 /* tankgame.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = tankgame.app; sourceTree = BUILT_PRODUCTS_DIR; };
+		0AEBC8162EB14C4300890CC1 /* tankgameBT.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = tankgameBT.app; sourceTree = BUILT_PRODUCTS_DIR; };
+		0AEBC8272EB14C4300890CC1 /* tankgameBT.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = tankgameBT.app; sourceTree = BUILT_PRODUCTS_DIR; };
+		0AEBC8372EB14C4300890CC1 /* tankgameBT.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = tankgameBT.app; sourceTree = BUILT_PRODUCTS_DIR; };
 /* End PBXFileReference section */
 
 /* Begin PBXFileSystemSynchronizedBuildFileExceptionSet section */
@@ -119,9 +119,9 @@
 		0AEBC8172EB14C4300890CC1 /* Products */ = {
 			isa = PBXGroup;
 			children = (
-				0AEBC8162EB14C4300890CC1 /* tankgame.app */,
-				0AEBC8272EB14C4300890CC1 /* tankgame.app */,
-				0AEBC8372EB14C4300890CC1 /* tankgame.app */,
+				0AEBC8162EB14C4300890CC1 /* tankgameBT.app */,
+				0AEBC8272EB14C4300890CC1 /* tankgameBT.app */,
+				0AEBC8372EB14C4300890CC1 /* tankgameBT.app */,
 			);
 			name = Products;
 			sourceTree = "<group>";
@@ -148,7 +148,7 @@
 			packageProductDependencies = (
 			);
 			productName = "tankgame iOS";
-			productReference = 0AEBC8162EB14C4300890CC1 /* tankgame.app */;
+			productReference = 0AEBC8162EB14C4300890CC1 /* tankgameBT.app */;
 			productType = "com.apple.product-type.application";
 		};
 		0AEBC8262EB14C4300890CC1 /* tankgame tvOS */ = {
@@ -170,7 +170,7 @@
 			packageProductDependencies = (
 			);
 			productName = "tankgame tvOS";
-			productReference = 0AEBC8272EB14C4300890CC1 /* tankgame.app */;
+			productReference = 0AEBC8272EB14C4300890CC1 /* tankgameBT.app */;
 			productType = "com.apple.product-type.application";
 		};
 		0AEBC8362EB14C4300890CC1 /* tankgame macOS */ = {
@@ -192,7 +192,7 @@
 			packageProductDependencies = (
 			);
 			productName = "tankgame macOS";
-			productReference = 0AEBC8372EB14C4300890CC1 /* tankgame.app */;
+			productReference = 0AEBC8372EB14C4300890CC1 /* tankgameBT.app */;
 			productType = "com.apple.product-type.application";
 		};
 /* End PBXNativeTarget section */
@@ -293,8 +293,10 @@
 				ASSETCATALOG_COMPILER_GLOBAL_ACCENT_COLOR_NAME = AccentColor;
 				CODE_SIGN_STYLE = Automatic;
 				CURRENT_PROJECT_VERSION = 1;
+				DEVELOPMENT_TEAM = N7C8DEK852;
 				GENERATE_INFOPLIST_FILE = YES;
 				INFOPLIST_KEY_CFBundleIconName = AppIcon;
+				INFOPLIST_KEY_LSApplicationCategoryType = "public.app-category.games";
 				INFOPLIST_KEY_NSBonjourServices = _tankgame._tcp;
 				INFOPLIST_KEY_NSLocalNetworkUsageDescription = "Find nearby players for multiplayer";
 				INFOPLIST_KEY_UIApplicationSupportsIndirectInputEvents = YES;
@@ -303,14 +305,14 @@
 				INFOPLIST_KEY_UIStatusBarHidden = YES;
 				INFOPLIST_KEY_UISupportedInterfaceOrientations_iPad = "UIInterfaceOrientationPortrait UIInterfaceOrientationPortraitUpsideDown UIInterfaceOrientationLandscapeLeft UIInterfaceOrientationLandscapeRight";
 				INFOPLIST_KEY_UISupportedInterfaceOrientations_iPhone = "UIInterfaceOrientationPortrait UIInterfaceOrientationLandscapeLeft UIInterfaceOrientationLandscapeRight";
-				IPHONEOS_DEPLOYMENT_TARGET = 18.4;
+				IPHONEOS_DEPLOYMENT_TARGET = 18.0;
 				LD_RUNPATH_SEARCH_PATHS = (
 					"$(inherited)",
 					"@executable_path/Frameworks",
 				);
 				MARKETING_VERSION = 1.0;
 				PRODUCT_BUNDLE_IDENTIFIER = com.joshspicer.tankgame;
-				PRODUCT_NAME = tankgame;
+				PRODUCT_NAME = tankgameBT;
 				SDKROOT = iphoneos;
 				STRING_CATALOG_GENERATE_SYMBOLS = YES;
 				SWIFT_APPROACHABLE_CONCURRENCY = YES;
@@ -329,8 +331,10 @@
 				ASSETCATALOG_COMPILER_GLOBAL_ACCENT_COLOR_NAME = AccentColor;
 				CODE_SIGN_STYLE = Automatic;
 				CURRENT_PROJECT_VERSION = 1;
+				DEVELOPMENT_TEAM = N7C8DEK852;
 				GENERATE_INFOPLIST_FILE = YES;
 				INFOPLIST_KEY_CFBundleIconName = AppIcon;
+				INFOPLIST_KEY_LSApplicationCategoryType = "public.app-category.games";
 				INFOPLIST_KEY_NSBonjourServices = _tankgame._tcp;
 				INFOPLIST_KEY_NSLocalNetworkUsageDescription = "Find nearby players for multiplayer";
 				INFOPLIST_KEY_UIApplicationSupportsIndirectInputEvents = YES;
@@ -339,14 +343,14 @@
 				INFOPLIST_KEY_UIStatusBarHidden = YES;
 				INFOPLIST_KEY_UISupportedInterfaceOrientations_iPad = "UIInterfaceOrientationPortrait UIInterfaceOrientationPortraitUpsideDown UIInterfaceOrientationLandscapeLeft UIInterfaceOrientationLandscapeRight";
 				INFOPLIST_KEY_UISupportedInterfaceOrientations_iPhone = "UIInterfaceOrientationPortrait UIInterfaceOrientationLandscapeLeft UIInterfaceOrientationLandscapeRight";
-				IPHONEOS_DEPLOYMENT_TARGET = 18.4;
+				IPHONEOS_DEPLOYMENT_TARGET = 18.0;
 				LD_RUNPATH_SEARCH_PATHS = (
 					"$(inherited)",
 					"@executable_path/Frameworks",
 				);
 				MARKETING_VERSION = 1.0;
 				PRODUCT_BUNDLE_IDENTIFIER = com.joshspicer.tankgame;
-				PRODUCT_NAME = tankgame;
+				PRODUCT_NAME = tankgameBT;
 				SDKROOT = iphoneos;
 				STRING_CATALOG_GENERATE_SYMBOLS = YES;
 				SWIFT_APPROACHABLE_CONCURRENCY = YES;
@@ -366,6 +370,7 @@
 				ASSETCATALOG_COMPILER_GLOBAL_ACCENT_COLOR_NAME = AccentColor;
 				CODE_SIGN_STYLE = Automatic;
 				CURRENT_PROJECT_VERSION = 1;
+				DEVELOPMENT_TEAM = N7C8DEK852;
 				GENERATE_INFOPLIST_FILE = YES;
 				INFOPLIST_KEY_UILaunchStoryboardName = LaunchScreen;
 				INFOPLIST_KEY_UIMainStoryboardFile = Main;
@@ -376,7 +381,7 @@
 				);
 				MARKETING_VERSION = 1.0;
 				PRODUCT_BUNDLE_IDENTIFIER = com.joshspicer.tankgame;
-				PRODUCT_NAME = tankgame;
+				PRODUCT_NAME = tankgameBT;
 				SDKROOT = appletvos;
 				STRING_CATALOG_GENERATE_SYMBOLS = YES;
 				SWIFT_APPROACHABLE_CONCURRENCY = YES;
@@ -396,6 +401,7 @@
 				ASSETCATALOG_COMPILER_GLOBAL_ACCENT_COLOR_NAME = AccentColor;
 				CODE_SIGN_STYLE = Automatic;
 				CURRENT_PROJECT_VERSION = 1;
+				DEVELOPMENT_TEAM = N7C8DEK852;
 				GENERATE_INFOPLIST_FILE = YES;
 				INFOPLIST_KEY_UILaunchStoryboardName = LaunchScreen;
 				INFOPLIST_KEY_UIMainStoryboardFile = Main;
@@ -406,7 +412,7 @@
 				);
 				MARKETING_VERSION = 1.0;
 				PRODUCT_BUNDLE_IDENTIFIER = com.joshspicer.tankgame;
-				PRODUCT_NAME = tankgame;
+				PRODUCT_NAME = tankgameBT;
 				SDKROOT = appletvos;
 				STRING_CATALOG_GENERATE_SYMBOLS = YES;
 				SWIFT_APPROACHABLE_CONCURRENCY = YES;
@@ -428,6 +434,7 @@
 				CODE_SIGN_STYLE = Automatic;
 				COMBINE_HIDPI_IMAGES = YES;
 				CURRENT_PROJECT_VERSION = 1;
+				DEVELOPMENT_TEAM = N7C8DEK852;
 				ENABLE_APP_SANDBOX = YES;
 				ENABLE_USER_SELECTED_FILES = readonly;
 				GENERATE_INFOPLIST_FILE = YES;
@@ -441,7 +448,7 @@
 				MACOSX_DEPLOYMENT_TARGET = 26.0;
 				MARKETING_VERSION = 1.0;
 				PRODUCT_BUNDLE_IDENTIFIER = com.joshspicer.tankgame;
-				PRODUCT_NAME = tankgame;
+				PRODUCT_NAME = tankgameBT;
 				REGISTER_APP_GROUPS = YES;
 				SDKROOT = macosx;
 				STRING_CATALOG_GENERATE_SYMBOLS = YES;
@@ -461,6 +468,7 @@
 				CODE_SIGN_STYLE = Automatic;
 				COMBINE_HIDPI_IMAGES = YES;
 				CURRENT_PROJECT_VERSION = 1;
+				DEVELOPMENT_TEAM = N7C8DEK852;
 				ENABLE_APP_SANDBOX = YES;
 				ENABLE_USER_SELECTED_FILES = readonly;
 				GENERATE_INFOPLIST_FILE = YES;
@@ -474,7 +482,7 @@
 				MACOSX_DEPLOYMENT_TARGET = 26.0;
 				MARKETING_VERSION = 1.0;
 				PRODUCT_BUNDLE_IDENTIFIER = com.joshspicer.tankgame;
-				PRODUCT_NAME = tankgame;
+				PRODUCT_NAME = tankgameBT;
 				REGISTER_APP_GROUPS = YES;
 				SDKROOT = macosx;
 				STRING_CATALOG_GENERATE_SYMBOLS = YES;
@@ -542,6 +550,7 @@
 				MTL_ENABLE_DEBUG_INFO = INCLUDE_SOURCE;
 				MTL_FAST_MATH = YES;
 				ONLY_ACTIVE_ARCH = YES;
+				PRODUCT_NAME = tankgameBT;
 				SWIFT_ACTIVE_COMPILATION_CONDITIONS = "DEBUG $(inherited)";
 				SWIFT_OPTIMIZATION_LEVEL = "-Onone";
 			};
@@ -596,6 +605,7 @@
 				LOCALIZATION_PREFERS_STRING_CATALOGS = YES;
 				MTL_ENABLE_DEBUG_INFO = NO;
 				MTL_FAST_MATH = YES;
+				PRODUCT_NAME = tankgameBT;
 				SWIFT_COMPILATION_MODE = wholemodule;
 			};
 			name = Release;
