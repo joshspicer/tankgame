@@ -295,6 +295,7 @@
 				CURRENT_PROJECT_VERSION = 1;
 				DEVELOPMENT_TEAM = N7C8DEK852;
 				GENERATE_INFOPLIST_FILE = YES;
+				INFOPLIST_KEY_CFBundleIconName = AppIcon;
 				INFOPLIST_KEY_LSApplicationCategoryType = "public.app-category.games";
 				INFOPLIST_KEY_NSBonjourServices = _tankgame._tcp;
 				INFOPLIST_KEY_NSLocalNetworkUsageDescription = "Find nearby players for multiplayer";
@@ -332,6 +333,7 @@
 				CURRENT_PROJECT_VERSION = 1;
 				DEVELOPMENT_TEAM = N7C8DEK852;
 				GENERATE_INFOPLIST_FILE = YES;
+				INFOPLIST_KEY_CFBundleIconName = AppIcon;
 				INFOPLIST_KEY_LSApplicationCategoryType = "public.app-category.games";
 				INFOPLIST_KEY_NSBonjourServices = _tankgame._tcp;
 				INFOPLIST_KEY_NSLocalNetworkUsageDescription = "Find nearby players for multiplayer";
