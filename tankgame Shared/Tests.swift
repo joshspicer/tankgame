@@ -10,6 +10,8 @@ import Foundation
 /// Simple test runner for core game logic
 struct GameTests {
     
+    static let gridSize = 8
+    
     /// Run all tests and print results
     static func runAll() {
         print("=== Running Tank Game Tests ===\n")
@@ -118,7 +120,7 @@ struct GameTests {
     
     static func testTankMovement() -> Bool {
         // Create empty grid
-        var grid = Array(repeating: Array(repeating: GridCell.empty, count: 8), count: 8)
+        var grid = Array(repeating: Array(repeating: GridCell.empty, count: gridSize), count: gridSize)
         var tank = Tank(row: 4, col: 4, direction: .up)
         
         // Test valid movement
@@ -174,12 +176,12 @@ struct GameTests {
         
         // Test out of bounds
         let outOfBounds = Projectile(row: -1, col: 0, direction: .up)
-        guard outOfBounds.isOutOfBounds(gridSize: 8) else {
+        guard outOfBounds.isOutOfBounds(gridSize: gridSize) else {
             return false
         }
         
         // Test wall collision
-        var grid = Array(repeating: Array(repeating: GridCell.empty, count: 8), count: 8)
+        var grid = Array(repeating: Array(repeating: GridCell.empty, count: gridSize), count: gridSize)
         grid[5][5] = .wall
         let wallProjectile = Projectile(row: 5, col: 5, direction: .up)
         guard wallProjectile.hits(grid: grid) else {
@@ -198,8 +200,8 @@ struct GameTests {
         let grid2 = GridGenerator.generate(seed: seed)
         
         // Compare grids
-        for row in 0..<8 {
-            for col in 0..<8 {
+        for row in 0..<gridSize {
+            for col in 0..<gridSize {
                 if grid1[row][col] != grid2[row][col] {
                     return false
                 }
@@ -209,8 +211,8 @@ struct GameTests {
         // Different seeds should (very likely) produce different grids
         let grid3 = GridGenerator.generate(seed: 54321)
         var different = false
-        for row in 0..<8 {
-            for col in 0..<8 {
+        for row in 0..<gridSize {
+            for col in 0..<gridSize {
                 if grid1[row][col] != grid3[row][col] {
                     different = true
                     break
