@@ -4,13 +4,17 @@
 Two real iOS devices were unable to see each other when using Multipeer Connectivity for the tank game multiplayer mode.
 
 ## Root Cause
-The issue was caused by an incomplete Bonjour service configuration in the Xcode project settings:
+The issue was caused by incomplete privacy permissions and Bonjour service configuration in the Xcode project settings:
 
 1. **Missing UDP Protocol**: The `NSBonjourServices` array only included `_tankgame._tcp` but was missing `_tankgame._udp`
    - Multipeer Connectivity uses **both TCP and UDP** protocols for peer discovery
    - Without both protocols declared, iOS blocks the network discovery for security/privacy reasons
 
-2. **Missing Error Handling**: The MultiplayerManager didn't implement error delegate methods, making it difficult to diagnose connection issues
+2. **Missing Bluetooth Permission**: The `NSBluetoothAlwaysUsageDescription` was not declared
+   - iOS 13+ requires explicit Bluetooth usage description for Multipeer Connectivity
+   - Multipeer Connectivity can use Bluetooth for initial discovery and fallback connectivity
+
+3. **Missing Error Handling**: The MultiplayerManager didn't implement error delegate methods, making it difficult to diagnose connection issues
 
 ## Changes Made
 
@@ -24,13 +28,16 @@ INFOPLIST_KEY_NSBonjourServices = _tankgame._tcp;
 
 **After:**
 ```
+INFOPLIST_KEY_NSBluetoothAlwaysUsageDescription = "Connect with nearby players for multiplayer games";
 INFOPLIST_KEY_NSBonjourServices = (
     _tankgame._tcp,
     _tankgame._udp,
 );
 ```
 
-This ensures both TCP and UDP protocols are declared for the "tankgame" service type.
+This ensures:
+- Both TCP and UDP protocols are declared for the "tankgame" service type
+- Bluetooth usage permission is properly requested from users
 
 ### 2. Added Error Handling (`tankgame Shared/MultiplayerManager.swift`)
 
@@ -91,7 +98,12 @@ Both must be declared in `NSBonjourServices` for iOS 14+ to allow the app to use
 - Multipeer Connectivity automatically converts the simple string to the proper Bonjour format
 
 ### Privacy Permissions
-The app already had the required `NSLocalNetworkUsageDescription` which explains to users why the app needs local network access. This permission, combined with the complete `NSBonjourServices` declaration, allows proper peer discovery.
+The app now includes all required privacy permissions for Multipeer Connectivity:
+- **NSLocalNetworkUsageDescription**: Explains why the app needs local network access for peer discovery
+- **NSBluetoothAlwaysUsageDescription**: Explains why the app needs Bluetooth access for device connectivity
+- **NSBonjourServices**: Declares the specific service types (TCP and UDP) the app uses
+
+These permissions, combined, allow proper peer discovery and connectivity on iOS 13+.
 
 ## References
 - [Apple Documentation: Multipeer Connectivity](https://developer.apple.com/documentation/multipeerconnectivity)

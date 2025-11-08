@@ -297,6 +297,7 @@
 				GENERATE_INFOPLIST_FILE = YES;
 				INFOPLIST_KEY_CFBundleIconName = AppIcon;
 				INFOPLIST_KEY_LSApplicationCategoryType = "public.app-category.games";
+				INFOPLIST_KEY_NSBluetoothAlwaysUsageDescription = "Connect with nearby players for multiplayer games";
 				INFOPLIST_KEY_NSBonjourServices = (
 					_tankgame._tcp,
 					_tankgame._udp,
@@ -338,6 +339,7 @@
 				GENERATE_INFOPLIST_FILE = YES;
 				INFOPLIST_KEY_CFBundleIconName = AppIcon;
 				INFOPLIST_KEY_LSApplicationCategoryType = "public.app-category.games";
+				INFOPLIST_KEY_NSBluetoothAlwaysUsageDescription = "Connect with nearby players for multiplayer games";
 				INFOPLIST_KEY_NSBonjourServices = (
 					_tankgame._tcp,
 					_tankgame._udp,
