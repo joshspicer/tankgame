@@ -296,12 +296,10 @@
 				DEVELOPMENT_TEAM = N7C8DEK852;
 				GENERATE_INFOPLIST_FILE = YES;
 				INFOPLIST_KEY_CFBundleIconName = AppIcon;
+				INFOPLIST_KEY_ITSAppUsesNonExemptEncryption = NO;
 				INFOPLIST_KEY_LSApplicationCategoryType = "public.app-category.games";
 				INFOPLIST_KEY_NSBluetoothAlwaysUsageDescription = "Connect with nearby players for multiplayer games";
-				INFOPLIST_KEY_NSBonjourServices = (
-					_tankgame._tcp,
-					_tankgame._udp,
-				);
+				INFOPLIST_KEY_NSBonjourServices = "_tankgame._tcp _tankgame._udp";
 				INFOPLIST_KEY_NSLocalNetworkUsageDescription = "Find nearby players for multiplayer";
 				INFOPLIST_KEY_UIApplicationSupportsIndirectInputEvents = YES;
 				INFOPLIST_KEY_UILaunchStoryboardName = LaunchScreen;
@@ -338,12 +336,10 @@
 				DEVELOPMENT_TEAM = N7C8DEK852;
 				GENERATE_INFOPLIST_FILE = YES;
 				INFOPLIST_KEY_CFBundleIconName = AppIcon;
+				INFOPLIST_KEY_ITSAppUsesNonExemptEncryption = NO;
 				INFOPLIST_KEY_LSApplicationCategoryType = "public.app-category.games";
 				INFOPLIST_KEY_NSBluetoothAlwaysUsageDescription = "Connect with nearby players for multiplayer games";
-				INFOPLIST_KEY_NSBonjourServices = (
-					_tankgame._tcp,
-					_tankgame._udp,
-				);
+				INFOPLIST_KEY_NSBonjourServices = "_tankgame._tcp _tankgame._udp";
 				INFOPLIST_KEY_NSLocalNetworkUsageDescription = "Find nearby players for multiplayer";
 				INFOPLIST_KEY_UIApplicationSupportsIndirectInputEvents = YES;
 				INFOPLIST_KEY_UILaunchStoryboardName = LaunchScreen;
