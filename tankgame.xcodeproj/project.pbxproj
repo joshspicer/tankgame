@@ -297,7 +297,10 @@
 				GENERATE_INFOPLIST_FILE = YES;
 				INFOPLIST_KEY_CFBundleIconName = AppIcon;
 				INFOPLIST_KEY_LSApplicationCategoryType = "public.app-category.games";
-				INFOPLIST_KEY_NSBonjourServices = _tankgame._tcp;
+				INFOPLIST_KEY_NSBonjourServices = (
+					_tankgame._tcp,
+					_tankgame._udp,
+				);
 				INFOPLIST_KEY_NSLocalNetworkUsageDescription = "Find nearby players for multiplayer";
 				INFOPLIST_KEY_UIApplicationSupportsIndirectInputEvents = YES;
 				INFOPLIST_KEY_UILaunchStoryboardName = LaunchScreen;
@@ -335,7 +338,10 @@
 				GENERATE_INFOPLIST_FILE = YES;
 				INFOPLIST_KEY_CFBundleIconName = AppIcon;
 				INFOPLIST_KEY_LSApplicationCategoryType = "public.app-category.games";
-				INFOPLIST_KEY_NSBonjourServices = _tankgame._tcp;
+				INFOPLIST_KEY_NSBonjourServices = (
+					_tankgame._tcp,
+					_tankgame._udp,
+				);
 				INFOPLIST_KEY_NSLocalNetworkUsageDescription = "Find nearby players for multiplayer";
 				INFOPLIST_KEY_UIApplicationSupportsIndirectInputEvents = YES;
 				INFOPLIST_KEY_UILaunchStoryboardName = LaunchScreen;
