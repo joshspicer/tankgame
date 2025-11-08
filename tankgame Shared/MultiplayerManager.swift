@@ -162,6 +162,10 @@ extension MultiplayerManager: MCNearbyServiceAdvertiserDelegate {
         // Auto-accept invitations (simple approach for 2-player game)
         invitationHandler(true, session)
     }
+    
+    func advertiser(_ advertiser: MCNearbyServiceAdvertiser, didNotStartAdvertisingPeer error: Error) {
+        print("Error starting advertising: \(error.localizedDescription)")
+    }
 }
 
 // MARK: - MCNearbyServiceBrowserDelegate
@@ -179,5 +183,9 @@ extension MultiplayerManager: MCNearbyServiceBrowserDelegate {
             guard let self = self else { return }
             self.delegate?.multiplayerManager(self, didLosePeer: peerID)
         }
+    }
+    
+    func browser(_ browser: MCNearbyServiceBrowser, didNotStartBrowsingForPeers error: Error) {
+        print("Error starting browsing: \(error.localizedDescription)")
     }
 }
