@@ -195,10 +195,34 @@ class GameScene: SKScene {
         barrel.position = CGPoint(x: 0, y: tileSize * 0.35)
         tankNode.addChild(barrel)
         
+        // Add rainbow animation to body and barrel
+        addRainbowAnimation(to: body, phaseOffset: 0)
+        addRainbowAnimation(to: barrel, phaseOffset: 0.15)
+        
         // Rotate based on direction
         tankNode.zRotation = CGFloat(direction.angle)
         
         return tankNode
+    }
+    
+    func addRainbowAnimation(to sprite: SKSpriteNode, phaseOffset: CGFloat = 0) {
+        let animationDuration: TimeInterval = 3.0
+        let numberOfColors = 12
+        
+        var colorActions: [SKAction] = []
+        
+        // Create a smooth rainbow by cycling through hue values
+        for i in 0...numberOfColors {
+            let hue = (CGFloat(i) / CGFloat(numberOfColors) + phaseOffset).truncatingRemainder(dividingBy: 1.0)
+            let color = SKColor(hue: hue, saturation: 0.9, brightness: 0.9, alpha: 1.0)
+            let colorAction = SKAction.colorize(with: color, colorBlendFactor: 1.0, duration: animationDuration / Double(numberOfColors))
+            colorActions.append(colorAction)
+        }
+        
+        let rainbowSequence = SKAction.sequence(colorActions)
+        let repeatForever = SKAction.repeatForever(rainbowSequence)
+        
+        sprite.run(repeatForever)
     }
     
     func gridPosition(row: Int, col: Int) -> CGPoint {
