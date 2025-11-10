@@ -358,8 +358,9 @@ extension GameScene {
     func processTouchLocation(_ location: CGPoint) {
         guard let handle = joystickHandle else { return }
         
-        let dx = location.x
-        let dy = location.y
+        let sensitivity = CGFloat(Settings.shared.joystickSensitivity)
+        let dx = location.x * sensitivity
+        let dy = location.y * sensitivity
         let distance = sqrt(dx * dx + dy * dy)
         
         if distance > 20 {

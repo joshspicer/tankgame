@@ -22,6 +22,7 @@ class GameViewController: UIViewController {
     var lobbyView: UIView!
     var hostButton: UIButton!
     var joinButton: UIButton!
+    var settingsButton: UIButton!
     var peerTableView: UITableView!
     var statusLabel: UILabel!
     var discoveredPeers: [MCPeerID] = []
@@ -88,6 +89,17 @@ class GameViewController: UIViewController {
         joinButton.addTarget(self, action: #selector(joinTapped), for: .touchUpInside)
         lobbyView.addSubview(joinButton)
         
+        // Settings button
+        settingsButton = UIButton(type: .system)
+        settingsButton.setTitle("⚙️ Settings", for: .normal)
+        settingsButton.titleLabel?.font = .systemFont(ofSize: 18, weight: .medium)
+        settingsButton.backgroundColor = .systemGray5
+        settingsButton.setTitleColor(.label, for: .normal)
+        settingsButton.layer.cornerRadius = 12
+        settingsButton.translatesAutoresizingMaskIntoConstraints = false
+        settingsButton.addTarget(self, action: #selector(settingsTapped), for: .touchUpInside)
+        lobbyView.addSubview(settingsButton)
+        
         // Peer table view
         peerTableView = UITableView()
         peerTableView.isHidden = true
@@ -116,7 +128,12 @@ class GameViewController: UIViewController {
             joinButton.widthAnchor.constraint(equalToConstant: 200),
             joinButton.heightAnchor.constraint(equalToConstant: 50),
             
-            peerTableView.topAnchor.constraint(equalTo: joinButton.bottomAnchor, constant: 20),
+            settingsButton.topAnchor.constraint(equalTo: joinButton.bottomAnchor, constant: 20),
+            settingsButton.centerXAnchor.constraint(equalTo: lobbyView.centerXAnchor),
+            settingsButton.widthAnchor.constraint(equalToConstant: 200),
+            settingsButton.heightAnchor.constraint(equalToConstant: 50),
+            
+            peerTableView.topAnchor.constraint(equalTo: settingsButton.bottomAnchor, constant: 20),
             peerTableView.leadingAnchor.constraint(equalTo: lobbyView.leadingAnchor, constant: 20),
             peerTableView.trailingAnchor.constraint(equalTo: lobbyView.trailingAnchor, constant: -20),
             peerTableView.bottomAnchor.constraint(equalTo: lobbyView.safeAreaLayoutGuide.bottomAnchor, constant: -20)
@@ -156,6 +173,12 @@ class GameViewController: UIViewController {
                 self.joinButton.isEnabled = true
             }
         }
+    }
+    
+    @objc func settingsTapped() {
+        let settingsVC = SettingsViewController()
+        settingsVC.modalPresentationStyle = .fullScreen
+        present(settingsVC, animated: true)
     }
     
     // MARK: - Permission Handling
