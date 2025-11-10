@@ -9,6 +9,7 @@ import UIKit
 import SpriteKit
 import GameplayKit
 import MultipeerConnectivity
+import Network
 
 class GameViewController: UIViewController {
     
@@ -29,6 +30,9 @@ class GameViewController: UIViewController {
     var isWaitingForNextRound = false
     var readyForNextRound = false
     var remoteReadyForNextRound = false
+    
+    // Permission tracking
+    var permissionCheckInProgress = false
 
     override func viewDidLoad() {
         super.viewDidLoad()
@@ -120,18 +124,88 @@ class GameViewController: UIViewController {
     }
     
     @objc func hostTapped() {
-        hostButton.isEnabled = false
-        joinButton.isEnabled = false
-        statusLabel.text = "Hosting game... Waiting for players to join"
-        multiplayerManager.startHosting()
+        checkAndRequestPermissions { [weak self] granted in
+            guard let self = self else { return }
+            
+            if granted {
+                self.hostButton.isEnabled = false
+                self.joinButton.isEnabled = false
+                self.statusLabel.text = "Hosting game... Waiting for players to join"
+                self.multiplayerManager.startHosting()
+            } else {
+                self.showPermissionDeniedAlert()
+                self.hostButton.isEnabled = true
+                self.joinButton.isEnabled = true
+            }
+        }
     }
     
     @objc func joinTapped() {
-        hostButton.isEnabled = false
-        joinButton.isEnabled = false
-        statusLabel.text = "Looking for nearby games..."
-        peerTableView.isHidden = false
-        multiplayerManager.startBrowsing()
+        checkAndRequestPermissions { [weak self] granted in
+            guard let self = self else { return }
+            
+            if granted {
+                self.hostButton.isEnabled = false
+                self.joinButton.isEnabled = false
+                self.statusLabel.text = "Looking for nearby games..."
+                self.peerTableView.isHidden = false
+                self.multiplayerManager.startBrowsing()
+            } else {
+                self.showPermissionDeniedAlert()
+                self.hostButton.isEnabled = true
+                self.joinButton.isEnabled = true
+            }
+        }
+    }
+    
+    // MARK: - Permission Handling
+    
+    func checkAndRequestPermissions(completion: @escaping (Bool) -> Void) {
+        // Prevent multiple simultaneous permission checks
+        guard !permissionCheckInProgress else {
+            completion(false)
+            return
+        }
+        
+        permissionCheckInProgress = true
+        statusLabel.text = "Checking permissions..."
+        
+        // Create a temporary browser to trigger the permission prompt
+        // This is necessary because iOS doesn't provide a direct API to check
+        // local network permission status
+        let tempPeerID = MCPeerID(displayName: "PermissionCheck")
+        let tempBrowser = MCNearbyServiceBrowser(peer: tempPeerID, serviceType: MultiplayerManager.serviceType)
+        
+        // Start browsing briefly to trigger permission prompt
+        tempBrowser.startBrowsingForPeers()
+        
+        // Give iOS time to show the permission dialog and for user to respond
+        DispatchQueue.main.asyncAfter(deadline: .now() + 0.5) { [weak self] in
+            tempBrowser.stopBrowsingForPeers()
+            self?.permissionCheckInProgress = false
+            
+            // After triggering the permission prompt, we assume permission is granted
+            // If it's not, the actual multiplayer operations will fail and we'll handle it there
+            completion(true)
+        }
+    }
+    
+    func showPermissionDeniedAlert() {
+        let alert = UIAlertController(
+            title: "Permissions Required",
+            message: "Tank Game needs Local Network access to find nearby players. Please enable Local Network permission in Settings > Privacy & Security > Local Network, then try again.",
+            preferredStyle: .alert
+        )
+        
+        alert.addAction(UIAlertAction(title: "Open Settings", style: .default) { _ in
+            if let settingsURL = URL(string: UIApplication.openSettingsURLString) {
+                UIApplication.shared.open(settingsURL)
+            }
+        })
+        
+        alert.addAction(UIAlertAction(title: "Cancel", style: .cancel))
+        
+        present(alert, animated: true)
     }
     
     func startGame(isPlayer1: Bool) {
@@ -325,6 +399,30 @@ extension GameViewController: MultiplayerManagerDelegate {
         case .playerHit:
             break // Not used in current implementation
         }
+    }
+    
+    func multiplayerManager(_ manager: MultiplayerManager, didEncounterError error: Error) {
+        // Re-enable buttons and show error alert
+        hostButton.isEnabled = true
+        joinButton.isEnabled = true
+        
+        let alert = UIAlertController(
+            title: "Connection Error",
+            message: "Unable to start multiplayer session. This may be due to missing Local Network permissions.\n\nError: \(error.localizedDescription)\n\nPlease ensure Local Network access is enabled in Settings > Privacy & Security > Local Network.",
+            preferredStyle: .alert
+        )
+        
+        alert.addAction(UIAlertAction(title: "Open Settings", style: .default) { _ in
+            if let settingsURL = URL(string: UIApplication.openSettingsURLString) {
+                UIApplication.shared.open(settingsURL)
+            }
+        })
+        
+        alert.addAction(UIAlertAction(title: "Try Again", style: .default) { [weak self] _ in
+            self?.statusLabel.text = "Host a game or join a nearby player"
+        })
+        
+        present(alert, animated: true)
     }
 }
 
