@@ -38,6 +38,9 @@ class GameScene: SKScene {
     var lastUpdateTime: TimeInterval = 0
     var lastMoveTime: TimeInterval = 0
     
+    // Sound control
+    var soundEnabled = true
+    
     class func newGameScene() -> GameScene {
         let scene = GameScene(size: CGSize(width: 600, height: 800))
         scene.scaleMode = .aspectFit
@@ -47,6 +50,11 @@ class GameScene: SKScene {
     override func didMove(to view: SKView) {
         backgroundColor = .darkGray
         setupScene()
+    }
+    
+    func playSound(_ soundFile: String) {
+        guard soundEnabled else { return }
+        run(SKAction.playSoundFileNamed(soundFile, waitForCompletion: false))
     }
     
     func setupScene() {
@@ -267,6 +275,7 @@ class GameScene: SKScene {
             if currentTime - lastMoveTime > 0.12 { // Move ~8 times per second
                 if state.localTank.move(in: direction, grid: state.grid) {
                     renderTanks()
+                    playSound("move.wav")
                     lastMoveTime = currentTime
                     
                     // Send position update
@@ -282,16 +291,29 @@ class GameScene: SKScene {
         
         // Update projectiles
         if currentTime - lastUpdateTime > 0.05 { // ~20 FPS for projectile updates
+            let wasLocalAlive = state.localTank.isAlive
+            let wasRemoteAlive = state.remoteTank.isAlive
+            
             state.updateProjectiles()
             renderProjectiles()
+            
+            // Play hit sound if a tank was hit
+            if wasLocalAlive && !state.localTank.isAlive {
+                playSound("hit.wav")
+            }
+            if wasRemoteAlive && !state.remoteTank.isAlive {
+                playSound("hit.wav")
+            }
             
             // Check if round ended after update
             if state.isRoundOver() {
                 let localWon = state.localPlayerWon()
                 if localWon {
                     gameState?.localWins += 1
+                    playSound("win.wav")
                 } else {
                     gameState?.remoteWins += 1
+                    playSound("lose.wav")
                 }
                 showRoundEnd(localWon: localWon)
                 updateScore()
@@ -411,6 +433,7 @@ extension GameScene {
         let projectile = state.localTank.shoot()
         state.projectiles.append(projectile)
         renderProjectiles()
+        playSound("shoot.wav")
         
         // Send shoot message
         onGameMessage?(.playerShoot(projectile: projectile))
