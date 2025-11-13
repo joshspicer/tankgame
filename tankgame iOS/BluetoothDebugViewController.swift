@@ -20,11 +20,14 @@ class BluetoothDebugViewController: UIViewController {
     
     private let titleLabel = UILabel()
     private let peerIDLabel = UILabel()
+    private let deviceInfoLabel = UILabel()
     private let sessionStateLabel = UILabel()
+    private let sessionDetailsLabel = UILabel()
     private let connectedPeersLabel = UILabel()
     private let discoveredPeersLabel = UILabel()
     private let browsingStatusLabel = UILabel()
     private let advertisingStatusLabel = UILabel()
+    private let timestampLabel = UILabel()
     
     private let refreshButton = UIButton(type: .system)
     private let closeButton = UIButton(type: .system)
@@ -83,10 +86,20 @@ class BluetoothDebugViewController: UIViewController {
         peerIDLabel.font = .systemFont(ofSize: 14, weight: .medium)
         peerIDLabel.numberOfLines = 0
         
+        // Device Info
+        deviceInfoLabel.text = "Device Info: Loading..."
+        deviceInfoLabel.font = .systemFont(ofSize: 14, weight: .medium)
+        deviceInfoLabel.numberOfLines = 0
+        
         // Session State
         sessionStateLabel.text = "Session State: Unknown"
         sessionStateLabel.font = .systemFont(ofSize: 14, weight: .medium)
         sessionStateLabel.numberOfLines = 0
+        
+        // Session Details
+        sessionDetailsLabel.text = "Session Details: Loading..."
+        sessionDetailsLabel.font = .systemFont(ofSize: 14, weight: .medium)
+        sessionDetailsLabel.numberOfLines = 0
         
         // Connected Peers
         connectedPeersLabel.text = "Connected Peers: None"
@@ -108,6 +121,13 @@ class BluetoothDebugViewController: UIViewController {
         advertisingStatusLabel.font = .systemFont(ofSize: 14, weight: .medium)
         advertisingStatusLabel.numberOfLines = 0
         
+        // Timestamp
+        timestampLabel.text = "Last Updated: Never"
+        timestampLabel.font = .systemFont(ofSize: 12, weight: .regular)
+        timestampLabel.textColor = .secondaryLabel
+        timestampLabel.textAlignment = .center
+        timestampLabel.numberOfLines = 0
+        
         // Refresh button
         refreshButton.setTitle("🔄 Refresh Now", for: .normal)
         refreshButton.titleLabel?.font = .systemFont(ofSize: 16, weight: .semibold)
@@ -128,11 +148,14 @@ class BluetoothDebugViewController: UIViewController {
         stackView.addArrangedSubview(titleLabel)
         stackView.addArrangedSubview(createSeparator())
         stackView.addArrangedSubview(createCard(with: peerIDLabel))
+        stackView.addArrangedSubview(createCard(with: deviceInfoLabel))
         stackView.addArrangedSubview(createCard(with: sessionStateLabel))
+        stackView.addArrangedSubview(createCard(with: sessionDetailsLabel))
         stackView.addArrangedSubview(createCard(with: connectedPeersLabel))
         stackView.addArrangedSubview(createCard(with: discoveredPeersLabel))
         stackView.addArrangedSubview(createCard(with: browsingStatusLabel))
         stackView.addArrangedSubview(createCard(with: advertisingStatusLabel))
+        stackView.addArrangedSubview(timestampLabel)
         stackView.addArrangedSubview(refreshButton)
         stackView.addArrangedSubview(closeButton)
         
@@ -202,14 +225,26 @@ class BluetoothDebugViewController: UIViewController {
     private func updateDebugInfo() {
         let session = multiplayerManager.session
         
-        // Peer ID
+        // Peer ID with more details
         let myPeerID = session?.myPeerID
+        let peerIDHash = myPeerID?.hash ?? 0
         peerIDLabel.text = """
         📱 My Peer Info
         Display Name: \(myPeerID?.displayName ?? "Unknown")
+        Peer ID Hash: \(peerIDHash)
         """
         
-        // Session State
+        // Device Info
+        let device = UIDevice.current
+        deviceInfoLabel.text = """
+        📱 Device Details
+        Model: \(device.model)
+        System: \(device.systemName) \(device.systemVersion)
+        Name: \(device.name)
+        Identifier: \(device.identifierForVendor?.uuidString ?? "Unknown")
+        """
+        
+        // Session State with more details
         let connectedCount = session?.connectedPeers.count ?? 0
         let stateEmoji = connectedCount > 0 ? "✅" : "⚪️"
         sessionStateLabel.text = """
@@ -218,7 +253,32 @@ class BluetoothDebugViewController: UIViewController {
         Is Connected: \(multiplayerManager.isConnected ? "Yes" : "No")
         """
         
-        // Connected Peers
+        // Session Details (encryption, configuration)
+        let encryptionPreference: String
+        if let session = session {
+            switch session.encryptionPreference {
+            case .none:
+                encryptionPreference = "None"
+            case .optional:
+                encryptionPreference = "Optional"
+            case .required:
+                encryptionPreference = "Required ✅"
+            @unknown default:
+                encryptionPreference = "Unknown"
+            }
+        } else {
+            encryptionPreference = "No Session"
+        }
+        
+        sessionDetailsLabel.text = """
+        🔐 Session Configuration
+        Encryption: \(encryptionPreference)
+        Service Type: \(MultiplayerManager.serviceType)
+        Protocol: MultipeerConnectivity
+        Transport: Bluetooth + WiFi
+        """
+        
+        // Connected Peers with detailed state
         let connectedPeers = session?.connectedPeers ?? []
         if connectedPeers.isEmpty {
             connectedPeersLabel.text = """
@@ -226,35 +286,49 @@ class BluetoothDebugViewController: UIViewController {
             None
             """
         } else {
-            let peerNames = connectedPeers.map { "  • \($0.displayName)" }.joined(separator: "\n")
+            var peerDetails = [String]()
+            for peer in connectedPeers {
+                let peerHash = peer.hash
+                peerDetails.append("  • \(peer.displayName)\n    Hash: \(peerHash)")
+            }
             connectedPeersLabel.text = """
             👥 Connected Peers (\(connectedPeers.count))
-            \(peerNames)
+            \(peerDetails.joined(separator: "\n"))
             """
         }
         
         // Discovery info
         discoveredPeersLabel.text = """
         🔍 Discovery Info
-        To see discovered peers, check the Join Game screen.
-        Note: Discovery uses MultipeerConnectivity
+        Note: Discovered peers are shown in the
+        Join Game screen. They are not accessible
+        via the MCNearbyServiceBrowser delegate
+        after invitation is sent.
         """
         
-        // Browsing status
+        // Browsing status with more details
         let browsingEmoji = multiplayerManager.isBrowsing ? "🟢" : "⚪️"
         browsingStatusLabel.text = """
         \(browsingEmoji) Browsing Status
         Currently Browsing: \(multiplayerManager.isBrowsing ? "Yes" : "No")
-        \(multiplayerManager.isBrowsing ? "Searching for nearby games..." : "Not actively searching")
+        \(multiplayerManager.isBrowsing ? "Actively searching for nearby games..." : "Not actively searching")
+        \(multiplayerManager.isBrowsing ? "Using service type: \(MultiplayerManager.serviceType)" : "")
         """
         
-        // Advertising status
+        // Advertising status with more details
         let advertisingEmoji = multiplayerManager.isAdvertising ? "🟢" : "⚪️"
         advertisingStatusLabel.text = """
         \(advertisingEmoji) Advertising Status
         Currently Advertising: \(multiplayerManager.isAdvertising ? "Yes" : "No")
-        \(multiplayerManager.isAdvertising ? "Game is visible to others" : "Not hosting a game")
+        \(multiplayerManager.isAdvertising ? "Game is visible to nearby devices" : "Not hosting a game")
         Service Type: \(MultiplayerManager.serviceType)
+        \(multiplayerManager.isAdvertising ? "Accepting connections automatically" : "")
         """
+        
+        // Timestamp
+        let formatter = DateFormatter()
+        formatter.dateFormat = "HH:mm:ss"
+        let timestamp = formatter.string(from: Date())
+        timestampLabel.text = "Last Updated: \(timestamp)"
     }
 }
