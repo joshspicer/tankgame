@@ -2,6 +2,11 @@
 """
 Simple WebSocket server for Tank Game internet multiplayer.
 Manages lobbies based on passphrases and routes messages between connected clients.
+
+Usage:
+    python server.py
+
+The server listens on port 8765 by default.
 """
 
 import asyncio
