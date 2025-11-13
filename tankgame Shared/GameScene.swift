@@ -151,6 +151,8 @@ class GameScene: SKScene {
     
     func startGame(with state: GameState) {
         self.gameState = state
+        localTankExploding = false
+        remoteTankExploding = false
         renderGrid()
         renderTanks()
         updateScore()
