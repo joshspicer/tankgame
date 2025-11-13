@@ -48,7 +48,11 @@ class GameScene: SKScene {
     }
     
     override func didMove(to view: SKView) {
+        #if os(iOS) || os(tvOS)
+        backgroundColor = SKColor(named: "GameBackground") ?? .darkGray
+        #else
         backgroundColor = .darkGray
+        #endif
         setupScene()
     }
     
@@ -129,17 +133,25 @@ class GameScene: SKScene {
         addChild(newJoystickNode)
         joystickNode = newJoystickNode
         
+        #if os(iOS) || os(tvOS)
+        let baseColor = SKColor(named: "JoystickBase") ?? .gray
+        let handleColor = SKColor(named: "JoystickHandle") ?? .white
+        #else
+        let baseColor = SKColor.gray
+        let handleColor = SKColor.white
+        #endif
+        
         let newJoystickBase = SKShapeNode(circleOfRadius: 50)
-        newJoystickBase.fillColor = .gray
-        newJoystickBase.strokeColor = .white
+        newJoystickBase.fillColor = baseColor
+        newJoystickBase.strokeColor = handleColor
         newJoystickBase.lineWidth = 2
         newJoystickBase.alpha = 0.5
         newJoystickNode.addChild(newJoystickBase)
         joystickBase = newJoystickBase
         
         let newJoystickHandle = SKShapeNode(circleOfRadius: 25)
-        newJoystickHandle.fillColor = .white
-        newJoystickHandle.strokeColor = .white
+        newJoystickHandle.fillColor = handleColor
+        newJoystickHandle.strokeColor = handleColor
         newJoystickHandle.alpha = 0.8
         newJoystickNode.addChild(newJoystickHandle)
         joystickHandle = newJoystickHandle
@@ -158,10 +170,18 @@ class GameScene: SKScene {
         
         grid.removeAllChildren()
         
+        #if os(iOS) || os(tvOS)
+        let wallColor = SKColor(named: "GridWall") ?? .black
+        let emptyColor = SKColor(named: "GridEmpty") ?? .white
+        #else
+        let wallColor = SKColor.black
+        let emptyColor = SKColor.white
+        #endif
+        
         for row in 0..<gridSize {
             for col in 0..<gridSize {
                 let cell = state.grid[row][col]
-                let tile = SKSpriteNode(color: cell == .wall ? .black : .white, size: CGSize(width: tileSize - 2, height: tileSize - 2))
+                let tile = SKSpriteNode(color: cell == .wall ? wallColor : emptyColor, size: CGSize(width: tileSize - 2, height: tileSize - 2))
                 tile.position = CGPoint(
                     x: CGFloat(col) * tileSize + tileSize / 2,
                     y: CGFloat(gridSize - 1 - row) * tileSize + tileSize / 2
