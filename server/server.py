@@ -10,6 +10,7 @@ The server listens on port 8765 by default.
 """
 
 import asyncio
+import hashlib
 import json
 import logging
 from typing import Dict, Set
@@ -21,6 +22,15 @@ logger = logging.getLogger(__name__)
 
 # Store active lobbies: passphrase -> set of connected clients
 lobbies: Dict[str, Set[WebSocketServerProtocol]] = {}
+
+def hash_passphrase(passphrase: str) -> str:
+    """
+    Hash passphrase for logging purposes to avoid logging sensitive data.
+    
+    Note: This is not for authentication - passphrases are meant to be shared between
+    players. We use SHA256 purely for obfuscation in logs, not for security.
+    """
+    return hashlib.sha256(passphrase.encode()).hexdigest()[:8]
 
 async def handle_client(websocket: WebSocketServerProtocol, path: str):
     """Handle a client connection."""
@@ -58,7 +68,7 @@ async def handle_client(websocket: WebSocketServerProtocol, path: str):
             return
         
         lobby.add(websocket)
-        logger.info(f"Client joined lobby '{passphrase}'. Lobby size: {len(lobby)}")
+        logger.info(f"Client joined lobby {hash_passphrase(passphrase)}. Lobby size: {len(lobby)}")
         
         # Send join confirmation
         await websocket.send(json.dumps({
@@ -71,7 +81,7 @@ async def handle_client(websocket: WebSocketServerProtocol, path: str):
         if len(lobby) == 2:
             for client in lobby:
                 await client.send(json.dumps({'type': 'ready', 'message': 'Opponent found!'}))
-            logger.info(f"Lobby '{passphrase}' is ready with 2 players")
+            logger.info(f"Lobby {hash_passphrase(passphrase)} is ready with 2 players")
         
         # Message routing loop
         async for message in websocket:
@@ -84,7 +94,7 @@ async def handle_client(websocket: WebSocketServerProtocol, path: str):
                 logger.error(f"Error forwarding message: {e}")
     
     except websockets.exceptions.ConnectionClosed:
-        logger.info(f"Client disconnected from lobby '{passphrase}'")
+        logger.info(f"Client disconnected from lobby {hash_passphrase(passphrase) if passphrase else 'unknown'}")
     except Exception as e:
         logger.error(f"Error handling client: {e}")
     finally:
@@ -93,10 +103,10 @@ async def handle_client(websocket: WebSocketServerProtocol, path: str):
             lobby = lobbies[passphrase]
             if websocket in lobby:
                 lobby.remove(websocket)
-                logger.info(f"Removed client from lobby '{passphrase}'. Remaining: {len(lobby)}")
+                logger.info(f"Removed client from lobby {hash_passphrase(passphrase)}. Remaining: {len(lobby)}")
                 
                 # Notify remaining client about disconnection
-                for client in lobby:
+                for client in list(lobby):  # Convert to list to avoid set mutation during iteration
                     try:
                         await client.send(json.dumps({'type': 'opponentDisconnected'}))
                     except:
@@ -105,7 +115,7 @@ async def handle_client(websocket: WebSocketServerProtocol, path: str):
                 # Remove empty lobbies
                 if len(lobby) == 0:
                     del lobbies[passphrase]
-                    logger.info(f"Removed empty lobby '{passphrase}'")
+                    logger.info(f"Removed empty lobby {hash_passphrase(passphrase)}")
 
 async def main():
     """Start the WebSocket server."""
