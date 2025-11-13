@@ -7,6 +7,9 @@
 
 import Foundation
 import MultipeerConnectivity
+#if os(iOS) || os(tvOS)
+import UIKit
+#endif
 
 protocol MultiplayerManagerDelegate: AnyObject {
     func multiplayerManager(_ manager: MultiplayerManager, didFindPeer peerID: MCPeerID)
@@ -30,13 +33,27 @@ class MultiplayerManager: NSObject {
     override init() {
         // Generate or retrieve persistent peer ID
         let peerID: MCPeerID
-        if let data = UserDefaults.standard.data(forKey: "tankgame.peerID"),
+        let peerIDKey = "tankgame.peerID"
+        
+        if let data = UserDefaults.standard.data(forKey: peerIDKey),
            let decoded = try? NSKeyedUnarchiver.unarchivedObject(ofClass: MCPeerID.self, from: data) {
             peerID = decoded
         } else {
-            peerID = MCPeerID(displayName: UIDevice.current.name)
-            if let data = try? NSKeyedArchiver.archivedData(withRootObject: peerID, requiringSecureCoding: true) {
-                UserDefaults.standard.set(data, forKey: "tankgame.peerID")
+            // Create new peer ID with platform-appropriate device name
+            #if os(iOS) || os(tvOS)
+            let deviceName = UIDevice.current.name
+            #elseif os(macOS)
+            let deviceName = Host.current().localizedName ?? ProcessInfo.processInfo.hostName
+            #endif
+            
+            peerID = MCPeerID(displayName: deviceName)
+            
+            // Persist the peer ID with error handling
+            do {
+                let data = try NSKeyedArchiver.archivedData(withRootObject: peerID, requiringSecureCoding: true)
+                UserDefaults.standard.set(data, forKey: peerIDKey)
+            } catch {
+                print("Failed to persist peer ID: \(error.localizedDescription)")
             }
         }
         self.myPeerID = peerID
