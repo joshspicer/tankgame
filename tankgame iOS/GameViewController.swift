@@ -499,7 +499,7 @@ extension GameViewController: MultiplayerManagerDelegate {
         }
     }
     
-    func multiplayerManager(_ manager: MultiplayerManager, didReceiveMessage message: GameMessage) {
+    func multiplayerManager(_ manager: MultiplayerManager, didReceiveMessage message: GameMessage, fromPeer peerID: MCPeerID) {
         switch message {
         case .playerIndexAssignment(let assignedIndex):
             // Host is assigning us a player index
@@ -559,8 +559,8 @@ extension GameViewController: MultiplayerManagerDelegate {
             gameScene?.renderProjectiles()
             
         case .readyForNextRound:
-            // Track which player is ready
-            playersReadyForNextRound.insert(multiplayerManager.session.myPeerID.displayName)
+            // Track which peer is ready by their peer ID
+            playersReadyForNextRound.insert(peerID.displayName)
             checkAndStartNextRound()
             
         case .playerHit:

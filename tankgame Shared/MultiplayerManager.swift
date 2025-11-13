@@ -13,7 +13,7 @@ protocol MultiplayerManagerDelegate: AnyObject {
     func multiplayerManager(_ manager: MultiplayerManager, didLosePeer peerID: MCPeerID)
     func multiplayerManager(_ manager: MultiplayerManager, didConnectToPeer peerID: MCPeerID)
     func multiplayerManager(_ manager: MultiplayerManager, didDisconnectFromPeer peerID: MCPeerID)
-    func multiplayerManager(_ manager: MultiplayerManager, didReceiveMessage message: GameMessage)
+    func multiplayerManager(_ manager: MultiplayerManager, didReceiveMessage message: GameMessage, fromPeer peerID: MCPeerID)
     func multiplayerManager(_ manager: MultiplayerManager, didEncounterError error: Error)
 }
 
@@ -144,7 +144,7 @@ extension MultiplayerManager: MCSessionDelegate {
             let message = try JSONDecoder().decode(GameMessage.self, from: data)
             DispatchQueue.main.async { [weak self] in
                 guard let self = self else { return }
-                self.delegate?.multiplayerManager(self, didReceiveMessage: message)
+                self.delegate?.multiplayerManager(self, didReceiveMessage: message, fromPeer: peerID)
             }
         } catch {
             print("Error decoding message: \(error.localizedDescription)")
