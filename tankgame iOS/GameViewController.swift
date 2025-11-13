@@ -33,7 +33,12 @@ class GameViewController: UIViewController {
     // Game state
     var isWaitingForNextRound = false
     var readyForNextRound = false
-    var remoteReadyForNextRound = false
+    var playersReadyForNextRound: Set<String> = [] // Track which peers are ready
+    
+    // Multiplayer state
+    var playerIndex: Int = 0 // This device's player index
+    var peerToPlayerIndex: [MCPeerID: Int] = [:] // Map peers to their player indices
+    var isHost: Bool = false // Whether this device is hosting
     
     // Permission tracking
     var permissionCheckInProgress = false
@@ -73,7 +78,7 @@ class GameViewController: UIViewController {
         
         // Instructions label
         instructionsLabel = UILabel()
-        instructionsLabel.text = "Battle with a friend on the same network!\nMove with the joystick, tap FIRE to shoot."
+        instructionsLabel.text = "Battle with friends on the same network!\nSupports 2-4 players.\nMove with the joystick, tap FIRE to shoot."
         instructionsLabel.font = .systemFont(ofSize: 14)
         instructionsLabel.textAlignment = .center
         instructionsLabel.numberOfLines = 0
@@ -196,12 +201,14 @@ class GameViewController: UIViewController {
             guard let self = self else { return }
             
             if granted {
+                self.isHost = true
+                self.playerIndex = 0 // Host is always player 0
                 self.hostButton.isHidden = true
                 self.joinButton.isHidden = true
                 self.instructionsLabel.isHidden = true
                 self.cancelButton.isHidden = false
                 self.activityIndicator.startAnimating()
-                self.statusLabel.text = "Hosting game...\nWaiting for a player to join"
+                self.statusLabel.text = "Hosting game...\nWaiting for players to join (2-4 players)"
                 self.multiplayerManager.startHosting()
             } else {
                 self.showPermissionDeniedAlert()
@@ -234,6 +241,8 @@ class GameViewController: UIViewController {
         multiplayerManager.stopHosting()
         multiplayerManager.stopBrowsing()
         discoveredPeers.removeAll()
+        peerToPlayerIndex.removeAll()
+        isHost = false
         
         // Reset UI
         resetLobbyUI()
@@ -311,7 +320,7 @@ class GameViewController: UIViewController {
         present(alert, animated: true)
     }
     
-    func startGame(isPlayer1: Bool) {
+    func startGame() {
         // Hide lobby
         lobbyView.isHidden = true
         
@@ -323,14 +332,19 @@ class GameViewController: UIViewController {
             skView = newSKView
         }
         
-        // Generate initial seed (coin flip for fairness)
+        // Calculate number of players (local + connected peers)
+        let numberOfPlayers = 1 + multiplayerManager.numberOfConnectedPeers
+        
+        // Generate initial seed
         let seed = UInt32.random(in: 0...UInt32.max)
         
-        // Create game state
-        gameState = GameState(seed: seed, isPlayer1: isPlayer1)
+        // Create game state with all players
+        gameState = GameState(seed: seed, numberOfPlayers: numberOfPlayers, localPlayerIndex: playerIndex)
         
-        // Send round start message
-        multiplayerManager.sendMessage(.roundStart(seed: seed, isInitiator: isPlayer1))
+        // Send round start message if host
+        if isHost {
+            multiplayerManager.sendMessage(.roundStart(seed: seed, isInitiator: true))
+        }
         
         // Setup game scene
         let scene = GameScene.newGameScene()
@@ -350,11 +364,11 @@ class GameViewController: UIViewController {
     
     func handleGameMessage(_ message: GameMessage) {
         switch message {
-        case .playerMove(let row, let col, let direction):
-            multiplayerManager.sendPositionUpdate(row: row, col: col, direction: direction)
+        case .playerMove(let playerIndex, let row, let col, let direction):
+            multiplayerManager.sendPositionUpdate(playerIndex: playerIndex, row: row, col: col, direction: direction)
             
-        case .playerShoot(let projectile):
-            multiplayerManager.sendMessage(.playerShoot(projectile: projectile))
+        case .playerShoot(let playerIndex, let projectile):
+            multiplayerManager.sendMessage(.playerShoot(playerIndex: playerIndex, projectile: projectile))
             
         case .readyForNextRound:
             readyForNextRound = true
@@ -366,10 +380,14 @@ class GameViewController: UIViewController {
     }
     
     func checkAndStartNextRound() {
-        if readyForNextRound && remoteReadyForNextRound {
-            // Both players ready, start next round
+        // Check if all players are ready
+        let allConnectedPeers = multiplayerManager.connectedPeers.map { $0.displayName }
+        let allReady = readyForNextRound && playersReadyForNextRound.count == allConnectedPeers.count
+        
+        if allReady {
+            // All players ready, start next round
             readyForNextRound = false
-            remoteReadyForNextRound = false
+            playersReadyForNextRound.removeAll()
             
             DispatchQueue.main.asyncAfter(deadline: .now() + 0.5) { [weak self] in
                 self?.startNextRound()
@@ -383,15 +401,17 @@ class GameViewController: UIViewController {
     func startNextRound() {
         guard let currentState = gameState else { return }
         
-        // Generate new seed (fair coin flip)
+        // Generate new seed
         let seed = UInt32.random(in: 0...UInt32.max)
         
         // Reset game state
         gameState?.reset(seed: seed)
         gameScene?.startGame(with: gameState!)
         
-        // Send new round message
-        multiplayerManager.sendMessage(.roundStart(seed: seed, isInitiator: true))
+        // Send new round message if host
+        if isHost {
+            multiplayerManager.sendMessage(.roundStart(seed: seed, isInitiator: true))
+        }
     }
 
     override var supportedInterfaceOrientations: UIInterfaceOrientationMask {
@@ -431,16 +451,30 @@ extension GameViewController: MultiplayerManagerDelegate {
     }
     
     func multiplayerManager(_ manager: MultiplayerManager, didConnectToPeer peerID: MCPeerID) {
-        activityIndicator.stopAnimating()
-        statusLabel.text = "Connected to \(peerID.displayName)! Starting game..."
-        
-        // Determine who is player 1 (lexicographically smaller peer ID becomes player 1)
-        let myName = multiplayerManager.session.myPeerID.displayName
-        let remoteName = peerID.displayName
-        let isPlayer1 = myName < remoteName
-        
-        DispatchQueue.main.asyncAfter(deadline: .now() + 1) { [weak self] in
-            self?.startGame(isPlayer1: isPlayer1)
+        // Assign player index for the new peer
+        if isHost {
+            // Host assigns player indices
+            let newPlayerIndex = 1 + peerToPlayerIndex.count
+            peerToPlayerIndex[peerID] = newPlayerIndex
+            
+            // Update status
+            let totalPlayers = 1 + peerToPlayerIndex.count
+            statusLabel.text = "Connected: \(totalPlayers) player\(totalPlayers == 1 ? "" : "s"). Waiting for more players..."
+            
+            // If we have at least 2 players and want to auto-start, we could do it here
+            // For now, let's wait for the host to manually start or have a timer
+            if totalPlayers >= 2 {
+                statusLabel.text = "Connected: \(totalPlayers) player\(totalPlayers == 1 ? "" : "s"). Starting game..."
+                activityIndicator.stopAnimating()
+                
+                DispatchQueue.main.asyncAfter(deadline: .now() + 2) { [weak self] in
+                    self?.startGame()
+                }
+            }
+        } else {
+            // Client waits for game start from host
+            activityIndicator.stopAnimating()
+            statusLabel.text = "Connected to \(peerID.displayName)! Waiting for game to start..."
         }
     }
     
@@ -467,9 +501,18 @@ extension GameViewController: MultiplayerManagerDelegate {
         case .roundStart(let seed, let isInitiator):
             // Remote player initiated round start
             if gameState == nil {
-                // Initial game start - we need to invert the isPlayer1 flag
-                let isPlayer1 = !isInitiator
-                gameState = GameState(seed: seed, isPlayer1: isPlayer1)
+                // Initial game start - determine our player index
+                // For clients, we need to figure out our index based on connected peers
+                let numberOfPlayers = 1 + multiplayerManager.numberOfConnectedPeers
+                
+                // If we're not the host, we're joining a game
+                // The host should have sent us our player index, but for now we'll determine it
+                if !isHost {
+                    // Assign ourselves as the last player index
+                    playerIndex = numberOfPlayers - 1
+                }
+                
+                gameState = GameState(seed: seed, numberOfPlayers: numberOfPlayers, localPlayerIndex: playerIndex)
                 
                 DispatchQueue.main.async { [weak self] in
                     guard let self = self, let state = self.gameState else { return }
@@ -503,22 +546,30 @@ extension GameViewController: MultiplayerManagerDelegate {
                 gameScene?.startGame(with: gameState!)
             }
             
-        case .playerMove(let row, let col, let direction):
-            gameState?.remoteTank.row = row
-            gameState?.remoteTank.col = col
-            gameState?.remoteTank.direction = direction
-            gameScene?.renderTanks()
+        case .playerMove(let playerIndex, let row, let col, let direction):
+            // Update the specified player's tank
+            if playerIndex < gameState?.tanks.count ?? 0 {
+                gameState?.tanks[playerIndex].row = row
+                gameState?.tanks[playerIndex].col = col
+                gameState?.tanks[playerIndex].direction = direction
+                gameScene?.renderTanks()
+            }
             
-        case .playerShoot(let projectile):
-            gameState?.projectiles.append(projectile)
+        case .playerShoot(let playerIndex, let projectile):
+            // Add projectile from specified player
+            gameState?.projectiles.append((projectile, playerIndex))
             gameScene?.renderProjectiles()
             
         case .readyForNextRound:
-            remoteReadyForNextRound = true
+            // Track which player is ready
+            playersReadyForNextRound.insert(multiplayerManager.session.myPeerID.displayName)
             checkAndStartNextRound()
             
         case .playerHit:
             break // Not used in current implementation
+            
+        case .playerJoined:
+            break // Can be used for future player join notifications
         }
     }
     

@@ -90,8 +90,8 @@ class MultiplayerManager: NSObject {
         }
     }
     
-    func sendPositionUpdate(row: Int, col: Int, direction: Direction) {
-        sendMessage(.playerMove(row: row, col: col, direction: direction))
+    func sendPositionUpdate(playerIndex: Int, row: Int, col: Int, direction: Direction) {
+        sendMessage(.playerMove(playerIndex: playerIndex, row: row, col: col, direction: direction))
     }
     
     // MARK: - Disconnection
@@ -108,6 +108,14 @@ class MultiplayerManager: NSObject {
     
     var connectedPeerName: String? {
         return session.connectedPeers.first?.displayName
+    }
+    
+    var connectedPeers: [MCPeerID] {
+        return session.connectedPeers
+    }
+    
+    var numberOfConnectedPeers: Int {
+        return session.connectedPeers.count
     }
 }
 

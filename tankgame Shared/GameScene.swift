@@ -19,8 +19,7 @@ class GameScene: SKScene {
     
     // Nodes
     var gridNode: SKNode?
-    var localTankNode: SKNode?
-    var remoteTankNode: SKNode?
+    var tankNodes: [SKNode] = [] // Array of tank nodes for each player
     var projectilesNode: SKNode?
     var joystickNode: SKNode?
     var joystickBase: SKShapeNode?
@@ -28,6 +27,9 @@ class GameScene: SKScene {
     var fireButton: SKShapeNode?
     var statusLabel: SKLabelNode?
     var scoreLabel: SKLabelNode?
+    
+    // Colors for different players
+    static let playerColors: [SKColor] = [.blue, .red, .green, .orange]
     
     // Joystick state
     var joystickActive = false
@@ -74,16 +76,8 @@ class GameScene: SKScene {
         addChild(newProjectilesNode)
         projectilesNode = newProjectilesNode
         
-        // Create tank nodes
-        let newLocalTankNode = SKNode()
-        newLocalTankNode.position = gridOffset
-        addChild(newLocalTankNode)
-        localTankNode = newLocalTankNode
-        
-        let newRemoteTankNode = SKNode()
-        newRemoteTankNode.position = gridOffset
-        addChild(newRemoteTankNode)
-        remoteTankNode = newRemoteTankNode
+        // Create tank nodes for each player (we'll create them dynamically based on number of players)
+        tankNodes = []
         
         // Create joystick
         setupJoystick()
@@ -147,6 +141,25 @@ class GameScene: SKScene {
     
     func startGame(with state: GameState) {
         self.gameState = state
+        
+        // Create tank nodes for all players
+        let gridOffset = CGPoint(
+            x: (size.width - CGFloat(gridSize) * tileSize) / 2,
+            y: (size.height - CGFloat(gridSize) * tileSize) / 2 + 50
+        )
+        
+        // Remove old tank nodes
+        tankNodes.forEach { $0.removeFromParent() }
+        tankNodes = []
+        
+        // Create a node for each player
+        for _ in 0..<state.tanks.count {
+            let tankNode = SKNode()
+            tankNode.position = gridOffset
+            addChild(tankNode)
+            tankNodes.append(tankNode)
+        }
+        
         renderGrid()
         renderTanks()
         updateScore()
@@ -174,20 +187,17 @@ class GameScene: SKScene {
     func renderTanks() {
         guard let state = gameState else { return }
         
-        // Render local tank
-        localTankNode?.removeAllChildren()
-        if state.localTank.isAlive, let localNode = localTankNode {
-            let tank = createTankNode(color: .blue, direction: state.localTank.direction)
-            tank.position = gridPosition(row: state.localTank.row, col: state.localTank.col)
-            localNode.addChild(tank)
-        }
-        
-        // Render remote tank
-        remoteTankNode?.removeAllChildren()
-        if state.remoteTank.isAlive, let remoteNode = remoteTankNode {
-            let tank = createTankNode(color: .red, direction: state.remoteTank.direction)
-            tank.position = gridPosition(row: state.remoteTank.row, col: state.remoteTank.col)
-            remoteNode.addChild(tank)
+        // Render all tanks
+        for (index, tank) in state.tanks.enumerated() {
+            guard index < tankNodes.count else { continue }
+            
+            tankNodes[index].removeAllChildren()
+            if tank.isAlive {
+                let color = GameScene.playerColors[index % GameScene.playerColors.count]
+                let tankNode = createTankNode(color: color, direction: tank.direction)
+                tankNode.position = gridPosition(row: tank.row, col: tank.col)
+                tankNodes[index].addChild(tankNode)
+            }
         }
     }
     
@@ -245,7 +255,7 @@ class GameScene: SKScene {
         
         projectiles.removeAllChildren()
         
-        for projectile in state.projectiles {
+        for (projectile, ownerIndex) in state.projectiles {
             // Make projectile larger and more visible
             let bullet = SKSpriteNode(color: .yellow, size: CGSize(width: tileSize * 0.5, height: tileSize * 0.5))
             bullet.zPosition = 5
@@ -273,7 +283,11 @@ class GameScene: SKScene {
     
     func updateScore() {
         guard let state = gameState else { return }
-        scoreLabel?.text = "Score: \(state.localWins) - \(state.remoteWins)"
+        // Show scores for all players
+        let scoreText = state.wins.enumerated()
+            .map { "P\($0.offset + 1): \($0.element)" }
+            .joined(separator: " | ")
+        scoreLabel?.text = "Score: \(scoreText)"
     }
     
     func showRoundEnd(localWon: Bool) {
@@ -296,8 +310,8 @@ class GameScene: SKScene {
                     playSound("move.wav")
                     lastMoveTime = currentTime
                     
-                    // Send position update
-                    onGameMessage?(.playerMove(row: state.localTank.row, col: state.localTank.col, direction: state.localTank.direction))
+                    // Send position update with player index
+                    onGameMessage?(.playerMove(playerIndex: state.localPlayerIndex, row: state.localTank.row, col: state.localTank.col, direction: state.localTank.direction))
                 }
             }
         }
@@ -309,28 +323,32 @@ class GameScene: SKScene {
         
         // Update projectiles
         if currentTime - lastUpdateTime > 0.05 { // ~20 FPS for projectile updates
-            let wasLocalAlive = state.localTank.isAlive
-            let wasRemoteAlive = state.remoteTank.isAlive
+            // Track which tanks were alive before update
+            let tanksAliveStatus = state.tanks.map { $0.isAlive }
             
             state.updateProjectiles()
             renderProjectiles()
             
-            // Play hit sound if a tank was hit
-            if wasLocalAlive && !state.localTank.isAlive {
-                playSound("hit.wav")
-            }
-            if wasRemoteAlive && !state.remoteTank.isAlive {
-                playSound("hit.wav")
+            // Play hit sound if any tank was hit
+            for (index, wasAlive) in tanksAliveStatus.enumerated() {
+                if wasAlive && !state.tanks[index].isAlive {
+                    playSound("hit.wav")
+                }
             }
             
             // Check if round ended after update
             if state.isRoundOver() {
                 let localWon = state.localPlayerWon()
+                
+                // Award win to the surviving player(s)
                 if localWon {
-                    gameState?.localWins += 1
+                    gameState?.wins[state.localPlayerIndex] += 1
                     playSound("win.wav")
                 } else {
-                    gameState?.remoteWins += 1
+                    // Find the winner (if any)
+                    if let winnerIndex = state.tanks.enumerated().first(where: { $0.element.isAlive })?.offset {
+                        gameState?.wins[winnerIndex] += 1
+                    }
                     playSound("lose.wav")
                 }
                 showRoundEnd(localWon: localWon)
@@ -449,12 +467,12 @@ extension GameScene {
         guard let state = gameState, state.localTank.isAlive else { return }
         
         let projectile = state.localTank.shoot()
-        state.projectiles.append(projectile)
+        state.projectiles.append((projectile, state.localPlayerIndex))
         renderProjectiles()
         playSound("shoot.wav")
         
-        // Send shoot message
-        onGameMessage?(.playerShoot(projectile: projectile))
+        // Send shoot message with player index
+        onGameMessage?(.playerShoot(playerIndex: state.localPlayerIndex, projectile: projectile))
     }
 }
 #endif
