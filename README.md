@@ -38,6 +38,11 @@ The internet multiplayer feature uses a simple WebSocket server that manages lob
    ```
 4. The server will start on port 8765
 
+**Note**: The iOS app is currently configured to connect to `ws://localhost:8765`. For testing with two simulators on the same Mac, this works fine. For production use or testing on different devices, you'll need to:
+- Deploy the server to a publicly accessible host
+- Update the `serverURL` in `GameViewController.swift` (line ~302) to point to your server
+- Consider using WSS (WebSocket Secure) for production
+
 ### Connecting to a Lobby
 
 1. In the app, tap "Connect to Internet Lobby"
