@@ -1,5 +1,5 @@
 ---
-name: Apple Docs Investigator
+name: "apple_docs_investigator"
 description: Uses the apple-developer-docs MCP server to investigate a prompt
 ---
 
