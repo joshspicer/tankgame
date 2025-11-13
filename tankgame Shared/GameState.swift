@@ -9,12 +9,12 @@ import Foundation
 
 // Network message types
 enum GameMessage: Codable {
-    case roundStart(seed: UInt32, isInitiator: Bool)
+    case roundStart(seed: UInt32, numberOfPlayers: Int, playerIndex: Int)
     case playerMove(playerIndex: Int, row: Int, col: Int, direction: Direction)
     case playerShoot(playerIndex: Int, projectile: Projectile)
     case playerHit(playerIndex: Int)
     case readyForNextRound
-    case playerJoined(playerIndex: Int, peerID: String)
+    case playerIndexAssignment(playerIndex: Int) // Sent by host to assign player index to client
 }
 
 final class GameState {

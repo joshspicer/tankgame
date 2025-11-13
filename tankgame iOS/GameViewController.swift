@@ -341,9 +341,9 @@ class GameViewController: UIViewController {
         // Create game state with all players
         gameState = GameState(seed: seed, numberOfPlayers: numberOfPlayers, localPlayerIndex: playerIndex)
         
-        // Send round start message if host
+        // Send round start message to all peers with their indices
         if isHost {
-            multiplayerManager.sendMessage(.roundStart(seed: seed, isInitiator: true))
+            multiplayerManager.sendMessage(.roundStart(seed: seed, numberOfPlayers: numberOfPlayers, playerIndex: 0))
         }
         
         // Setup game scene
@@ -410,7 +410,8 @@ class GameViewController: UIViewController {
         
         // Send new round message if host
         if isHost {
-            multiplayerManager.sendMessage(.roundStart(seed: seed, isInitiator: true))
+            let numberOfPlayers = 1 + multiplayerManager.numberOfConnectedPeers
+            multiplayerManager.sendMessage(.roundStart(seed: seed, numberOfPlayers: numberOfPlayers, playerIndex: 0))
         }
     }
 
@@ -457,12 +458,14 @@ extension GameViewController: MultiplayerManagerDelegate {
             let newPlayerIndex = 1 + peerToPlayerIndex.count
             peerToPlayerIndex[peerID] = newPlayerIndex
             
+            // Send player index assignment to the new peer
+            multiplayerManager.sendMessage(.playerIndexAssignment(playerIndex: newPlayerIndex))
+            
             // Update status
             let totalPlayers = 1 + peerToPlayerIndex.count
             statusLabel.text = "Connected: \(totalPlayers) player\(totalPlayers == 1 ? "" : "s"). Waiting for more players..."
             
-            // If we have at least 2 players and want to auto-start, we could do it here
-            // For now, let's wait for the host to manually start or have a timer
+            // If we have at least 2 players, start the game after a short delay
             if totalPlayers >= 2 {
                 statusLabel.text = "Connected: \(totalPlayers) player\(totalPlayers == 1 ? "" : "s"). Starting game..."
                 activityIndicator.stopAnimating()
@@ -498,20 +501,15 @@ extension GameViewController: MultiplayerManagerDelegate {
     
     func multiplayerManager(_ manager: MultiplayerManager, didReceiveMessage message: GameMessage) {
         switch message {
-        case .roundStart(let seed, let isInitiator):
+        case .playerIndexAssignment(let assignedIndex):
+            // Host is assigning us a player index
+            playerIndex = assignedIndex
+            print("Assigned player index: \(assignedIndex)")
+            
+        case .roundStart(let seed, let numberOfPlayers, _):
             // Remote player initiated round start
             if gameState == nil {
-                // Initial game start - determine our player index
-                // For clients, we need to figure out our index based on connected peers
-                let numberOfPlayers = 1 + multiplayerManager.numberOfConnectedPeers
-                
-                // If we're not the host, we're joining a game
-                // The host should have sent us our player index, but for now we'll determine it
-                if !isHost {
-                    // Assign ourselves as the last player index
-                    playerIndex = numberOfPlayers - 1
-                }
-                
+                // Initial game start
                 gameState = GameState(seed: seed, numberOfPlayers: numberOfPlayers, localPlayerIndex: playerIndex)
                 
                 DispatchQueue.main.async { [weak self] in
@@ -567,9 +565,6 @@ extension GameViewController: MultiplayerManagerDelegate {
             
         case .playerHit:
             break // Not used in current implementation
-            
-        case .playerJoined:
-            break // Can be used for future player join notifications
         }
     }
     
