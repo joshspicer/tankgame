@@ -109,6 +109,16 @@ class MultiplayerManager: NSObject {
     var connectedPeerName: String? {
         return session.connectedPeers.first?.displayName
     }
+    
+    // MARK: - Debug Info
+    
+    var isAdvertising: Bool {
+        return advertiser != nil
+    }
+    
+    var isBrowsing: Bool {
+        return browser != nil
+    }
 }
 
 // MARK: - MCSessionDelegate

@@ -233,29 +233,28 @@ class BluetoothDebugViewController: UIViewController {
             """
         }
         
-        // Note: We can't directly check discovered peers or browsing/advertising status
-        // from the MultiplayerManager without modifying it
+        // Discovery info
         discoveredPeersLabel.text = """
         🔍 Discovery Info
         To see discovered peers, check the Join Game screen.
+        Note: Discovery uses MultipeerConnectivity
         """
         
+        // Browsing status
+        let browsingEmoji = multiplayerManager.isBrowsing ? "🟢" : "⚪️"
         browsingStatusLabel.text = """
-        📡 Browsing Status
-        Check Join Game to browse for peers.
+        \(browsingEmoji) Browsing Status
+        Currently Browsing: \(multiplayerManager.isBrowsing ? "Yes" : "No")
+        \(multiplayerManager.isBrowsing ? "Searching for nearby games..." : "Not actively searching")
         """
         
+        // Advertising status
+        let advertisingEmoji = multiplayerManager.isAdvertising ? "🟢" : "⚪️"
         advertisingStatusLabel.text = """
-        📢 Advertising Status
-        Check Host Game to advertise.
-        """
-        
-        // Get service type info
-        let serviceType = MultiplayerManager.serviceType
-        browsingStatusLabel.text = """
-        📡 Service Info
-        Service Type: \(serviceType)
-        Protocol: MultipeerConnectivity (Bluetooth/WiFi)
+        \(advertisingEmoji) Advertising Status
+        Currently Advertising: \(multiplayerManager.isAdvertising ? "Yes" : "No")
+        \(multiplayerManager.isAdvertising ? "Game is visible to others" : "Not hosting a game")
+        Service Type: \(MultiplayerManager.serviceType)
         """
     }
 }
