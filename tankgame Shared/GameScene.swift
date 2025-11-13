@@ -19,8 +19,7 @@ class GameScene: SKScene {
     
     // Nodes
     var gridNode: SKNode?
-    var localTankNode: SKNode?
-    var remoteTankNode: SKNode?
+    var tankNodes: [SKNode] = [] // One node per player
     var projectilesNode: SKNode?
     var joystickNode: SKNode?
     var joystickBase: SKShapeNode?
@@ -73,17 +72,6 @@ class GameScene: SKScene {
         newProjectilesNode.position = gridOffset
         addChild(newProjectilesNode)
         projectilesNode = newProjectilesNode
-        
-        // Create tank nodes
-        let newLocalTankNode = SKNode()
-        newLocalTankNode.position = gridOffset
-        addChild(newLocalTankNode)
-        localTankNode = newLocalTankNode
-        
-        let newRemoteTankNode = SKNode()
-        newRemoteTankNode.position = gridOffset
-        addChild(newRemoteTankNode)
-        remoteTankNode = newRemoteTankNode
         
         // Create joystick
         setupJoystick()
@@ -147,6 +135,16 @@ class GameScene: SKScene {
     
     func startGame(with state: GameState) {
         self.gameState = state
+        
+        // Create tank nodes for all players
+        tankNodes.removeAll()
+        for _ in state.tanks {
+            let tankNode = SKNode()
+            tankNode.position = gridNode?.position ?? .zero
+            addChild(tankNode)
+            tankNodes.append(tankNode)
+        }
+        
         renderGrid()
         renderTanks()
         updateScore()
@@ -174,20 +172,21 @@ class GameScene: SKScene {
     func renderTanks() {
         guard let state = gameState else { return }
         
-        // Render local tank
-        localTankNode?.removeAllChildren()
-        if state.localTank.isAlive, let localNode = localTankNode {
-            let tank = createTankNode(color: .blue, direction: state.localTank.direction)
-            tank.position = gridPosition(row: state.localTank.row, col: state.localTank.col)
-            localNode.addChild(tank)
-        }
+        // Define colors for different players
+        let playerColors: [SKColor] = [.blue, .red, .green, .yellow]
         
-        // Render remote tank
-        remoteTankNode?.removeAllChildren()
-        if state.remoteTank.isAlive, let remoteNode = remoteTankNode {
-            let tank = createTankNode(color: .red, direction: state.remoteTank.direction)
-            tank.position = gridPosition(row: state.remoteTank.row, col: state.remoteTank.col)
-            remoteNode.addChild(tank)
+        // Render all tanks
+        for (index, playerTank) in state.tanks.enumerated() {
+            guard index < tankNodes.count else { break }
+            
+            tankNodes[index].removeAllChildren()
+            
+            if playerTank.tank.isAlive {
+                let color = playerColors[index % playerColors.count]
+                let tank = createTankNode(color: color, direction: playerTank.tank.direction)
+                tank.position = gridPosition(row: playerTank.tank.row, col: playerTank.tank.col)
+                tankNodes[index].addChild(tank)
+            }
         }
     }
     
@@ -273,7 +272,18 @@ class GameScene: SKScene {
     
     func updateScore() {
         guard let state = gameState else { return }
-        scoreLabel?.text = "Score: \(state.localWins) - \(state.remoteWins)"
+        
+        // Build score string for all players
+        var scoreText = "Score: "
+        for (index, playerTank) in state.tanks.enumerated() {
+            let wins = state.wins[playerTank.playerIndex] ?? 0
+            if index > 0 {
+                scoreText += " - "
+            }
+            scoreText += "\(wins)"
+        }
+        
+        scoreLabel?.text = scoreText
     }
     
     func showRoundEnd(localWon: Bool) {
@@ -297,7 +307,12 @@ class GameScene: SKScene {
                     lastMoveTime = currentTime
                     
                     // Send position update
-                    onGameMessage?(.playerMove(row: state.localTank.row, col: state.localTank.col, direction: state.localTank.direction))
+                    onGameMessage?(.playerMove(
+                        playerIndex: state.localPlayerIndex,
+                        row: state.localTank.row,
+                        col: state.localTank.col,
+                        direction: state.localTank.direction
+                    ))
                 }
             }
         }
@@ -326,18 +341,20 @@ class GameScene: SKScene {
             // Check if round ended after update
             if state.isRoundOver() {
                 let localWon = state.localPlayerWon()
+                if let winnerIndex = state.getWinnerIndex() {
+                    gameState?.wins[winnerIndex, default: 0] += 1
+                }
+                
                 if localWon {
-                    gameState?.localWins += 1
                     playSound("win.wav")
                 } else {
-                    gameState?.remoteWins += 1
                     playSound("lose.wav")
                 }
                 showRoundEnd(localWon: localWon)
                 updateScore()
                 
                 // Notify that round ended
-                onGameMessage?(.readyForNextRound)
+                onGameMessage?(.readyForNextRound(playerIndex: state.localPlayerIndex))
             }
             
             lastUpdateTime = currentTime
@@ -454,7 +471,7 @@ extension GameScene {
         playSound("shoot.wav")
         
         // Send shoot message
-        onGameMessage?(.playerShoot(projectile: projectile))
+        onGameMessage?(.playerShoot(playerIndex: state.localPlayerIndex, projectile: projectile))
     }
 }
 #endif

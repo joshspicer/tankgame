@@ -106,8 +106,12 @@ class MultiplayerManager: NSObject {
         return !session.connectedPeers.isEmpty
     }
     
-    var connectedPeerName: String? {
-        return session.connectedPeers.first?.displayName
+    var connectedPeers: [MCPeerID] {
+        return session.connectedPeers
+    }
+    
+    var connectedPeerCount: Int {
+        return session.connectedPeers.count
     }
 }
 
@@ -160,8 +164,13 @@ extension MultiplayerManager: MCSessionDelegate {
 
 extension MultiplayerManager: MCNearbyServiceAdvertiserDelegate {
     func advertiser(_ advertiser: MCNearbyServiceAdvertiser, didReceiveInvitationFromPeer peerID: MCPeerID, withContext context: Data?, invitationHandler: @escaping (Bool, MCSession?) -> Void) {
-        // Auto-accept invitations (simple approach for 2-player game)
-        invitationHandler(true, session)
+        // Auto-accept invitations to support multiplayer (up to 4 players)
+        // MCSession supports up to 8 peers, but we'll limit to 4 for gameplay
+        if session.connectedPeers.count < 3 { // Allow up to 3 other players (4 total including self)
+            invitationHandler(true, session)
+        } else {
+            invitationHandler(false, nil)
+        }
     }
     
     func advertiser(_ advertiser: MCNearbyServiceAdvertiser, didNotStartAdvertisingPeer error: Error) {
