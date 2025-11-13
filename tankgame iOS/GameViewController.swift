@@ -23,6 +23,7 @@ class GameViewController: UIViewController {
     var hostButton: UIButton!
     var joinButton: UIButton!
     var cancelButton: UIButton!
+    var debugButton: UIButton!
     var peerTableView: UITableView!
     var statusLabel: UILabel!
     var instructionsLabel: UILabel!
@@ -121,6 +122,15 @@ class GameViewController: UIViewController {
         cancelButton.addTarget(self, action: #selector(cancelTapped), for: .touchUpInside)
         lobbyView.addSubview(cancelButton)
         
+        // Debug button
+        debugButton = UIButton(type: .system)
+        debugButton.setTitle("🔧 Debug", for: .normal)
+        debugButton.titleLabel?.font = .systemFont(ofSize: 14, weight: .regular)
+        debugButton.setTitleColor(.systemGray, for: .normal)
+        debugButton.translatesAutoresizingMaskIntoConstraints = false
+        debugButton.addTarget(self, action: #selector(debugTapped), for: .touchUpInside)
+        lobbyView.addSubview(debugButton)
+        
         // Activity indicator
         activityIndicator = UIActivityIndicatorView(style: .large)
         activityIndicator.color = .systemBlue
@@ -187,7 +197,10 @@ class GameViewController: UIViewController {
             
             emptyStateLabel.topAnchor.constraint(equalTo: cancelButton.bottomAnchor, constant: 40),
             emptyStateLabel.leadingAnchor.constraint(equalTo: lobbyView.leadingAnchor, constant: 30),
-            emptyStateLabel.trailingAnchor.constraint(equalTo: lobbyView.trailingAnchor, constant: -30)
+            emptyStateLabel.trailingAnchor.constraint(equalTo: lobbyView.trailingAnchor, constant: -30),
+            
+            debugButton.bottomAnchor.constraint(equalTo: lobbyView.safeAreaLayoutGuide.bottomAnchor, constant: -20),
+            debugButton.centerXAnchor.constraint(equalTo: lobbyView.centerXAnchor)
         ])
     }
     
@@ -237,6 +250,16 @@ class GameViewController: UIViewController {
         
         // Reset UI
         resetLobbyUI()
+    }
+    
+    @objc func debugTapped() {
+        let debugVC = BluetoothDebugViewController(multiplayerManager: multiplayerManager)
+        debugVC.modalPresentationStyle = .pageSheet
+        if let sheet = debugVC.sheetPresentationController {
+            sheet.detents = [.medium(), .large()]
+            sheet.prefersGrabberVisible = true
+        }
+        present(debugVC, animated: true)
     }
     
     func resetLobbyUI() {
