@@ -9,38 +9,36 @@ import Foundation
 
 // Network message types
 enum GameMessage: Codable {
-    case roundStart(seed: UInt32, numberOfPlayers: Int, playerIndex: Int)
-    case playerMove(playerIndex: Int, row: Int, col: Int, direction: Direction)
-    case playerShoot(playerIndex: Int, projectile: Projectile)
+    case roundStart(seed: UInt32, isInitiator: Bool)
+    case playerMove(row: Int, col: Int, direction: Direction)
+    case playerShoot(projectile: Projectile)
     case playerHit(playerIndex: Int)
     case readyForNextRound
-    case playerIndexAssignment(playerIndex: Int) // Sent by host to assign player index to client
 }
 
 final class GameState {
     var grid: [[GridCell]]
-    var tanks: [Tank] // Array of all tanks (local player is at localPlayerIndex)
-    var projectiles: [(projectile: Projectile, ownerIndex: Int)] = []
-    var wins: [Int] // Wins for each player
-    var localPlayerIndex: Int // Index of the local player in the tanks array
+    var localTank: Tank
+    var remoteTank: Tank
+    var projectiles: [Projectile] = []
+    var localWins: Int = 0
+    var remoteWins: Int = 0
+    var isLocalPlayer1: Bool // true if we're player 1 (top-left spawn)
     
-    // Spawn positions for up to 4 players (corners)
-    static let spawnPositions: [(row: Int, col: Int, direction: Direction)] = [
-        (0, 0, .down),      // Player 0: top-left
-        (0, 7, .down),      // Player 1: top-right
-        (7, 7, .up),        // Player 2: bottom-right
-        (7, 0, .up)         // Player 3: bottom-left
-    ]
-    
-    init(seed: UInt32, numberOfPlayers: Int, localPlayerIndex: Int) {
+    init(seed: UInt32, isPlayer1: Bool) {
         self.grid = GridGenerator.generate(seed: seed)
-        self.localPlayerIndex = localPlayerIndex
-        self.wins = Array(repeating: 0, count: numberOfPlayers)
+        self.isLocalPlayer1 = isPlayer1
         
-        // Initialize tanks at spawn positions
-        self.tanks = (0..<numberOfPlayers).map { playerIndex in
-            let spawn = GameState.spawnPositions[playerIndex % GameState.spawnPositions.count]
-            return Tank(row: spawn.row, col: spawn.col, direction: spawn.direction)
+        if isPlayer1 {
+            // Player 1: top-left
+            self.localTank = Tank(row: 0, col: 0, direction: .down)
+            // Player 2: bottom-right
+            self.remoteTank = Tank(row: 7, col: 7, direction: .up)
+        } else {
+            // Player 2: bottom-right
+            self.localTank = Tank(row: 7, col: 7, direction: .up)
+            // Player 1: top-left
+            self.remoteTank = Tank(row: 0, col: 0, direction: .down)
         }
     }
     
@@ -48,17 +46,19 @@ final class GameState {
         self.grid = GridGenerator.generate(seed: seed)
         self.projectiles = []
         
-        // Reset all tanks to their spawn positions
-        for (index, _) in tanks.enumerated() {
-            let spawn = GameState.spawnPositions[index % GameState.spawnPositions.count]
-            tanks[index] = Tank(row: spawn.row, col: spawn.col, direction: spawn.direction)
+        if isLocalPlayer1 {
+            self.localTank = Tank(row: 0, col: 0, direction: .down)
+            self.remoteTank = Tank(row: 7, col: 7, direction: .up)
+        } else {
+            self.localTank = Tank(row: 7, col: 7, direction: .up)
+            self.remoteTank = Tank(row: 0, col: 0, direction: .down)
         }
     }
     
     func updateProjectiles() {
-        var activeProjectiles: [(projectile: Projectile, ownerIndex: Int)] = []
+        var activeProjectiles: [Projectile] = []
         
-        for (var projectile, ownerIndex) in projectiles {
+        for var projectile in projectiles {
             projectile.advance()
             
             // Check if out of bounds or hit wall
@@ -66,38 +66,29 @@ final class GameState {
                 continue // Remove this projectile
             }
             
-            // Check if hit any tank
-            var hitTank = false
-            for (index, _) in tanks.enumerated() {
-                if projectile.hits(tank: tanks[index]) {
-                    tanks[index].isAlive = false
-                    hitTank = true
-                    break
-                }
+            // Check if hit local tank
+            if projectile.hits(tank: localTank) {
+                localTank.isAlive = false
+                continue
             }
             
-            if hitTank {
-                continue // Remove this projectile
+            // Check if hit remote tank
+            if projectile.hits(tank: remoteTank) {
+                remoteTank.isAlive = false
+                continue
             }
             
-            activeProjectiles.append((projectile, ownerIndex))
+            activeProjectiles.append(projectile)
         }
         
         projectiles = activeProjectiles
     }
     
     func isRoundOver() -> Bool {
-        let aliveTanks = tanks.filter { $0.isAlive }
-        return aliveTanks.count <= 1
+        return !localTank.isAlive || !remoteTank.isAlive
     }
     
     func localPlayerWon() -> Bool {
-        let aliveTanks = tanks.enumerated().filter { $0.element.isAlive }
-        return aliveTanks.count == 1 && aliveTanks.first?.offset == localPlayerIndex
-    }
-    
-    var localTank: Tank {
-        get { tanks[localPlayerIndex] }
-        set { tanks[localPlayerIndex] = newValue }
+        return !remoteTank.isAlive && localTank.isAlive
     }
 }

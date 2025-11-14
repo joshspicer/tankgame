@@ -13,7 +13,7 @@ protocol MultiplayerManagerDelegate: AnyObject {
     func multiplayerManager(_ manager: MultiplayerManager, didLosePeer peerID: MCPeerID)
     func multiplayerManager(_ manager: MultiplayerManager, didConnectToPeer peerID: MCPeerID)
     func multiplayerManager(_ manager: MultiplayerManager, didDisconnectFromPeer peerID: MCPeerID)
-    func multiplayerManager(_ manager: MultiplayerManager, didReceiveMessage message: GameMessage, fromPeer peerID: MCPeerID)
+    func multiplayerManager(_ manager: MultiplayerManager, didReceiveMessage message: GameMessage)
     func multiplayerManager(_ manager: MultiplayerManager, didEncounterError error: Error)
 }
 
@@ -90,8 +90,8 @@ class MultiplayerManager: NSObject {
         }
     }
     
-    func sendPositionUpdate(playerIndex: Int, row: Int, col: Int, direction: Direction) {
-        sendMessage(.playerMove(playerIndex: playerIndex, row: row, col: col, direction: direction))
+    func sendPositionUpdate(row: Int, col: Int, direction: Direction) {
+        sendMessage(.playerMove(row: row, col: col, direction: direction))
     }
     
     // MARK: - Disconnection
@@ -108,14 +108,6 @@ class MultiplayerManager: NSObject {
     
     var connectedPeerName: String? {
         return session.connectedPeers.first?.displayName
-    }
-    
-    var connectedPeers: [MCPeerID] {
-        return session.connectedPeers
-    }
-    
-    var numberOfConnectedPeers: Int {
-        return session.connectedPeers.count
     }
 }
 
@@ -144,7 +136,7 @@ extension MultiplayerManager: MCSessionDelegate {
             let message = try JSONDecoder().decode(GameMessage.self, from: data)
             DispatchQueue.main.async { [weak self] in
                 guard let self = self else { return }
-                self.delegate?.multiplayerManager(self, didReceiveMessage: message, fromPeer: peerID)
+                self.delegate?.multiplayerManager(self, didReceiveMessage: message)
             }
         } catch {
             print("Error decoding message: \(error.localizedDescription)")

@@ -12,12 +12,10 @@ struct GridGenerator {
         var rng = SeededRandomNumberGenerator(seed: seed)
         var grid = Array(repeating: Array(repeating: GridCell.empty, count: 8), count: 8)
         
-        // Keep spawn corners clear (all 4 corners for up to 4 players)
+        // Keep spawn corners clear (top-left and bottom-right)
         let protectedCells: Set<String> = [
             "0,0", "0,1", "1,0", "1,1", // Top-left spawn area
-            "0,6", "0,7", "1,6", "1,7", // Top-right spawn area
-            "6,6", "6,7", "7,6", "7,7", // Bottom-right spawn area
-            "6,0", "6,1", "7,0", "7,1"  // Bottom-left spawn area
+            "6,6", "6,7", "7,6", "7,7"  // Bottom-right spawn area
         ]
         
         // Keep the border paths clear (row 0, row 7, col 0, col 7)
