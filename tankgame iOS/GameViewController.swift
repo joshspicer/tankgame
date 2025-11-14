@@ -14,6 +14,7 @@ import Network
 class GameViewController: UIViewController {
     
     var multiplayerManager: MultiplayerManager!
+    var internetMultiplayerManager: InternetMultiplayerManager?
     var gameScene: GameScene?
     var gameState: GameState?
     var skView: SKView?
@@ -22,6 +23,7 @@ class GameViewController: UIViewController {
     var lobbyView: UIView!
     var hostButton: UIButton!
     var joinButton: UIButton!
+    var internetButton: UIButton!
     var cancelButton: UIButton!
     var peerTableView: UITableView!
     var statusLabel: UILabel!
@@ -34,6 +36,7 @@ class GameViewController: UIViewController {
     var isWaitingForNextRound = false
     var readyForNextRound = false
     var remoteReadyForNextRound = false
+    var isInternetMultiplayer = false
     
     // Permission tracking
     var permissionCheckInProgress = false
@@ -111,6 +114,21 @@ class GameViewController: UIViewController {
         joinButton.addTarget(self, action: #selector(joinTapped), for: .touchUpInside)
         lobbyView.addSubview(joinButton)
         
+        // Internet lobby button
+        internetButton = UIButton(type: .system)
+        internetButton.setTitle("🌐 Connect to Internet Lobby", for: .normal)
+        internetButton.titleLabel?.font = .systemFont(ofSize: 20, weight: .semibold)
+        internetButton.backgroundColor = .systemPurple
+        internetButton.setTitleColor(.white, for: .normal)
+        internetButton.layer.cornerRadius = 16
+        internetButton.layer.shadowColor = UIColor.black.cgColor
+        internetButton.layer.shadowOpacity = 0.2
+        internetButton.layer.shadowOffset = CGSize(width: 0, height: 2)
+        internetButton.layer.shadowRadius = 4
+        internetButton.translatesAutoresizingMaskIntoConstraints = false
+        internetButton.addTarget(self, action: #selector(internetLobbyTapped), for: .touchUpInside)
+        lobbyView.addSubview(internetButton)
+        
         // Cancel button
         cancelButton = UIButton(type: .system)
         cancelButton.setTitle("Cancel", for: .normal)
@@ -174,7 +192,12 @@ class GameViewController: UIViewController {
             joinButton.widthAnchor.constraint(equalToConstant: 240),
             joinButton.heightAnchor.constraint(equalToConstant: 56),
             
-            cancelButton.topAnchor.constraint(equalTo: joinButton.bottomAnchor, constant: 20),
+            internetButton.topAnchor.constraint(equalTo: joinButton.bottomAnchor, constant: 20),
+            internetButton.centerXAnchor.constraint(equalTo: lobbyView.centerXAnchor),
+            internetButton.widthAnchor.constraint(equalToConstant: 280),
+            internetButton.heightAnchor.constraint(equalToConstant: 56),
+            
+            cancelButton.topAnchor.constraint(equalTo: internetButton.bottomAnchor, constant: 20),
             cancelButton.centerXAnchor.constraint(equalTo: lobbyView.centerXAnchor),
             
             activityIndicator.centerXAnchor.constraint(equalTo: lobbyView.centerXAnchor),
@@ -196,8 +219,10 @@ class GameViewController: UIViewController {
             guard let self = self else { return }
             
             if granted {
+                self.isInternetMultiplayer = false
                 self.hostButton.isHidden = true
                 self.joinButton.isHidden = true
+                self.internetButton.isHidden = true
                 self.instructionsLabel.isHidden = true
                 self.cancelButton.isHidden = false
                 self.activityIndicator.startAnimating()
@@ -214,8 +239,10 @@ class GameViewController: UIViewController {
             guard let self = self else { return }
             
             if granted {
+                self.isInternetMultiplayer = false
                 self.hostButton.isHidden = true
                 self.joinButton.isHidden = true
+                self.internetButton.isHidden = true
                 self.instructionsLabel.isHidden = true
                 self.cancelButton.isHidden = false
                 self.activityIndicator.startAnimating()
@@ -229,19 +256,73 @@ class GameViewController: UIViewController {
         }
     }
     
+    @objc func internetLobbyTapped() {
+        // Show passphrase input dialog
+        let alert = UIAlertController(
+            title: "Join Internet Lobby",
+            message: "Enter a passphrase to join or create a lobby.\nFormat: verb-noun (e.g., jump-rocket)",
+            preferredStyle: .alert
+        )
+        
+        alert.addTextField { textField in
+            textField.placeholder = "jump-rocket"
+            textField.autocapitalizationType = .none
+            textField.autocorrectionType = .no
+        }
+        
+        alert.addAction(UIAlertAction(title: "Cancel", style: .cancel))
+        alert.addAction(UIAlertAction(title: "Connect", style: .default) { [weak self] _ in
+            guard let self = self,
+                  let passphrase = alert.textFields?.first?.text?.trimmingCharacters(in: .whitespaces).lowercased(),
+                  !passphrase.isEmpty else {
+                return
+            }
+            
+            self.connectToInternetLobby(passphrase: passphrase)
+        })
+        
+        present(alert, animated: true)
+    }
+    
+    func connectToInternetLobby(passphrase: String) {
+        isInternetMultiplayer = true
+        hostButton.isHidden = true
+        joinButton.isHidden = true
+        internetButton.isHidden = true
+        instructionsLabel.isHidden = true
+        cancelButton.isHidden = false
+        activityIndicator.startAnimating()
+        statusLabel.text = "Connecting to internet lobby '\(passphrase)'...\nWaiting for opponent"
+        
+        // Create internet multiplayer manager
+        internetMultiplayerManager = InternetMultiplayerManager()
+        internetMultiplayerManager?.delegate = self
+        
+        // Connect to server (you can change this URL to your server)
+        let serverURL = "ws://localhost:8765"
+        internetMultiplayerManager?.connect(to: serverURL, passphrase: passphrase)
+    }
+    
     @objc func cancelTapped() {
         // Stop any active connections
-        multiplayerManager.stopHosting()
-        multiplayerManager.stopBrowsing()
-        discoveredPeers.removeAll()
+        if isInternetMultiplayer {
+            internetMultiplayerManager?.disconnect()
+            internetMultiplayerManager = nil
+        } else {
+            multiplayerManager.stopHosting()
+            multiplayerManager.stopBrowsing()
+            discoveredPeers.removeAll()
+        }
         
         // Reset UI
         resetLobbyUI()
     }
     
     func resetLobbyUI() {
+        isInternetMultiplayer = false
         hostButton.isHidden = false
         joinButton.isHidden = false
+        internetButton.isHidden = false
         instructionsLabel.isHidden = false
         cancelButton.isHidden = true
         peerTableView.isHidden = true
@@ -330,7 +411,11 @@ class GameViewController: UIViewController {
         gameState = GameState(seed: seed, isPlayer1: isPlayer1)
         
         // Send round start message
-        multiplayerManager.sendMessage(.roundStart(seed: seed, isInitiator: isPlayer1))
+        if isInternetMultiplayer {
+            internetMultiplayerManager?.sendMessage(.roundStart(seed: seed, isInitiator: isPlayer1))
+        } else {
+            multiplayerManager.sendMessage(.roundStart(seed: seed, isInitiator: isPlayer1))
+        }
         
         // Setup game scene
         let scene = GameScene.newGameScene()
@@ -351,10 +436,18 @@ class GameViewController: UIViewController {
     func handleGameMessage(_ message: GameMessage) {
         switch message {
         case .playerMove(let row, let col, let direction):
-            multiplayerManager.sendPositionUpdate(row: row, col: col, direction: direction)
+            if isInternetMultiplayer {
+                internetMultiplayerManager?.sendMessage(message)
+            } else {
+                multiplayerManager.sendPositionUpdate(row: row, col: col, direction: direction)
+            }
             
         case .playerShoot(let projectile):
-            multiplayerManager.sendMessage(.playerShoot(projectile: projectile))
+            if isInternetMultiplayer {
+                internetMultiplayerManager?.sendMessage(message)
+            } else {
+                multiplayerManager.sendMessage(.playerShoot(projectile: projectile))
+            }
             
         case .readyForNextRound:
             readyForNextRound = true
@@ -376,7 +469,11 @@ class GameViewController: UIViewController {
             }
         } else if readyForNextRound {
             // Send ready message
-            multiplayerManager.sendMessage(.readyForNextRound)
+            if isInternetMultiplayer {
+                internetMultiplayerManager?.sendMessage(.readyForNextRound)
+            } else {
+                multiplayerManager.sendMessage(.readyForNextRound)
+            }
         }
     }
     
@@ -391,7 +488,11 @@ class GameViewController: UIViewController {
         gameScene?.startGame(with: gameState!)
         
         // Send new round message
-        multiplayerManager.sendMessage(.roundStart(seed: seed, isInitiator: true))
+        if isInternetMultiplayer {
+            internetMultiplayerManager?.sendMessage(.roundStart(seed: seed, isInitiator: true))
+        } else {
+            multiplayerManager.sendMessage(.roundStart(seed: seed, isInitiator: true))
+        }
     }
 
     override var supportedInterfaceOrientations: UIInterfaceOrientationMask {
@@ -568,6 +669,119 @@ extension GameViewController: UITableViewDelegate, UITableViewDataSource {
         statusLabel.text = "Connecting to \(peer.displayName)..."
         activityIndicator.startAnimating()
         tableView.deselectRow(at: indexPath, animated: true)
+    }
+}
+
+// MARK: - InternetMultiplayerManagerDelegate
+
+extension GameViewController: InternetMultiplayerManagerDelegate {
+    func internetMultiplayerManager(_ manager: InternetMultiplayerManager, didConnect: Bool) {
+        activityIndicator.stopAnimating()
+        statusLabel.text = "Connected! Starting game..."
+        
+        // Determine who is player 1 (random, but both will agree based on server order)
+        // For simplicity, just use a random assignment
+        let isPlayer1 = Bool.random()
+        
+        DispatchQueue.main.asyncAfter(deadline: .now() + 1) { [weak self] in
+            self?.startGame(isPlayer1: isPlayer1)
+        }
+    }
+    
+    func internetMultiplayerManager(_ manager: InternetMultiplayerManager, didReceiveMessage message: GameMessage) {
+        // Same message handling as local multiplayer
+        switch message {
+        case .roundStart(let seed, let isInitiator):
+            // Remote player initiated round start
+            if gameState == nil {
+                // Initial game start - we need to invert the isPlayer1 flag
+                let isPlayer1 = !isInitiator
+                gameState = GameState(seed: seed, isPlayer1: isPlayer1)
+                
+                DispatchQueue.main.async { [weak self] in
+                    guard let self = self, let state = self.gameState else { return }
+                    
+                    // Hide lobby
+                    self.lobbyView.isHidden = true
+                    
+                    // Create SKView if needed
+                    if self.skView == nil {
+                        let newSKView = SKView(frame: self.view.bounds)
+                        newSKView.autoresizingMask = [.flexibleWidth, .flexibleHeight]
+                        self.view.insertSubview(newSKView, at: 0)
+                        self.skView = newSKView
+                    }
+                    
+                    let scene = GameScene.newGameScene()
+                    scene.startGame(with: state)
+                    scene.onGameMessage = { [weak self] msg in
+                        self?.handleGameMessage(msg)
+                    }
+                    self.gameScene = scene
+                    
+                    self.skView?.presentScene(scene)
+                    self.skView?.ignoresSiblingOrder = true
+                    self.skView?.showsFPS = true
+                    self.skView?.showsNodeCount = true
+                }
+            } else {
+                // Round restart
+                gameState?.reset(seed: seed)
+                gameScene?.startGame(with: gameState!)
+            }
+            
+        case .playerMove(let row, let col, let direction):
+            gameState?.remoteTank.row = row
+            gameState?.remoteTank.col = col
+            gameState?.remoteTank.direction = direction
+            gameScene?.renderTanks()
+            
+        case .playerShoot(let projectile):
+            gameState?.projectiles.append(projectile)
+            gameScene?.renderProjectiles()
+            
+        case .readyForNextRound:
+            remoteReadyForNextRound = true
+            checkAndStartNextRound()
+            
+        case .playerHit:
+            break // Not used in current implementation
+        }
+    }
+    
+    func internetMultiplayerManager(_ manager: InternetMultiplayerManager, didDisconnect: Bool) {
+        // Return to lobby
+        DispatchQueue.main.async { [weak self] in
+            guard let self = self else { return }
+            self.view.subviews.forEach { $0.removeFromSuperview() }
+            self.viewDidLoad()
+            let alert = UIAlertController(
+                title: "Disconnected",
+                message: "Lost connection to opponent",
+                preferredStyle: .alert
+            )
+            alert.addAction(UIAlertAction(title: "OK", style: .default) { [weak self] _ in
+                self?.resetLobbyUI()
+            })
+            self.present(alert, animated: true)
+        }
+    }
+    
+    func internetMultiplayerManager(_ manager: InternetMultiplayerManager, didEncounterError error: Error) {
+        // Show error alert
+        activityIndicator.stopAnimating()
+        
+        let alert = UIAlertController(
+            title: "Connection Error",
+            message: "Unable to connect to internet lobby.\n\n\(error.localizedDescription)",
+            preferredStyle: .alert
+        )
+        
+        alert.addAction(UIAlertAction(title: "OK", style: .default) { [weak self] _ in
+            self?.resetLobbyUI()
+        })
+        
+        present(alert, animated: true)
     }
 }
 

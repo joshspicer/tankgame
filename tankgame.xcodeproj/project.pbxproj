@@ -24,6 +24,7 @@
 				GameState.swift,
 				GridCell.swift,
 				GridGenerator.swift,
+				InternetMultiplayerManager.swift,
 				MultiplayerManager.swift,
 				Projectile.swift,
 				Sounds,
