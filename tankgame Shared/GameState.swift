@@ -7,7 +7,7 @@
 
 import Foundation
 
-// Network message types
+/// Messages exchanged between players during multiplayer gameplay
 enum GameMessage: Codable {
     case roundStart(seed: UInt32, isInitiator: Bool)
     case playerMove(row: Int, col: Int, direction: Direction)
@@ -16,6 +16,7 @@ enum GameMessage: Codable {
     case readyForNextRound
 }
 
+/// Manages the state of a tank game round including grid, tanks, and projectiles
 final class GameState {
     var grid: [[GridCell]]
     var localTank: Tank
@@ -25,6 +26,10 @@ final class GameState {
     var remoteWins: Int = 0
     var isLocalPlayer1: Bool // true if we're player 1 (top-left spawn)
     
+    /// Initializes a new game state with the given parameters
+    /// - Parameters:
+    ///   - seed: Random seed for deterministic grid generation
+    ///   - isPlayer1: Whether this player spawns at top-left (true) or bottom-right (false)
     init(seed: UInt32, isPlayer1: Bool) {
         self.grid = GridGenerator.generate(seed: seed)
         self.isLocalPlayer1 = isPlayer1
@@ -42,6 +47,8 @@ final class GameState {
         }
     }
     
+    /// Resets the game state for a new round with a new grid
+    /// - Parameter seed: Random seed for deterministic grid generation
     func reset(seed: UInt32) {
         self.grid = GridGenerator.generate(seed: seed)
         self.projectiles = []
@@ -55,6 +62,7 @@ final class GameState {
         }
     }
     
+    /// Updates all projectiles, checking for collisions with walls and tanks
     func updateProjectiles() {
         var activeProjectiles: [Projectile] = []
         
@@ -84,10 +92,14 @@ final class GameState {
         projectiles = activeProjectiles
     }
     
+    /// Checks if the current round has ended (at least one tank destroyed)
+    /// - Returns: true if round is over, false otherwise
     func isRoundOver() -> Bool {
         return !localTank.isAlive || !remoteTank.isAlive
     }
     
+    /// Determines if the local player won the round
+    /// - Returns: true if local player won (remote tank destroyed, local tank alive)
     func localPlayerWon() -> Bool {
         return !remoteTank.isAlive && localTank.isAlive
     }

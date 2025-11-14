@@ -8,6 +8,7 @@
 import Foundation
 import MultipeerConnectivity
 
+/// Delegate protocol for receiving multiplayer events
 protocol MultiplayerManagerDelegate: AnyObject {
     func multiplayerManager(_ manager: MultiplayerManager, didFindPeer peerID: MCPeerID)
     func multiplayerManager(_ manager: MultiplayerManager, didLosePeer peerID: MCPeerID)
@@ -17,6 +18,7 @@ protocol MultiplayerManagerDelegate: AnyObject {
     func multiplayerManager(_ manager: MultiplayerManager, didEncounterError error: Error)
 }
 
+/// Manages peer-to-peer multiplayer connectivity using MultipeerConnectivity framework
 class MultiplayerManager: NSObject {
     static let serviceType = "tankgame"
     
@@ -34,7 +36,9 @@ class MultiplayerManager: NSObject {
            let decoded = try? NSKeyedUnarchiver.unarchivedObject(ofClass: MCPeerID.self, from: data) {
             peerID = decoded
         } else {
-            peerID = MCPeerID(displayName: UIDevice.current.name)
+            // Use a process-generated name instead of device name for privacy
+            let uniqueID = UUID().uuidString.prefix(8)
+            peerID = MCPeerID(displayName: "Player-\(uniqueID)")
             if let data = try? NSKeyedArchiver.archivedData(withRootObject: peerID, requiringSecureCoding: true) {
                 UserDefaults.standard.set(data, forKey: "tankgame.peerID")
             }
@@ -74,19 +78,23 @@ class MultiplayerManager: NSObject {
     }
     
     func invitePeer(_ peerID: MCPeerID) {
-        browser?.invitePeer(peerID, to: session, withContext: nil, timeout: 30)
+        browser?.invitePeer(peerID, to: session, withContext: nil, timeout: GameConstants.peerInvitationTimeout)
     }
     
     // MARK: - Messaging
     
     func sendMessage(_ message: GameMessage) {
-        guard !session.connectedPeers.isEmpty else { return }
+        guard !session.connectedPeers.isEmpty else {
+            print("Warning: Attempting to send message with no connected peers")
+            return
+        }
         
         do {
             let data = try JSONEncoder().encode(message)
             try session.send(data, toPeers: session.connectedPeers, with: .reliable)
         } catch {
             print("Error sending message: \(error.localizedDescription)")
+            delegate?.multiplayerManager(self, didEncounterError: error)
         }
     }
     
@@ -140,6 +148,10 @@ extension MultiplayerManager: MCSessionDelegate {
             }
         } catch {
             print("Error decoding message: \(error.localizedDescription)")
+            DispatchQueue.main.async { [weak self] in
+                guard let self = self else { return }
+                self.delegate?.multiplayerManager(self, didEncounterError: error)
+            }
         }
     }
     

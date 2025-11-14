@@ -7,12 +7,14 @@
 
 import Foundation
 
+/// Cardinal directions for tank movement and projectile travel
 enum Direction: Int, Codable, CaseIterable {
     case up = 0
     case right = 1
     case down = 2
     case left = 3
     
+    /// Rotation angle in radians for visual representation
     var angle: Double {
         switch self {
         case .up: return 0
@@ -22,6 +24,7 @@ enum Direction: Int, Codable, CaseIterable {
         }
     }
     
+    /// Grid offset for movement in this direction (row, col)
     var offset: (row: Int, col: Int) {
         switch self {
         case .up: return (-1, 0)

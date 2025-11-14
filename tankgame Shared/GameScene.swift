@@ -13,10 +13,6 @@ class GameScene: SKScene {
     var gameState: GameState?
     var onGameMessage: ((GameMessage) -> Void)?
     
-    // Constants
-    let tileSize: CGFloat = 64
-    let gridSize = 8
-    
     // Nodes
     var gridNode: SKNode?
     var localTankNode: SKNode?
@@ -65,8 +61,8 @@ class GameScene: SKScene {
         // Create grid container (centered)
         let newGridNode = SKNode()
         let gridOffset = CGPoint(
-            x: (size.width - CGFloat(gridSize) * tileSize) / 2,
-            y: (size.height - CGFloat(gridSize) * tileSize) / 2 + 50
+            x: (size.width - CGFloat(GameConstants.gridSize) * GameConstants.tileSize) / 2,
+            y: (size.height - CGFloat(GameConstants.gridSize) * GameConstants.tileSize) / 2 + GameConstants.gridVerticalOffset
         )
         newGridNode.position = gridOffset
         addChild(newGridNode)
@@ -109,8 +105,8 @@ class GameScene: SKScene {
         scoreLabel = newScoreLabel
         
         // Create fire button (bottom right)
-        let newFireButton = SKShapeNode(circleOfRadius: 40)
-        newFireButton.position = CGPoint(x: size.width - 80, y: 100)
+        let newFireButton = SKShapeNode(circleOfRadius: GameConstants.fireButtonRadius)
+        newFireButton.position = CGPoint(x: size.width - GameConstants.fireButtonOffsetX, y: GameConstants.fireButtonPositionY)
         newFireButton.fillColor = .red
         newFireButton.strokeColor = .white
         newFireButton.lineWidth = 3
@@ -129,11 +125,11 @@ class GameScene: SKScene {
     
     func setupJoystick() {
         let newJoystickNode = SKNode()
-        newJoystickNode.position = CGPoint(x: 80, y: 100)
+        newJoystickNode.position = CGPoint(x: GameConstants.joystickPositionX, y: GameConstants.joystickPositionY)
         addChild(newJoystickNode)
         joystickNode = newJoystickNode
         
-        let newJoystickBase = SKShapeNode(circleOfRadius: 50)
+        let newJoystickBase = SKShapeNode(circleOfRadius: GameConstants.joystickBaseRadius)
         newJoystickBase.fillColor = .gray
         newJoystickBase.strokeColor = .white
         newJoystickBase.lineWidth = 2
@@ -141,7 +137,7 @@ class GameScene: SKScene {
         newJoystickNode.addChild(newJoystickBase)
         joystickBase = newJoystickBase
         
-        let newJoystickHandle = SKShapeNode(circleOfRadius: 25)
+        let newJoystickHandle = SKShapeNode(circleOfRadius: GameConstants.joystickHandleRadius)
         newJoystickHandle.fillColor = .white
         newJoystickHandle.strokeColor = .white
         newJoystickHandle.alpha = 0.8
@@ -164,13 +160,13 @@ class GameScene: SKScene {
         
         grid.removeAllChildren()
         
-        for row in 0..<gridSize {
-            for col in 0..<gridSize {
+        for row in 0..<GameConstants.gridSize {
+            for col in 0..<GameConstants.gridSize {
                 let cell = state.grid[row][col]
-                let tile = SKSpriteNode(color: cell == .wall ? .black : .white, size: CGSize(width: tileSize - 2, height: tileSize - 2))
+                let tile = SKSpriteNode(color: cell == .wall ? .black : .white, size: CGSize(width: GameConstants.tileSize - 2, height: GameConstants.tileSize - 2))
                 tile.position = CGPoint(
-                    x: CGFloat(col) * tileSize + tileSize / 2,
-                    y: CGFloat(gridSize - 1 - row) * tileSize + tileSize / 2
+                    x: CGFloat(col) * GameConstants.tileSize + GameConstants.tileSize / 2,
+                    y: CGFloat(GameConstants.gridSize - 1 - row) * GameConstants.tileSize + GameConstants.tileSize / 2
                 )
                 grid.addChild(tile)
             }
@@ -201,12 +197,12 @@ class GameScene: SKScene {
         let tankNode = SKNode()
         
         // Tank body (square)
-        let body = SKSpriteNode(color: color, size: CGSize(width: tileSize * 0.7, height: tileSize * 0.7))
+        let body = SKSpriteNode(color: color, size: CGSize(width: GameConstants.tileSize * GameConstants.tankBodyScale, height: GameConstants.tileSize * GameConstants.tankBodyScale))
         tankNode.addChild(body)
         
         // Tank barrel (rectangle)
-        let barrel = SKSpriteNode(color: color.withAlphaComponent(0.8), size: CGSize(width: tileSize * 0.2, height: tileSize * 0.5))
-        barrel.position = CGPoint(x: 0, y: tileSize * 0.35)
+        let barrel = SKSpriteNode(color: color.withAlphaComponent(0.8), size: CGSize(width: GameConstants.tileSize * GameConstants.tankBarrelWidth, height: GameConstants.tileSize * GameConstants.tankBarrelHeight))
+        barrel.position = CGPoint(x: 0, y: GameConstants.tileSize * GameConstants.tankBarrelOffset)
         tankNode.addChild(barrel)
         
         // Add rainbow animation to body and barrel
@@ -220,8 +216,8 @@ class GameScene: SKScene {
     }
     
     func addRainbowAnimation(to sprite: SKSpriteNode, phaseOffset: CGFloat = 0) {
-        let animationDuration: TimeInterval = 3.0
-        let numberOfColors = 12
+        let animationDuration = GameConstants.rainbowAnimationDuration
+        let numberOfColors = GameConstants.rainbowColorSteps
         
         var colorActions: [SKAction] = []
         
@@ -241,8 +237,8 @@ class GameScene: SKScene {
     
     func gridPosition(row: Int, col: Int) -> CGPoint {
         return CGPoint(
-            x: CGFloat(col) * tileSize + tileSize / 2,
-            y: CGFloat(gridSize - 1 - row) * tileSize + tileSize / 2
+            x: CGFloat(col) * GameConstants.tileSize + GameConstants.tileSize / 2,
+            y: CGFloat(GameConstants.gridSize - 1 - row) * GameConstants.tileSize + GameConstants.tileSize / 2
         )
     }
     
@@ -255,7 +251,7 @@ class GameScene: SKScene {
         }
         
         // Create explosion particles
-        let particleCount = 12
+        let particleCount = GameConstants.explosionParticleCount
         for i in 0..<particleCount {
             let particle = SKShapeNode(circleOfRadius: 8)
             particle.fillColor = color
@@ -266,15 +262,15 @@ class GameScene: SKScene {
             
             // Calculate random direction
             let angle = (CGFloat(i) / CGFloat(particleCount)) * 2 * .pi
-            let velocity: CGFloat = 150
+            let velocity = GameConstants.explosionParticleVelocity
             let dx = cos(angle) * velocity
             let dy = sin(angle) * velocity
             
             // Create movement animation
-            let moveAction = SKAction.moveBy(x: dx, y: dy, duration: 0.6)
-            let fadeOut = SKAction.fadeOut(withDuration: 0.6)
-            let scaleUp = SKAction.scale(to: 2.0, duration: 0.3)
-            let scaleDown = SKAction.scale(to: 0.1, duration: 0.3)
+            let moveAction = SKAction.moveBy(x: dx, y: dy, duration: GameConstants.explosionDuration)
+            let fadeOut = SKAction.fadeOut(withDuration: GameConstants.explosionDuration)
+            let scaleUp = SKAction.scale(to: 2.0, duration: GameConstants.explosionDuration / 2)
+            let scaleDown = SKAction.scale(to: 0.1, duration: GameConstants.explosionDuration / 2)
             let scaleSequence = SKAction.sequence([scaleUp, scaleDown])
             
             let group = SKAction.group([moveAction, fadeOut, scaleSequence])
@@ -286,7 +282,7 @@ class GameScene: SKScene {
         }
         
         // Create central flash effect
-        let flash = SKShapeNode(circleOfRadius: tileSize * 0.5)
+        let flash = SKShapeNode(circleOfRadius: GameConstants.tileSize * GameConstants.explosionFlashScale)
         flash.fillColor = .white
         flash.strokeColor = .yellow
         flash.lineWidth = 4
@@ -294,8 +290,8 @@ class GameScene: SKScene {
         flash.zPosition = 11
         flash.alpha = 0.9
         
-        let flashScale = SKAction.scale(to: 2.5, duration: 0.4)
-        let flashFade = SKAction.fadeOut(withDuration: 0.4)
+        let flashScale = SKAction.scale(to: GameConstants.explosionFlashMaxScale, duration: GameConstants.explosionFlashDuration)
+        let flashFade = SKAction.fadeOut(withDuration: GameConstants.explosionFlashDuration)
         let flashGroup = SKAction.group([flashScale, flashFade])
         let flashRemove = SKAction.removeFromParent()
         let flashSequence = SKAction.sequence([flashGroup, flashRemove])
@@ -318,7 +314,7 @@ class GameScene: SKScene {
         
         for projectile in state.projectiles {
             // Make projectile larger and more visible
-            let bullet = SKSpriteNode(color: .yellow, size: CGSize(width: tileSize * 0.5, height: tileSize * 0.5))
+            let bullet = SKSpriteNode(color: .yellow, size: CGSize(width: GameConstants.tileSize * GameConstants.projectileScale, height: GameConstants.tileSize * GameConstants.projectileScale))
             bullet.zPosition = 5
             bullet.position = gridPosition(row: projectile.row, col: projectile.col)
             
@@ -351,7 +347,7 @@ class GameScene: SKScene {
         let message = localWon ? "You Win!" : "You Lose!"
         statusLabel?.text = message
         
-        DispatchQueue.main.asyncAfter(deadline: .now() + 3) { [weak self] in
+        DispatchQueue.main.asyncAfter(deadline: .now() + GameConstants.nextRoundDelay) { [weak self] in
             self?.statusLabel?.text = "Next round starting..."
         }
     }
@@ -361,7 +357,7 @@ class GameScene: SKScene {
         
         // Handle continuous movement from joystick
         if let direction = currentDirection, !state.isRoundOver() {
-            if currentTime - lastMoveTime > 0.12 { // Move ~8 times per second
+            if currentTime - lastMoveTime > GameConstants.movementInterval {
                 if state.localTank.move(in: direction, grid: state.grid) {
                     renderTanks()
                     playSound("move.wav")
@@ -379,7 +375,7 @@ class GameScene: SKScene {
         }
         
         // Update projectiles
-        if currentTime - lastUpdateTime > 0.05 { // ~20 FPS for projectile updates
+        if currentTime - lastUpdateTime > GameConstants.projectileUpdateInterval {
             let wasLocalAlive = state.localTank.isAlive
             let wasRemoteAlive = state.remoteTank.isAlive
             let localTankPosition = gridPosition(row: state.localTank.row, col: state.localTank.col)
@@ -409,7 +405,7 @@ class GameScene: SKScene {
                 let localWon = state.localPlayerWon()
                 
                 // Wait for explosion to complete before showing round end
-                DispatchQueue.main.asyncAfter(deadline: .now() + 1.0) { [weak self] in
+                DispatchQueue.main.asyncAfter(deadline: .now() + GameConstants.roundEndDelay) { [weak self] in
                     guard let self = self else { return }
                     
                     // Update score and play win/lose sound
@@ -427,7 +423,7 @@ class GameScene: SKScene {
                     self.updateScore()
                     
                     // Notify that round ended after a longer delay
-                    DispatchQueue.main.asyncAfter(deadline: .now() + 2.0) { [weak self] in
+                    DispatchQueue.main.asyncAfter(deadline: .now() + GameConstants.nextRoundDelay) { [weak self] in
                         self?.onGameMessage?(.readyForNextRound)
                     }
                 }
@@ -454,7 +450,7 @@ extension GameScene {
                 let dy = location.y - button.position.y
                 let distance = sqrt(dx * dx + dy * dy)
                 
-                if distance < 50 {
+                if distance < GameConstants.fireButtonHitRadius {
                     handleShoot()
                     continue
                 }
@@ -467,8 +463,8 @@ extension GameScene {
                 let dy = location.y - joystickCenter.y
                 let distance = sqrt(dx * dx + dy * dy)
                 
-                // Joystick area is 150 points radius
-                if distance < 150 {
+                // Joystick area with expanded hit radius
+                if distance < GameConstants.joystickHitRadius {
                     joystickActive = true
                     joystickTouchID = touch
                     // Process initial direction
@@ -495,7 +491,7 @@ extension GameScene {
         let dy = location.y
         let distance = sqrt(dx * dx + dy * dy)
         
-        if distance > 20 {
+        if distance > GameConstants.joystickDeadZone {
             let angle = atan2(dy, dx)
             
             // Snap to cardinal directions
@@ -513,7 +509,7 @@ extension GameScene {
             currentDirection = direction
             
             // Update joystick handle position
-            let maxDistance: CGFloat = 30
+            let maxDistance = GameConstants.joystickMaxDistance
             let clampedDistance = min(distance, maxDistance)
             handle.position = CGPoint(
                 x: cos(angle) * clampedDistance,

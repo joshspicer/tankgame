@@ -283,7 +283,7 @@ class GameViewController: UIViewController {
         tempBrowser.startBrowsingForPeers()
         
         // Give iOS time to show the permission dialog and for user to respond
-        DispatchQueue.main.asyncAfter(deadline: .now() + 0.5) { [weak self] in
+        DispatchQueue.main.asyncAfter(deadline: .now() + GameConstants.permissionCheckDelay) { [weak self] in
             tempBrowser.stopBrowsingForPeers()
             self?.permissionCheckInProgress = false
             
@@ -371,7 +371,7 @@ class GameViewController: UIViewController {
             readyForNextRound = false
             remoteReadyForNextRound = false
             
-            DispatchQueue.main.asyncAfter(deadline: .now() + 0.5) { [weak self] in
+            DispatchQueue.main.asyncAfter(deadline: .now() + GameConstants.nextRoundStartDelay) { [weak self] in
                 self?.startNextRound()
             }
         } else if readyForNextRound {
@@ -439,7 +439,7 @@ extension GameViewController: MultiplayerManagerDelegate {
         let remoteName = peerID.displayName
         let isPlayer1 = myName < remoteName
         
-        DispatchQueue.main.asyncAfter(deadline: .now() + 1) { [weak self] in
+        DispatchQueue.main.asyncAfter(deadline: .now() + GameConstants.gameStartDelay) { [weak self] in
             self?.startGame(isPlayer1: isPlayer1)
         }
     }

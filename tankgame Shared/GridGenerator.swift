@@ -7,7 +7,11 @@
 
 import Foundation
 
+/// Generates random game grids with deterministic seeding for multiplayer synchronization
 struct GridGenerator {
+    /// Generates an 8x8 grid with random wall placement
+    /// - Parameter seed: Random seed for deterministic generation
+    /// - Returns: 2D array representing the game grid
     static func generate(seed: UInt32) -> [[GridCell]] {
         var rng = SeededRandomNumberGenerator(seed: seed)
         var grid = Array(repeating: Array(repeating: GridCell.empty, count: 8), count: 8)
@@ -32,8 +36,8 @@ struct GridGenerator {
             return cells
         }()
         
-        // Generate random wall density between 15% and 30%
-        let wallDensity = 0.15 + (rng.nextDouble() * 0.15)
+        // Generate random wall density between min and max
+        let wallDensity = GameConstants.minWallDensity + (rng.nextDouble() * (GameConstants.maxWallDensity - GameConstants.minWallDensity))
         
         // Add random walls with variable density only to interior cells
         for row in 0..<8 {
@@ -49,7 +53,7 @@ struct GridGenerator {
     }
 }
 
-// Seeded random number generator for consistent grid generation
+/// Deterministic random number generator using Linear Congruential Generator algorithm
 struct SeededRandomNumberGenerator: RandomNumberGenerator {
     private var state: UInt32
     
