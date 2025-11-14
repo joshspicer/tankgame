@@ -92,7 +92,7 @@ class GameScene: SKScene {
         let newStatusLabel = SKLabelNode(fontNamed: "Arial-BoldMT")
         newStatusLabel.fontSize = 20
         newStatusLabel.position = CGPoint(x: size.width / 2, y: size.height - 50)
-        newStatusLabel.text = "Waiting for game..."
+        newStatusLabel.text = NSLocalizedString("Waiting for game...", comment: "Waiting for game status")
         addChild(newStatusLabel)
         statusLabel = newStatusLabel
         
@@ -100,7 +100,7 @@ class GameScene: SKScene {
         let newScoreLabel = SKLabelNode(fontNamed: "Arial")
         newScoreLabel.fontSize = 16
         newScoreLabel.position = CGPoint(x: size.width / 2, y: 30)
-        newScoreLabel.text = "Score: 0 - 0"
+        newScoreLabel.text = String(format: NSLocalizedString("Score: %lld - %lld", comment: "Score display"), 0, 0)
         addChild(newScoreLabel)
         scoreLabel = newScoreLabel
         
@@ -116,7 +116,7 @@ class GameScene: SKScene {
         
         // Add fire label
         let fireLabel = SKLabelNode(fontNamed: "Arial-BoldMT")
-        fireLabel.text = "FIRE"
+        fireLabel.text = NSLocalizedString("FIRE", comment: "Fire button label")
         fireLabel.fontSize = 14
         fireLabel.fontColor = .white
         fireLabel.verticalAlignmentMode = .center
@@ -150,7 +150,7 @@ class GameScene: SKScene {
         renderGrid()
         renderTanks()
         updateScore()
-        statusLabel?.text = "Fight!"
+        statusLabel?.text = NSLocalizedString("Fight!", comment: "Fight status")
     }
     
     func renderGrid() {
@@ -273,15 +273,15 @@ class GameScene: SKScene {
     
     func updateScore() {
         guard let state = gameState else { return }
-        scoreLabel?.text = "Score: \(state.localWins) - \(state.remoteWins)"
+        scoreLabel?.text = String(format: NSLocalizedString("Score: %lld - %lld", comment: "Score display"), state.localWins, state.remoteWins)
     }
     
     func showRoundEnd(localWon: Bool) {
-        let message = localWon ? "You Win!" : "You Lose!"
+        let message = localWon ? NSLocalizedString("You Win!", comment: "Win message") : NSLocalizedString("You Lose!", comment: "Lose message")
         statusLabel?.text = message
         
         DispatchQueue.main.asyncAfter(deadline: .now() + 3) { [weak self] in
-            self?.statusLabel?.text = "Next round starting..."
+            self?.statusLabel?.text = NSLocalizedString("Next round starting...", comment: "Next round message")
         }
     }
     

@@ -55,7 +55,7 @@ class GameViewController: UIViewController {
         
         // Title label
         let titleLabel = UILabel()
-        titleLabel.text = "🎮 Tank Game"
+        titleLabel.text = NSLocalizedString("🎮 Tank Game", comment: "App title")
         titleLabel.font = .systemFont(ofSize: 36, weight: .bold)
         titleLabel.textAlignment = .center
         titleLabel.translatesAutoresizingMaskIntoConstraints = false
@@ -63,7 +63,7 @@ class GameViewController: UIViewController {
         
         // Status label
         statusLabel = UILabel()
-        statusLabel.text = "Choose an option to start"
+        statusLabel.text = NSLocalizedString("Choose an option to start", comment: "Initial status message")
         statusLabel.font = .systemFont(ofSize: 18, weight: .medium)
         statusLabel.textAlignment = .center
         statusLabel.numberOfLines = 0
@@ -73,7 +73,7 @@ class GameViewController: UIViewController {
         
         // Instructions label
         instructionsLabel = UILabel()
-        instructionsLabel.text = "Battle with a friend on the same network!\nMove with the joystick, tap FIRE to shoot."
+        instructionsLabel.text = NSLocalizedString("Battle with a friend on the same network!\nMove with the joystick, tap FIRE to shoot.", comment: "Game instructions")
         instructionsLabel.font = .systemFont(ofSize: 14)
         instructionsLabel.textAlignment = .center
         instructionsLabel.numberOfLines = 0
@@ -83,7 +83,7 @@ class GameViewController: UIViewController {
         
         // Host button
         hostButton = UIButton(type: .system)
-        hostButton.setTitle("🎯 Host Game", for: .normal)
+        hostButton.setTitle(NSLocalizedString("🎯 Host Game", comment: "Host game button"), for: .normal)
         hostButton.titleLabel?.font = .systemFont(ofSize: 20, weight: .semibold)
         hostButton.backgroundColor = .systemBlue
         hostButton.setTitleColor(.white, for: .normal)
@@ -98,7 +98,7 @@ class GameViewController: UIViewController {
         
         // Join button
         joinButton = UIButton(type: .system)
-        joinButton.setTitle("🔍 Join Game", for: .normal)
+        joinButton.setTitle(NSLocalizedString("🔍 Join Game", comment: "Join game button"), for: .normal)
         joinButton.titleLabel?.font = .systemFont(ofSize: 20, weight: .semibold)
         joinButton.backgroundColor = .systemGreen
         joinButton.setTitleColor(.white, for: .normal)
@@ -113,7 +113,7 @@ class GameViewController: UIViewController {
         
         // Cancel button
         cancelButton = UIButton(type: .system)
-        cancelButton.setTitle("Cancel", for: .normal)
+        cancelButton.setTitle(NSLocalizedString("Cancel", comment: "Cancel button"), for: .normal)
         cancelButton.titleLabel?.font = .systemFont(ofSize: 18, weight: .medium)
         cancelButton.setTitleColor(.systemRed, for: .normal)
         cancelButton.isHidden = true
@@ -142,7 +142,7 @@ class GameViewController: UIViewController {
         
         // Empty state label
         emptyStateLabel = UILabel()
-        emptyStateLabel.text = "No nearby games found.\nMake sure the other device is hosting."
+        emptyStateLabel.text = NSLocalizedString("No nearby games found.\nMake sure the other device is hosting.", comment: "Empty state message")
         emptyStateLabel.font = .systemFont(ofSize: 14)
         emptyStateLabel.textAlignment = .center
         emptyStateLabel.numberOfLines = 0
@@ -201,7 +201,7 @@ class GameViewController: UIViewController {
                 self.instructionsLabel.isHidden = true
                 self.cancelButton.isHidden = false
                 self.activityIndicator.startAnimating()
-                self.statusLabel.text = "Hosting game...\nWaiting for a player to join"
+                self.statusLabel.text = NSLocalizedString("Hosting game...\nWaiting for a player to join", comment: "Hosting status message")
                 self.multiplayerManager.startHosting()
             } else {
                 self.showPermissionDeniedAlert()
@@ -219,7 +219,7 @@ class GameViewController: UIViewController {
                 self.instructionsLabel.isHidden = true
                 self.cancelButton.isHidden = false
                 self.activityIndicator.startAnimating()
-                self.statusLabel.text = "Searching for nearby games..."
+                self.statusLabel.text = NSLocalizedString("Searching for nearby games...", comment: "Searching status message")
                 self.peerTableView.isHidden = false
                 self.updatePeerListUI()
                 self.multiplayerManager.startBrowsing()
@@ -247,7 +247,7 @@ class GameViewController: UIViewController {
         peerTableView.isHidden = true
         emptyStateLabel.isHidden = true
         activityIndicator.stopAnimating()
-        statusLabel.text = "Choose an option to start"
+        statusLabel.text = NSLocalizedString("Choose an option to start", comment: "Initial status message")
         peerTableView.reloadData()
     }
     
@@ -271,7 +271,7 @@ class GameViewController: UIViewController {
         }
         
         permissionCheckInProgress = true
-        statusLabel.text = "Checking permissions..."
+        statusLabel.text = NSLocalizedString("Checking permissions...", comment: "Checking permissions status")
         
         // Create a temporary browser to trigger the permission prompt
         // This is necessary because iOS doesn't provide a direct API to check
@@ -295,18 +295,18 @@ class GameViewController: UIViewController {
     
     func showPermissionDeniedAlert() {
         let alert = UIAlertController(
-            title: "Permissions Required",
-            message: "Tank Game needs Local Network access to find nearby players. Please enable Local Network permission in Settings > Privacy & Security > Local Network, then try again.",
+            title: NSLocalizedString("Permissions Required", comment: "Permission alert title"),
+            message: NSLocalizedString("Tank Game needs Local Network access to find nearby players. Please enable Local Network permission in Settings > Privacy & Security > Local Network, then try again.", comment: "Permission alert message"),
             preferredStyle: .alert
         )
         
-        alert.addAction(UIAlertAction(title: "Open Settings", style: .default) { _ in
+        alert.addAction(UIAlertAction(title: NSLocalizedString("Open Settings", comment: "Open Settings button"), style: .default) { _ in
             if let settingsURL = URL(string: UIApplication.openSettingsURLString) {
                 UIApplication.shared.open(settingsURL)
             }
         })
         
-        alert.addAction(UIAlertAction(title: "Cancel", style: .cancel))
+        alert.addAction(UIAlertAction(title: NSLocalizedString("Cancel", comment: "Cancel button"), style: .cancel))
         
         present(alert, animated: true)
     }
@@ -415,7 +415,7 @@ extension GameViewController: MultiplayerManagerDelegate {
             discoveredPeers.append(peerID)
             peerTableView.reloadData()
             updatePeerListUI()
-            statusLabel.text = "Found \(discoveredPeers.count) game\(discoveredPeers.count == 1 ? "" : "s"). Tap to join."
+            statusLabel.text = String(format: NSLocalizedString("Found %lld game%@. Tap to join.", comment: "Found games status"), discoveredPeers.count, discoveredPeers.count == 1 ? "" : "s")
         }
     }
     
@@ -424,15 +424,15 @@ extension GameViewController: MultiplayerManagerDelegate {
         peerTableView.reloadData()
         updatePeerListUI()
         if discoveredPeers.isEmpty {
-            statusLabel.text = "Searching for nearby games..."
+            statusLabel.text = NSLocalizedString("Searching for nearby games...", comment: "Searching status message")
         } else {
-            statusLabel.text = "Found \(discoveredPeers.count) game\(discoveredPeers.count == 1 ? "" : "s"). Tap to join."
+            statusLabel.text = String(format: NSLocalizedString("Found %lld game%@. Tap to join.", comment: "Found games status"), discoveredPeers.count, discoveredPeers.count == 1 ? "" : "s")
         }
     }
     
     func multiplayerManager(_ manager: MultiplayerManager, didConnectToPeer peerID: MCPeerID) {
         activityIndicator.stopAnimating()
-        statusLabel.text = "Connected to \(peerID.displayName)! Starting game..."
+        statusLabel.text = String(format: NSLocalizedString("Connected to %@! Starting game...", comment: "Connected status"), peerID.displayName)
         
         // Determine who is player 1 (lexicographically smaller peer ID becomes player 1)
         let myName = multiplayerManager.session.myPeerID.displayName
@@ -451,11 +451,11 @@ extension GameViewController: MultiplayerManagerDelegate {
             self.view.subviews.forEach { $0.removeFromSuperview() }
             self.viewDidLoad()
             let alert = UIAlertController(
-                title: "Disconnected",
-                message: "Lost connection to \(peerID.displayName)",
+                title: NSLocalizedString("Disconnected", comment: "Disconnected alert title"),
+                message: String(format: NSLocalizedString("Lost connection to %@", comment: "Lost connection message"), peerID.displayName),
                 preferredStyle: .alert
             )
-            alert.addAction(UIAlertAction(title: "OK", style: .default) { [weak self] _ in
+            alert.addAction(UIAlertAction(title: NSLocalizedString("OK", comment: "OK button"), style: .default) { [weak self] _ in
                 self?.resetLobbyUI()
             })
             self.present(alert, animated: true)
@@ -527,18 +527,18 @@ extension GameViewController: MultiplayerManagerDelegate {
         activityIndicator.stopAnimating()
         
         let alert = UIAlertController(
-            title: "Connection Error",
-            message: "Unable to start multiplayer session. This may be due to missing Local Network permissions.\n\nError: \(error.localizedDescription)\n\nPlease ensure Local Network access is enabled in Settings > Privacy & Security > Local Network.",
+            title: NSLocalizedString("Connection Error", comment: "Connection error alert title"),
+            message: String(format: NSLocalizedString("Unable to start multiplayer session. This may be due to missing Local Network permissions.\n\nError: %@\n\nPlease ensure Local Network access is enabled in Settings > Privacy & Security > Local Network.", comment: "Connection error message"), error.localizedDescription),
             preferredStyle: .alert
         )
         
-        alert.addAction(UIAlertAction(title: "Open Settings", style: .default) { _ in
+        alert.addAction(UIAlertAction(title: NSLocalizedString("Open Settings", comment: "Open Settings button"), style: .default) { _ in
             if let settingsURL = URL(string: UIApplication.openSettingsURLString) {
                 UIApplication.shared.open(settingsURL)
             }
         })
         
-        alert.addAction(UIAlertAction(title: "Try Again", style: .default) { [weak self] _ in
+        alert.addAction(UIAlertAction(title: NSLocalizedString("Try Again", comment: "Try Again button"), style: .default) { [weak self] _ in
             self?.resetLobbyUI()
         })
         
@@ -556,7 +556,7 @@ extension GameViewController: UITableViewDelegate, UITableViewDataSource {
     func tableView(_ tableView: UITableView, cellForRowAt indexPath: IndexPath) -> UITableViewCell {
         let cell = tableView.dequeueReusableCell(withIdentifier: "PeerCell", for: indexPath)
         let peer = discoveredPeers[indexPath.row]
-        cell.textLabel?.text = "📱 \(peer.displayName)"
+        cell.textLabel?.text = String(format: NSLocalizedString("📱 %@", comment: "Peer display name"), peer.displayName)
         cell.textLabel?.font = .systemFont(ofSize: 16, weight: .medium)
         cell.accessoryType = .disclosureIndicator
         return cell
@@ -565,7 +565,7 @@ extension GameViewController: UITableViewDelegate, UITableViewDataSource {
     func tableView(_ tableView: UITableView, didSelectRowAt indexPath: IndexPath) {
         let peer = discoveredPeers[indexPath.row]
         multiplayerManager.invitePeer(peer)
-        statusLabel.text = "Connecting to \(peer.displayName)..."
+        statusLabel.text = String(format: NSLocalizedString("Connecting to %@...", comment: "Connecting status"), peer.displayName)
         activityIndicator.startAnimating()
         tableView.deselectRow(at: indexPath, animated: true)
     }
