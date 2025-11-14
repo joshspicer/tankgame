@@ -41,6 +41,10 @@ class GameScene: SKScene {
     // Sound control
     var soundEnabled = true
     
+    // Explosion state
+    var localTankExploding = false
+    var remoteTankExploding = false
+    
     class func newGameScene() -> GameScene {
         let scene = GameScene(size: CGSize(width: 600, height: 800))
         scene.scaleMode = .aspectFit
@@ -147,6 +151,8 @@ class GameScene: SKScene {
     
     func startGame(with state: GameState) {
         self.gameState = state
+        localTankExploding = false
+        remoteTankExploding = false
         renderGrid()
         renderTanks()
         updateScore()
@@ -174,17 +180,17 @@ class GameScene: SKScene {
     func renderTanks() {
         guard let state = gameState else { return }
         
-        // Render local tank
+        // Render local tank - keep visible during explosion
         localTankNode?.removeAllChildren()
-        if state.localTank.isAlive, let localNode = localTankNode {
+        if state.localTank.isAlive || localTankExploding, let localNode = localTankNode {
             let tank = createTankNode(color: .blue, direction: state.localTank.direction)
             tank.position = gridPosition(row: state.localTank.row, col: state.localTank.col)
             localNode.addChild(tank)
         }
         
-        // Render remote tank
+        // Render remote tank - keep visible during explosion
         remoteTankNode?.removeAllChildren()
-        if state.remoteTank.isAlive, let remoteNode = remoteTankNode {
+        if state.remoteTank.isAlive || remoteTankExploding, let remoteNode = remoteTankNode {
             let tank = createTankNode(color: .red, direction: state.remoteTank.direction)
             tank.position = gridPosition(row: state.remoteTank.row, col: state.remoteTank.col)
             remoteNode.addChild(tank)
@@ -238,6 +244,71 @@ class GameScene: SKScene {
             x: CGFloat(col) * tileSize + tileSize / 2,
             y: CGFloat(gridSize - 1 - row) * tileSize + tileSize / 2
         )
+    }
+    
+    func createExplosion(at position: CGPoint, color: SKColor, in parentNode: SKNode, isLocalTank: Bool) {
+        // Mark which tank is exploding
+        if isLocalTank {
+            localTankExploding = true
+        } else {
+            remoteTankExploding = true
+        }
+        
+        // Create explosion particles
+        let particleCount = 12
+        for i in 0..<particleCount {
+            let particle = SKShapeNode(circleOfRadius: 8)
+            particle.fillColor = color
+            particle.strokeColor = .white
+            particle.lineWidth = 2
+            particle.position = position
+            particle.zPosition = 10
+            
+            // Calculate random direction
+            let angle = (CGFloat(i) / CGFloat(particleCount)) * 2 * .pi
+            let velocity: CGFloat = 150
+            let dx = cos(angle) * velocity
+            let dy = sin(angle) * velocity
+            
+            // Create movement animation
+            let moveAction = SKAction.moveBy(x: dx, y: dy, duration: 0.6)
+            let fadeOut = SKAction.fadeOut(withDuration: 0.6)
+            let scaleUp = SKAction.scale(to: 2.0, duration: 0.3)
+            let scaleDown = SKAction.scale(to: 0.1, duration: 0.3)
+            let scaleSequence = SKAction.sequence([scaleUp, scaleDown])
+            
+            let group = SKAction.group([moveAction, fadeOut, scaleSequence])
+            let remove = SKAction.removeFromParent()
+            let sequence = SKAction.sequence([group, remove])
+            
+            parentNode.addChild(particle)
+            particle.run(sequence)
+        }
+        
+        // Create central flash effect
+        let flash = SKShapeNode(circleOfRadius: tileSize * 0.5)
+        flash.fillColor = .white
+        flash.strokeColor = .yellow
+        flash.lineWidth = 4
+        flash.position = position
+        flash.zPosition = 11
+        flash.alpha = 0.9
+        
+        let flashScale = SKAction.scale(to: 2.5, duration: 0.4)
+        let flashFade = SKAction.fadeOut(withDuration: 0.4)
+        let flashGroup = SKAction.group([flashScale, flashFade])
+        let flashRemove = SKAction.removeFromParent()
+        let flashSequence = SKAction.sequence([flashGroup, flashRemove])
+        
+        parentNode.addChild(flash)
+        flash.run(flashSequence) {
+            // Clear the explosion flag for this tank
+            if isLocalTank {
+                self.localTankExploding = false
+            } else {
+                self.remoteTankExploding = false
+            }
+        }
     }
     
     func renderProjectiles() {
@@ -302,8 +373,8 @@ class GameScene: SKScene {
             }
         }
         
-        // Don't update if round is over
-        if state.isRoundOver() {
+        // Don't update if round is over or explosion in progress
+        if state.isRoundOver() || localTankExploding || remoteTankExploding {
             return
         }
         
@@ -311,33 +382,55 @@ class GameScene: SKScene {
         if currentTime - lastUpdateTime > 0.05 { // ~20 FPS for projectile updates
             let wasLocalAlive = state.localTank.isAlive
             let wasRemoteAlive = state.remoteTank.isAlive
+            let localTankPosition = gridPosition(row: state.localTank.row, col: state.localTank.col)
+            let remoteTankPosition = gridPosition(row: state.remoteTank.row, col: state.remoteTank.col)
             
             state.updateProjectiles()
             renderProjectiles()
             
-            // Play hit sound if a tank was hit
+            // Check if local tank was hit and trigger explosion
             if wasLocalAlive && !state.localTank.isAlive {
                 playSound("hit.wav")
+                if let localNode = localTankNode {
+                    createExplosion(at: localTankPosition, color: .blue, in: localNode, isLocalTank: true)
+                }
             }
+            
+            // Check if remote tank was hit and trigger explosion
             if wasRemoteAlive && !state.remoteTank.isAlive {
                 playSound("hit.wav")
+                if let remoteNode = remoteTankNode {
+                    createExplosion(at: remoteTankPosition, color: .red, in: remoteNode, isLocalTank: false)
+                }
             }
             
             // Check if round ended after update
             if state.isRoundOver() {
                 let localWon = state.localPlayerWon()
-                if localWon {
-                    gameState?.localWins += 1
-                    playSound("win.wav")
-                } else {
-                    gameState?.remoteWins += 1
-                    playSound("lose.wav")
-                }
-                showRoundEnd(localWon: localWon)
-                updateScore()
                 
-                // Notify that round ended
-                onGameMessage?(.readyForNextRound)
+                // Wait for explosion to complete before showing round end
+                DispatchQueue.main.asyncAfter(deadline: .now() + 1.0) { [weak self] in
+                    guard let self = self else { return }
+                    
+                    // Update score and play win/lose sound
+                    if localWon {
+                        self.gameState?.localWins += 1
+                        self.playSound("win.wav")
+                    } else {
+                        self.gameState?.remoteWins += 1
+                        self.playSound("lose.wav")
+                    }
+                    
+                    // Remove tank nodes now that explosion is done
+                    self.renderTanks()
+                    self.showRoundEnd(localWon: localWon)
+                    self.updateScore()
+                    
+                    // Notify that round ended after a longer delay
+                    DispatchQueue.main.asyncAfter(deadline: .now() + 2.0) { [weak self] in
+                        self?.onGameMessage?(.readyForNextRound)
+                    }
+                }
             }
             
             lastUpdateTime = currentTime
