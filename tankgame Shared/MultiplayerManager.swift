@@ -14,6 +14,7 @@ protocol MultiplayerManagerDelegate: AnyObject {
     func multiplayerManager(_ manager: MultiplayerManager, didConnectToPeer peerID: MCPeerID)
     func multiplayerManager(_ manager: MultiplayerManager, didDisconnectFromPeer peerID: MCPeerID)
     func multiplayerManager(_ manager: MultiplayerManager, didReceiveMessage message: GameMessage)
+    func multiplayerManager(_ manager: MultiplayerManager, didEncounterError error: Error)
 }
 
 class MultiplayerManager: NSObject {
@@ -165,6 +166,10 @@ extension MultiplayerManager: MCNearbyServiceAdvertiserDelegate {
     
     func advertiser(_ advertiser: MCNearbyServiceAdvertiser, didNotStartAdvertisingPeer error: Error) {
         print("Error starting advertising: \(error.localizedDescription)")
+        DispatchQueue.main.async { [weak self] in
+            guard let self = self else { return }
+            self.delegate?.multiplayerManager(self, didEncounterError: error)
+        }
     }
 }
 
@@ -187,5 +192,9 @@ extension MultiplayerManager: MCNearbyServiceBrowserDelegate {
     
     func browser(_ browser: MCNearbyServiceBrowser, didNotStartBrowsingForPeers error: Error) {
         print("Error starting browsing: \(error.localizedDescription)")
+        DispatchQueue.main.async { [weak self] in
+            guard let self = self else { return }
+            self.delegate?.multiplayerManager(self, didEncounterError: error)
+        }
     }
 }
