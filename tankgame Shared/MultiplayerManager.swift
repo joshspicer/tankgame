@@ -13,7 +13,7 @@ protocol MultiplayerManagerDelegate: AnyObject {
     func multiplayerManager(_ manager: MultiplayerManager, didLosePeer peerID: MCPeerID)
     func multiplayerManager(_ manager: MultiplayerManager, didConnectToPeer peerID: MCPeerID)
     func multiplayerManager(_ manager: MultiplayerManager, didDisconnectFromPeer peerID: MCPeerID)
-    func multiplayerManager(_ manager: MultiplayerManager, didReceiveMessage message: GameMessage)
+    func multiplayerManager(_ manager: MultiplayerManager, didReceiveMessage message: GameMessage, from peerID: MCPeerID)
     func multiplayerManager(_ manager: MultiplayerManager, didEncounterError error: Error)
 }
 
@@ -26,6 +26,9 @@ class MultiplayerManager: NSObject {
     private(set) var session: MCSession!
     private var advertiser: MCNearbyServiceAdvertiser?
     private var browser: MCNearbyServiceBrowser?
+    
+    var isHost: Bool = false
+    var maxPlayers: Int = 4 // Can be 2, 3, or 4
     
     override init() {
         // Generate or retrieve persistent peer ID
@@ -109,6 +112,14 @@ class MultiplayerManager: NSObject {
     var connectedPeerName: String? {
         return session.connectedPeers.first?.displayName
     }
+    
+    var connectedPeersCount: Int {
+        return session.connectedPeers.count + 1 // +1 for local player
+    }
+    
+    var allPlayerNames: [String] {
+        return [myPeerID.displayName] + session.connectedPeers.map { $0.displayName }
+    }
 }
 
 // MARK: - MCSessionDelegate
@@ -136,7 +147,7 @@ extension MultiplayerManager: MCSessionDelegate {
             let message = try JSONDecoder().decode(GameMessage.self, from: data)
             DispatchQueue.main.async { [weak self] in
                 guard let self = self else { return }
-                self.delegate?.multiplayerManager(self, didReceiveMessage: message)
+                self.delegate?.multiplayerManager(self, didReceiveMessage: message, from: peerID)
             }
         } catch {
             print("Error decoding message: \(error.localizedDescription)")
@@ -160,8 +171,12 @@ extension MultiplayerManager: MCSessionDelegate {
 
 extension MultiplayerManager: MCNearbyServiceAdvertiserDelegate {
     func advertiser(_ advertiser: MCNearbyServiceAdvertiser, didReceiveInvitationFromPeer peerID: MCPeerID, withContext context: Data?, invitationHandler: @escaping (Bool, MCSession?) -> Void) {
-        // Auto-accept invitations (simple approach for 2-player game)
-        invitationHandler(true, session)
+        // Accept invitations if we have room (max 4 players total)
+        if session.connectedPeers.count < maxPlayers - 1 {
+            invitationHandler(true, session)
+        } else {
+            invitationHandler(false, nil)
+        }
     }
     
     func advertiser(_ advertiser: MCNearbyServiceAdvertiser, didNotStartAdvertisingPeer error: Error) {
