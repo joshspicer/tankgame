@@ -19,8 +19,7 @@ class GameScene: SKScene {
     
     // Nodes
     var gridNode: SKNode?
-    var localTankNode: SKNode?
-    var remoteTankNode: SKNode?
+    var tankNodes: [SKNode?] = [nil, nil, nil, nil] // Support up to 4 tanks
     var projectilesNode: SKNode?
     var joystickNode: SKNode?
     var joystickBase: SKShapeNode?
@@ -42,8 +41,10 @@ class GameScene: SKScene {
     var soundEnabled = true
     
     // Explosion state
-    var localTankExploding = false
-    var remoteTankExploding = false
+    var tankExploding: [Bool] = [false, false, false, false]
+    
+    // Tank colors for up to 4 players
+    let tankColors: [SKColor] = [.blue, .red, .green, .orange]
     
     class func newGameScene() -> GameScene {
         let scene = GameScene(size: CGSize(width: 600, height: 800))
@@ -78,16 +79,13 @@ class GameScene: SKScene {
         addChild(newProjectilesNode)
         projectilesNode = newProjectilesNode
         
-        // Create tank nodes
-        let newLocalTankNode = SKNode()
-        newLocalTankNode.position = gridOffset
-        addChild(newLocalTankNode)
-        localTankNode = newLocalTankNode
-        
-        let newRemoteTankNode = SKNode()
-        newRemoteTankNode.position = gridOffset
-        addChild(newRemoteTankNode)
-        remoteTankNode = newRemoteTankNode
+        // Create tank nodes for all possible players
+        for i in 0..<4 {
+            let tankNode = SKNode()
+            tankNode.position = gridOffset
+            addChild(tankNode)
+            tankNodes[i] = tankNode
+        }
         
         // Create joystick
         setupJoystick()
@@ -151,8 +149,7 @@ class GameScene: SKScene {
     
     func startGame(with state: GameState) {
         self.gameState = state
-        localTankExploding = false
-        remoteTankExploding = false
+        tankExploding = Array(repeating: false, count: state.tanks.count)
         renderGrid()
         renderTanks()
         updateScore()
@@ -180,20 +177,18 @@ class GameScene: SKScene {
     func renderTanks() {
         guard let state = gameState else { return }
         
-        // Render local tank - keep visible during explosion
-        localTankNode?.removeAllChildren()
-        if state.localTank.isAlive || localTankExploding, let localNode = localTankNode {
-            let tank = createTankNode(color: .blue, direction: state.localTank.direction)
-            tank.position = gridPosition(row: state.localTank.row, col: state.localTank.col)
-            localNode.addChild(tank)
-        }
-        
-        // Render remote tank - keep visible during explosion
-        remoteTankNode?.removeAllChildren()
-        if state.remoteTank.isAlive || remoteTankExploding, let remoteNode = remoteTankNode {
-            let tank = createTankNode(color: .red, direction: state.remoteTank.direction)
-            tank.position = gridPosition(row: state.remoteTank.row, col: state.remoteTank.col)
-            remoteNode.addChild(tank)
+        // Render all tanks
+        for i in 0..<state.tanks.count {
+            guard let tankNode = tankNodes[i] else { continue }
+            tankNode.removeAllChildren()
+            
+            let tank = state.tanks[i]
+            if tank.isAlive || tankExploding[i] {
+                let color = tankColors[i]
+                let tankSprite = createTankNode(color: color, direction: tank.direction)
+                tankSprite.position = gridPosition(row: tank.row, col: tank.col)
+                tankNode.addChild(tankSprite)
+            }
         }
     }
     
@@ -246,13 +241,9 @@ class GameScene: SKScene {
         )
     }
     
-    func createExplosion(at position: CGPoint, color: SKColor, in parentNode: SKNode, isLocalTank: Bool) {
+    func createExplosion(at position: CGPoint, color: SKColor, in parentNode: SKNode, tankIndex: Int) {
         // Mark which tank is exploding
-        if isLocalTank {
-            localTankExploding = true
-        } else {
-            remoteTankExploding = true
-        }
+        tankExploding[tankIndex] = true
         
         // Create explosion particles
         let particleCount = 12
@@ -303,11 +294,7 @@ class GameScene: SKScene {
         parentNode.addChild(flash)
         flash.run(flashSequence) {
             // Clear the explosion flag for this tank
-            if isLocalTank {
-                self.localTankExploding = false
-            } else {
-                self.remoteTankExploding = false
-            }
+            self.tankExploding[tankIndex] = false
         }
     }
     
@@ -344,12 +331,28 @@ class GameScene: SKScene {
     
     func updateScore() {
         guard let state = gameState else { return }
-        scoreLabel?.text = "Score: \(state.localWins) - \(state.remoteWins)"
+        
+        if state.tanks.count == 2 {
+            scoreLabel?.text = "Score: \(state.wins[0]) - \(state.wins[1])"
+        } else {
+            // For 3-4 players, show all scores
+            let scoreText = state.wins.enumerated().map { "P\($0.offset+1): \($0.element)" }.joined(separator: " | ")
+            scoreLabel?.text = scoreText
+        }
     }
     
-    func showRoundEnd(localWon: Bool) {
-        let message = localWon ? "You Win!" : "You Lose!"
-        statusLabel?.text = message
+    func showRoundEnd(winner: Int?) {
+        guard let state = gameState else { return }
+        
+        if let winner = winner {
+            if winner == state.localPlayerIndex {
+                statusLabel?.text = "You Win!"
+            } else {
+                statusLabel?.text = "Player \(winner + 1) Wins!"
+            }
+        } else {
+            statusLabel?.text = "Draw!"
+        }
         
         DispatchQueue.main.asyncAfter(deadline: .now() + 3) { [weak self] in
             self?.statusLabel?.text = "Next round starting..."
@@ -368,67 +371,63 @@ class GameScene: SKScene {
                     lastMoveTime = currentTime
                     
                     // Send position update
-                    onGameMessage?(.playerMove(row: state.localTank.row, col: state.localTank.col, direction: state.localTank.direction))
+                    let localIndex = state.localPlayerIndex
+                    onGameMessage?(.playerMove(playerIndex: localIndex, row: state.localTank.row, col: state.localTank.col, direction: state.localTank.direction))
                 }
             }
         }
         
-        // Don't update if round is over or explosion in progress
-        if state.isRoundOver() || localTankExploding || remoteTankExploding {
+        // Don't update if round is over or any explosion in progress
+        if state.isRoundOver() || tankExploding.contains(true) {
             return
         }
         
         // Update projectiles
         if currentTime - lastUpdateTime > 0.05 { // ~20 FPS for projectile updates
-            let wasLocalAlive = state.localTank.isAlive
-            let wasRemoteAlive = state.remoteTank.isAlive
-            let localTankPosition = gridPosition(row: state.localTank.row, col: state.localTank.col)
-            let remoteTankPosition = gridPosition(row: state.remoteTank.row, col: state.remoteTank.col)
+            // Save tank alive state before update
+            let wasAlive = state.tanks.map { $0.isAlive }
+            let tankPositions = state.tanks.map { gridPosition(row: $0.row, col: $0.col) }
             
             state.updateProjectiles()
             renderProjectiles()
             
-            // Check if local tank was hit and trigger explosion
-            if wasLocalAlive && !state.localTank.isAlive {
-                playSound("hit.wav")
-                if let localNode = localTankNode {
-                    createExplosion(at: localTankPosition, color: .blue, in: localNode, isLocalTank: true)
-                }
-            }
-            
-            // Check if remote tank was hit and trigger explosion
-            if wasRemoteAlive && !state.remoteTank.isAlive {
-                playSound("hit.wav")
-                if let remoteNode = remoteTankNode {
-                    createExplosion(at: remoteTankPosition, color: .red, in: remoteNode, isLocalTank: false)
+            // Check which tanks were hit and trigger explosions
+            for i in 0..<state.tanks.count {
+                if wasAlive[i] && !state.tanks[i].isAlive {
+                    playSound("hit.wav")
+                    if let tankNode = tankNodes[i] {
+                        createExplosion(at: tankPositions[i], color: tankColors[i], in: tankNode, tankIndex: i)
+                    }
                 }
             }
             
             // Check if round ended after update
             if state.isRoundOver() {
-                let localWon = state.localPlayerWon()
+                let winner = state.getWinner()
                 
                 // Wait for explosion to complete before showing round end
                 DispatchQueue.main.asyncAfter(deadline: .now() + 1.0) { [weak self] in
-                    guard let self = self else { return }
+                    guard let self = self, let state = self.gameState else { return }
                     
                     // Update score and play win/lose sound
-                    if localWon {
-                        self.gameState?.localWins += 1
-                        self.playSound("win.wav")
-                    } else {
-                        self.gameState?.remoteWins += 1
-                        self.playSound("lose.wav")
+                    if let winner = winner {
+                        state.wins[winner] += 1
+                        if winner == state.localPlayerIndex {
+                            self.playSound("win.wav")
+                        } else {
+                            self.playSound("lose.wav")
+                        }
                     }
                     
                     // Remove tank nodes now that explosion is done
                     self.renderTanks()
-                    self.showRoundEnd(localWon: localWon)
+                    self.showRoundEnd(winner: winner)
                     self.updateScore()
                     
                     // Notify that round ended after a longer delay
                     DispatchQueue.main.asyncAfter(deadline: .now() + 2.0) { [weak self] in
-                        self?.onGameMessage?(.readyForNextRound)
+                        guard let state = self?.gameState else { return }
+                        self?.onGameMessage?(.readyForNextRound(playerIndex: state.localPlayerIndex))
                     }
                 }
             }
@@ -547,7 +546,7 @@ extension GameScene {
         playSound("shoot.wav")
         
         // Send shoot message
-        onGameMessage?(.playerShoot(projectile: projectile))
+        onGameMessage?(.playerShoot(playerIndex: state.localPlayerIndex, projectile: projectile))
     }
 }
 #endif
