@@ -7,27 +7,25 @@
 
 import UIKit
 import SpriteKit
-import GameplayKit
 import MultipeerConnectivity
-import Network
 
 class GameViewController: UIViewController {
     
-    var multiplayerManager: MultiplayerManager!
+    var multiplayerManager: MultiplayerManager?
     var gameScene: GameScene?
     var gameState: GameState?
     var skView: SKView?
     
     // Lobby UI
-    var lobbyView: UIView!
-    var hostButton: UIButton!
-    var joinButton: UIButton!
-    var cancelButton: UIButton!
-    var peerTableView: UITableView!
-    var statusLabel: UILabel!
-    var instructionsLabel: UILabel!
-    var emptyStateLabel: UILabel!
-    var activityIndicator: UIActivityIndicatorView!
+    var lobbyView: UIView?
+    var hostButton: UIButton?
+    var joinButton: UIButton?
+    var cancelButton: UIButton?
+    var peerTableView: UITableView?
+    var statusLabel: UILabel?
+    var instructionsLabel: UILabel?
+    var emptyStateLabel: UILabel?
+    var activityIndicator: UIActivityIndicatorView?
     var discoveredPeers: [MCPeerID] = []
     
     // Game state
@@ -41,17 +39,19 @@ class GameViewController: UIViewController {
     override func viewDidLoad() {
         super.viewDidLoad()
         
-        multiplayerManager = MultiplayerManager()
-        multiplayerManager.delegate = self
+        let manager = MultiplayerManager()
+        manager.delegate = self
+        multiplayerManager = manager
         
         setupLobby()
     }
     
     func setupLobby() {
         // Create lobby view
-        lobbyView = UIView(frame: view.bounds)
-        lobbyView.backgroundColor = .systemBackground
-        view.addSubview(lobbyView)
+        let newLobbyView = UIView(frame: view.bounds)
+        newLobbyView.backgroundColor = .systemBackground
+        view.addSubview(newLobbyView)
+        lobbyView = newLobbyView
         
         // Title label
         let titleLabel = UILabel()
@@ -59,135 +59,143 @@ class GameViewController: UIViewController {
         titleLabel.font = .systemFont(ofSize: 36, weight: .bold)
         titleLabel.textAlignment = .center
         titleLabel.translatesAutoresizingMaskIntoConstraints = false
-        lobbyView.addSubview(titleLabel)
+        newLobbyView.addSubview(titleLabel)
         
         // Status label
-        statusLabel = UILabel()
-        statusLabel.text = "Choose an option to start"
-        statusLabel.font = .systemFont(ofSize: 18, weight: .medium)
-        statusLabel.textAlignment = .center
-        statusLabel.numberOfLines = 0
-        statusLabel.textColor = .secondaryLabel
-        statusLabel.translatesAutoresizingMaskIntoConstraints = false
-        lobbyView.addSubview(statusLabel)
+        let newStatusLabel = UILabel()
+        newStatusLabel.text = "Choose an option to start"
+        newStatusLabel.font = .systemFont(ofSize: 18, weight: .medium)
+        newStatusLabel.textAlignment = .center
+        newStatusLabel.numberOfLines = 0
+        newStatusLabel.textColor = .secondaryLabel
+        newStatusLabel.translatesAutoresizingMaskIntoConstraints = false
+        newLobbyView.addSubview(newStatusLabel)
+        statusLabel = newStatusLabel
         
         // Instructions label
-        instructionsLabel = UILabel()
-        instructionsLabel.text = "Battle with a friend on the same network!\nMove with the joystick, tap FIRE to shoot."
-        instructionsLabel.font = .systemFont(ofSize: 14)
-        instructionsLabel.textAlignment = .center
-        instructionsLabel.numberOfLines = 0
-        instructionsLabel.textColor = .secondaryLabel
-        instructionsLabel.translatesAutoresizingMaskIntoConstraints = false
-        lobbyView.addSubview(instructionsLabel)
+        let newInstructionsLabel = UILabel()
+        newInstructionsLabel.text = "Battle with a friend on the same network!\nMove with the joystick, tap FIRE to shoot."
+        newInstructionsLabel.font = .systemFont(ofSize: 14)
+        newInstructionsLabel.textAlignment = .center
+        newInstructionsLabel.numberOfLines = 0
+        newInstructionsLabel.textColor = .secondaryLabel
+        newInstructionsLabel.translatesAutoresizingMaskIntoConstraints = false
+        newLobbyView.addSubview(newInstructionsLabel)
+        instructionsLabel = newInstructionsLabel
         
         // Host button
-        hostButton = UIButton(type: .system)
-        hostButton.setTitle("🎯 Host Game", for: .normal)
-        hostButton.titleLabel?.font = .systemFont(ofSize: 20, weight: .semibold)
-        hostButton.backgroundColor = .systemBlue
-        hostButton.setTitleColor(.white, for: .normal)
-        hostButton.layer.cornerRadius = 16
-        hostButton.layer.shadowColor = UIColor.black.cgColor
-        hostButton.layer.shadowOpacity = 0.2
-        hostButton.layer.shadowOffset = CGSize(width: 0, height: 2)
-        hostButton.layer.shadowRadius = 4
-        hostButton.translatesAutoresizingMaskIntoConstraints = false
-        hostButton.addTarget(self, action: #selector(hostTapped), for: .touchUpInside)
-        lobbyView.addSubview(hostButton)
+        let newHostButton = UIButton(type: .system)
+        newHostButton.setTitle("🎯 Host Game", for: .normal)
+        newHostButton.titleLabel?.font = .systemFont(ofSize: 20, weight: .semibold)
+        newHostButton.backgroundColor = .systemBlue
+        newHostButton.setTitleColor(.white, for: .normal)
+        newHostButton.layer.cornerRadius = 16
+        newHostButton.layer.shadowColor = UIColor.black.cgColor
+        newHostButton.layer.shadowOpacity = 0.2
+        newHostButton.layer.shadowOffset = CGSize(width: 0, height: 2)
+        newHostButton.layer.shadowRadius = 4
+        newHostButton.translatesAutoresizingMaskIntoConstraints = false
+        newHostButton.addTarget(self, action: #selector(hostTapped), for: .touchUpInside)
+        newLobbyView.addSubview(newHostButton)
+        hostButton = newHostButton
         
         // Join button
-        joinButton = UIButton(type: .system)
-        joinButton.setTitle("🔍 Join Game", for: .normal)
-        joinButton.titleLabel?.font = .systemFont(ofSize: 20, weight: .semibold)
-        joinButton.backgroundColor = .systemGreen
-        joinButton.setTitleColor(.white, for: .normal)
-        joinButton.layer.cornerRadius = 16
-        joinButton.layer.shadowColor = UIColor.black.cgColor
-        joinButton.layer.shadowOpacity = 0.2
-        joinButton.layer.shadowOffset = CGSize(width: 0, height: 2)
-        joinButton.layer.shadowRadius = 4
-        joinButton.translatesAutoresizingMaskIntoConstraints = false
-        joinButton.addTarget(self, action: #selector(joinTapped), for: .touchUpInside)
-        lobbyView.addSubview(joinButton)
+        let newJoinButton = UIButton(type: .system)
+        newJoinButton.setTitle("🔍 Join Game", for: .normal)
+        newJoinButton.titleLabel?.font = .systemFont(ofSize: 20, weight: .semibold)
+        newJoinButton.backgroundColor = .systemGreen
+        newJoinButton.setTitleColor(.white, for: .normal)
+        newJoinButton.layer.cornerRadius = 16
+        newJoinButton.layer.shadowColor = UIColor.black.cgColor
+        newJoinButton.layer.shadowOpacity = 0.2
+        newJoinButton.layer.shadowOffset = CGSize(width: 0, height: 2)
+        newJoinButton.layer.shadowRadius = 4
+        newJoinButton.translatesAutoresizingMaskIntoConstraints = false
+        newJoinButton.addTarget(self, action: #selector(joinTapped), for: .touchUpInside)
+        newLobbyView.addSubview(newJoinButton)
+        joinButton = newJoinButton
         
         // Cancel button
-        cancelButton = UIButton(type: .system)
-        cancelButton.setTitle("Cancel", for: .normal)
-        cancelButton.titleLabel?.font = .systemFont(ofSize: 18, weight: .medium)
-        cancelButton.setTitleColor(.systemRed, for: .normal)
-        cancelButton.isHidden = true
-        cancelButton.translatesAutoresizingMaskIntoConstraints = false
-        cancelButton.addTarget(self, action: #selector(cancelTapped), for: .touchUpInside)
-        lobbyView.addSubview(cancelButton)
+        let newCancelButton = UIButton(type: .system)
+        newCancelButton.setTitle("Cancel", for: .normal)
+        newCancelButton.titleLabel?.font = .systemFont(ofSize: 18, weight: .medium)
+        newCancelButton.setTitleColor(.systemRed, for: .normal)
+        newCancelButton.isHidden = true
+        newCancelButton.translatesAutoresizingMaskIntoConstraints = false
+        newCancelButton.addTarget(self, action: #selector(cancelTapped), for: .touchUpInside)
+        newLobbyView.addSubview(newCancelButton)
+        cancelButton = newCancelButton
         
         // Activity indicator
-        activityIndicator = UIActivityIndicatorView(style: .large)
-        activityIndicator.color = .systemBlue
-        activityIndicator.hidesWhenStopped = true
-        activityIndicator.translatesAutoresizingMaskIntoConstraints = false
-        lobbyView.addSubview(activityIndicator)
+        let newActivityIndicator = UIActivityIndicatorView(style: .large)
+        newActivityIndicator.color = .systemBlue
+        newActivityIndicator.hidesWhenStopped = true
+        newActivityIndicator.translatesAutoresizingMaskIntoConstraints = false
+        newLobbyView.addSubview(newActivityIndicator)
+        activityIndicator = newActivityIndicator
         
         // Peer table view
-        peerTableView = UITableView()
-        peerTableView.isHidden = true
-        peerTableView.delegate = self
-        peerTableView.dataSource = self
-        peerTableView.layer.cornerRadius = 12
-        peerTableView.layer.borderWidth = 1
-        peerTableView.layer.borderColor = UIColor.separator.cgColor
-        peerTableView.register(UITableViewCell.self, forCellReuseIdentifier: "PeerCell")
-        peerTableView.translatesAutoresizingMaskIntoConstraints = false
-        lobbyView.addSubview(peerTableView)
+        let newPeerTableView = UITableView()
+        newPeerTableView.isHidden = true
+        newPeerTableView.delegate = self
+        newPeerTableView.dataSource = self
+        newPeerTableView.layer.cornerRadius = 12
+        newPeerTableView.layer.borderWidth = 1
+        newPeerTableView.layer.borderColor = UIColor.separator.cgColor
+        newPeerTableView.register(UITableViewCell.self, forCellReuseIdentifier: "PeerCell")
+        newPeerTableView.translatesAutoresizingMaskIntoConstraints = false
+        newLobbyView.addSubview(newPeerTableView)
+        peerTableView = newPeerTableView
         
         // Empty state label
-        emptyStateLabel = UILabel()
-        emptyStateLabel.text = "No nearby games found.\nMake sure the other device is hosting."
-        emptyStateLabel.font = .systemFont(ofSize: 14)
-        emptyStateLabel.textAlignment = .center
-        emptyStateLabel.numberOfLines = 0
-        emptyStateLabel.textColor = .secondaryLabel
-        emptyStateLabel.isHidden = true
-        emptyStateLabel.translatesAutoresizingMaskIntoConstraints = false
-        lobbyView.addSubview(emptyStateLabel)
+        let newEmptyStateLabel = UILabel()
+        newEmptyStateLabel.text = "No nearby games found.\nMake sure the other device is hosting."
+        newEmptyStateLabel.font = .systemFont(ofSize: 14)
+        newEmptyStateLabel.textAlignment = .center
+        newEmptyStateLabel.numberOfLines = 0
+        newEmptyStateLabel.textColor = .secondaryLabel
+        newEmptyStateLabel.isHidden = true
+        newEmptyStateLabel.translatesAutoresizingMaskIntoConstraints = false
+        newLobbyView.addSubview(newEmptyStateLabel)
+        emptyStateLabel = newEmptyStateLabel
         
         // Layout constraints
         NSLayoutConstraint.activate([
-            titleLabel.topAnchor.constraint(equalTo: lobbyView.safeAreaLayoutGuide.topAnchor, constant: 80),
-            titleLabel.centerXAnchor.constraint(equalTo: lobbyView.centerXAnchor),
+            titleLabel.topAnchor.constraint(equalTo: newLobbyView.safeAreaLayoutGuide.topAnchor, constant: 80),
+            titleLabel.centerXAnchor.constraint(equalTo: newLobbyView.centerXAnchor),
             
-            statusLabel.topAnchor.constraint(equalTo: titleLabel.bottomAnchor, constant: 16),
-            statusLabel.leadingAnchor.constraint(equalTo: lobbyView.leadingAnchor, constant: 30),
-            statusLabel.trailingAnchor.constraint(equalTo: lobbyView.trailingAnchor, constant: -30),
+            newStatusLabel.topAnchor.constraint(equalTo: titleLabel.bottomAnchor, constant: 16),
+            newStatusLabel.leadingAnchor.constraint(equalTo: newLobbyView.leadingAnchor, constant: 30),
+            newStatusLabel.trailingAnchor.constraint(equalTo: newLobbyView.trailingAnchor, constant: -30),
             
-            instructionsLabel.topAnchor.constraint(equalTo: statusLabel.bottomAnchor, constant: 12),
-            instructionsLabel.leadingAnchor.constraint(equalTo: lobbyView.leadingAnchor, constant: 30),
-            instructionsLabel.trailingAnchor.constraint(equalTo: lobbyView.trailingAnchor, constant: -30),
+            newInstructionsLabel.topAnchor.constraint(equalTo: newStatusLabel.bottomAnchor, constant: 12),
+            newInstructionsLabel.leadingAnchor.constraint(equalTo: newLobbyView.leadingAnchor, constant: 30),
+            newInstructionsLabel.trailingAnchor.constraint(equalTo: newLobbyView.trailingAnchor, constant: -30),
             
-            hostButton.topAnchor.constraint(equalTo: instructionsLabel.bottomAnchor, constant: 50),
-            hostButton.centerXAnchor.constraint(equalTo: lobbyView.centerXAnchor),
-            hostButton.widthAnchor.constraint(equalToConstant: 240),
-            hostButton.heightAnchor.constraint(equalToConstant: 56),
+            newHostButton.topAnchor.constraint(equalTo: newInstructionsLabel.bottomAnchor, constant: 50),
+            newHostButton.centerXAnchor.constraint(equalTo: newLobbyView.centerXAnchor),
+            newHostButton.widthAnchor.constraint(equalToConstant: 240),
+            newHostButton.heightAnchor.constraint(equalToConstant: 56),
             
-            joinButton.topAnchor.constraint(equalTo: hostButton.bottomAnchor, constant: 20),
-            joinButton.centerXAnchor.constraint(equalTo: lobbyView.centerXAnchor),
-            joinButton.widthAnchor.constraint(equalToConstant: 240),
-            joinButton.heightAnchor.constraint(equalToConstant: 56),
+            newJoinButton.topAnchor.constraint(equalTo: newHostButton.bottomAnchor, constant: 20),
+            newJoinButton.centerXAnchor.constraint(equalTo: newLobbyView.centerXAnchor),
+            newJoinButton.widthAnchor.constraint(equalToConstant: 240),
+            newJoinButton.heightAnchor.constraint(equalToConstant: 56),
             
-            cancelButton.topAnchor.constraint(equalTo: joinButton.bottomAnchor, constant: 20),
-            cancelButton.centerXAnchor.constraint(equalTo: lobbyView.centerXAnchor),
+            newCancelButton.topAnchor.constraint(equalTo: newJoinButton.bottomAnchor, constant: 20),
+            newCancelButton.centerXAnchor.constraint(equalTo: newLobbyView.centerXAnchor),
             
-            activityIndicator.centerXAnchor.constraint(equalTo: lobbyView.centerXAnchor),
-            activityIndicator.topAnchor.constraint(equalTo: statusLabel.bottomAnchor, constant: 20),
+            newActivityIndicator.centerXAnchor.constraint(equalTo: newLobbyView.centerXAnchor),
+            newActivityIndicator.topAnchor.constraint(equalTo: newStatusLabel.bottomAnchor, constant: 20),
             
-            peerTableView.topAnchor.constraint(equalTo: cancelButton.bottomAnchor, constant: 20),
-            peerTableView.leadingAnchor.constraint(equalTo: lobbyView.leadingAnchor, constant: 30),
-            peerTableView.trailingAnchor.constraint(equalTo: lobbyView.trailingAnchor, constant: -30),
-            peerTableView.heightAnchor.constraint(equalToConstant: 200),
+            newPeerTableView.topAnchor.constraint(equalTo: newCancelButton.bottomAnchor, constant: 20),
+            newPeerTableView.leadingAnchor.constraint(equalTo: newLobbyView.leadingAnchor, constant: 30),
+            newPeerTableView.trailingAnchor.constraint(equalTo: newLobbyView.trailingAnchor, constant: -30),
+            newPeerTableView.heightAnchor.constraint(equalToConstant: 200),
             
-            emptyStateLabel.topAnchor.constraint(equalTo: cancelButton.bottomAnchor, constant: 40),
-            emptyStateLabel.leadingAnchor.constraint(equalTo: lobbyView.leadingAnchor, constant: 30),
-            emptyStateLabel.trailingAnchor.constraint(equalTo: lobbyView.trailingAnchor, constant: -30)
+            newEmptyStateLabel.topAnchor.constraint(equalTo: newCancelButton.bottomAnchor, constant: 40),
+            newEmptyStateLabel.leadingAnchor.constraint(equalTo: newLobbyView.leadingAnchor, constant: 30),
+            newEmptyStateLabel.trailingAnchor.constraint(equalTo: newLobbyView.trailingAnchor, constant: -30)
         ])
     }
     
@@ -196,13 +204,13 @@ class GameViewController: UIViewController {
             guard let self = self else { return }
             
             if granted {
-                self.hostButton.isHidden = true
-                self.joinButton.isHidden = true
-                self.instructionsLabel.isHidden = true
-                self.cancelButton.isHidden = false
-                self.activityIndicator.startAnimating()
-                self.statusLabel.text = "Hosting game...\nWaiting for a player to join"
-                self.multiplayerManager.startHosting()
+                self.hostButton?.isHidden = true
+                self.joinButton?.isHidden = true
+                self.instructionsLabel?.isHidden = true
+                self.cancelButton?.isHidden = false
+                self.activityIndicator?.startAnimating()
+                self.statusLabel?.text = "Hosting game...\nWaiting for a player to join"
+                self.multiplayerManager?.startHosting()
             } else {
                 self.showPermissionDeniedAlert()
             }
@@ -214,15 +222,15 @@ class GameViewController: UIViewController {
             guard let self = self else { return }
             
             if granted {
-                self.hostButton.isHidden = true
-                self.joinButton.isHidden = true
-                self.instructionsLabel.isHidden = true
-                self.cancelButton.isHidden = false
-                self.activityIndicator.startAnimating()
-                self.statusLabel.text = "Searching for nearby games..."
-                self.peerTableView.isHidden = false
+                self.hostButton?.isHidden = true
+                self.joinButton?.isHidden = true
+                self.instructionsLabel?.isHidden = true
+                self.cancelButton?.isHidden = false
+                self.activityIndicator?.startAnimating()
+                self.statusLabel?.text = "Searching for nearby games..."
+                self.peerTableView?.isHidden = false
                 self.updatePeerListUI()
-                self.multiplayerManager.startBrowsing()
+                self.multiplayerManager?.startBrowsing()
             } else {
                 self.showPermissionDeniedAlert()
             }
@@ -231,8 +239,8 @@ class GameViewController: UIViewController {
     
     @objc func cancelTapped() {
         // Stop any active connections
-        multiplayerManager.stopHosting()
-        multiplayerManager.stopBrowsing()
+        multiplayerManager?.stopHosting()
+        multiplayerManager?.stopBrowsing()
         discoveredPeers.removeAll()
         
         // Reset UI
@@ -240,24 +248,24 @@ class GameViewController: UIViewController {
     }
     
     func resetLobbyUI() {
-        hostButton.isHidden = false
-        joinButton.isHidden = false
-        instructionsLabel.isHidden = false
-        cancelButton.isHidden = true
-        peerTableView.isHidden = true
-        emptyStateLabel.isHidden = true
-        activityIndicator.stopAnimating()
-        statusLabel.text = "Choose an option to start"
-        peerTableView.reloadData()
+        hostButton?.isHidden = false
+        joinButton?.isHidden = false
+        instructionsLabel?.isHidden = false
+        cancelButton?.isHidden = true
+        peerTableView?.isHidden = true
+        emptyStateLabel?.isHidden = true
+        activityIndicator?.stopAnimating()
+        statusLabel?.text = "Choose an option to start"
+        peerTableView?.reloadData()
     }
     
     func updatePeerListUI() {
         if discoveredPeers.isEmpty {
-            peerTableView.isHidden = true
-            emptyStateLabel.isHidden = false
+            peerTableView?.isHidden = true
+            emptyStateLabel?.isHidden = false
         } else {
-            peerTableView.isHidden = false
-            emptyStateLabel.isHidden = true
+            peerTableView?.isHidden = false
+            emptyStateLabel?.isHidden = true
         }
     }
     
@@ -271,7 +279,7 @@ class GameViewController: UIViewController {
         }
         
         permissionCheckInProgress = true
-        statusLabel.text = "Checking permissions..."
+        statusLabel?.text = "Checking permissions..."
         
         // Create a temporary browser to trigger the permission prompt
         // This is necessary because iOS doesn't provide a direct API to check
@@ -313,7 +321,7 @@ class GameViewController: UIViewController {
     
     func startGame(isPlayer1: Bool) {
         // Hide lobby
-        lobbyView.isHidden = true
+        lobbyView?.isHidden = true
         
         // Create SKView if needed
         if skView == nil {
@@ -327,14 +335,15 @@ class GameViewController: UIViewController {
         let seed = UInt32.random(in: 0...UInt32.max)
         
         // Create game state
-        gameState = GameState(seed: seed, isPlayer1: isPlayer1)
+        let newGameState = GameState(seed: seed, isPlayer1: isPlayer1)
+        gameState = newGameState
         
         // Send round start message
-        multiplayerManager.sendMessage(.roundStart(seed: seed, isInitiator: isPlayer1))
+        multiplayerManager?.sendMessage(.roundStart(seed: seed, isInitiator: isPlayer1))
         
         // Setup game scene
         let scene = GameScene.newGameScene()
-        scene.startGame(with: gameState!)
+        scene.startGame(with: newGameState)
         scene.onGameMessage = { [weak self] message in
             self?.handleGameMessage(message)
         }
@@ -342,19 +351,20 @@ class GameViewController: UIViewController {
         gameScene = scene
         
         // Present the scene
-        skView?.presentScene(scene)
-        skView?.ignoresSiblingOrder = true
-        skView?.showsFPS = true
-        skView?.showsNodeCount = true
+        guard let skView = skView else { return }
+        skView.presentScene(scene)
+        skView.ignoresSiblingOrder = true
+        skView.showsFPS = true
+        skView.showsNodeCount = true
     }
     
     func handleGameMessage(_ message: GameMessage) {
         switch message {
         case .playerMove(let row, let col, let direction):
-            multiplayerManager.sendPositionUpdate(row: row, col: col, direction: direction)
+            multiplayerManager?.sendPositionUpdate(row: row, col: col, direction: direction)
             
         case .playerShoot(let projectile):
-            multiplayerManager.sendMessage(.playerShoot(projectile: projectile))
+            multiplayerManager?.sendMessage(.playerShoot(projectile: projectile))
             
         case .readyForNextRound:
             readyForNextRound = true
@@ -376,7 +386,7 @@ class GameViewController: UIViewController {
             }
         } else if readyForNextRound {
             // Send ready message
-            multiplayerManager.sendMessage(.readyForNextRound)
+            multiplayerManager?.sendMessage(.readyForNextRound)
         }
     }
     
@@ -387,11 +397,11 @@ class GameViewController: UIViewController {
         let seed = UInt32.random(in: 0...UInt32.max)
         
         // Reset game state
-        gameState?.reset(seed: seed)
-        gameScene?.startGame(with: gameState!)
+        currentState.reset(seed: seed)
+        gameScene?.startGame(with: currentState)
         
         // Send new round message
-        multiplayerManager.sendMessage(.roundStart(seed: seed, isInitiator: true))
+        multiplayerManager?.sendMessage(.roundStart(seed: seed, isInitiator: true))
     }
 
     override var supportedInterfaceOrientations: UIInterfaceOrientationMask {
@@ -413,29 +423,29 @@ extension GameViewController: MultiplayerManagerDelegate {
     func multiplayerManager(_ manager: MultiplayerManager, didFindPeer peerID: MCPeerID) {
         if !discoveredPeers.contains(peerID) {
             discoveredPeers.append(peerID)
-            peerTableView.reloadData()
+            peerTableView?.reloadData()
             updatePeerListUI()
-            statusLabel.text = "Found \(discoveredPeers.count) game\(discoveredPeers.count == 1 ? "" : "s"). Tap to join."
+            statusLabel?.text = "Found \(discoveredPeers.count) game\(discoveredPeers.count == 1 ? "" : "s"). Tap to join."
         }
     }
     
     func multiplayerManager(_ manager: MultiplayerManager, didLosePeer peerID: MCPeerID) {
         discoveredPeers.removeAll { $0 == peerID }
-        peerTableView.reloadData()
+        peerTableView?.reloadData()
         updatePeerListUI()
         if discoveredPeers.isEmpty {
-            statusLabel.text = "Searching for nearby games..."
+            statusLabel?.text = "Searching for nearby games..."
         } else {
-            statusLabel.text = "Found \(discoveredPeers.count) game\(discoveredPeers.count == 1 ? "" : "s"). Tap to join."
+            statusLabel?.text = "Found \(discoveredPeers.count) game\(discoveredPeers.count == 1 ? "" : "s"). Tap to join."
         }
     }
     
     func multiplayerManager(_ manager: MultiplayerManager, didConnectToPeer peerID: MCPeerID) {
-        activityIndicator.stopAnimating()
-        statusLabel.text = "Connected to \(peerID.displayName)! Starting game..."
+        activityIndicator?.stopAnimating()
+        statusLabel?.text = "Connected to \(peerID.displayName)! Starting game..."
         
         // Determine who is player 1 (lexicographically smaller peer ID becomes player 1)
-        let myName = multiplayerManager.session.myPeerID.displayName
+        guard let myName = multiplayerManager?.session.myPeerID.displayName else { return }
         let remoteName = peerID.displayName
         let isPlayer1 = myName < remoteName
         
@@ -469,13 +479,14 @@ extension GameViewController: MultiplayerManagerDelegate {
             if gameState == nil {
                 // Initial game start - we need to invert the isPlayer1 flag
                 let isPlayer1 = !isInitiator
-                gameState = GameState(seed: seed, isPlayer1: isPlayer1)
+                let newGameState = GameState(seed: seed, isPlayer1: isPlayer1)
+                gameState = newGameState
                 
                 DispatchQueue.main.async { [weak self] in
-                    guard let self = self, let state = self.gameState else { return }
+                    guard let self = self else { return }
                     
                     // Hide lobby
-                    self.lobbyView.isHidden = true
+                    self.lobbyView?.isHidden = true
                     
                     // Create SKView if needed
                     if self.skView == nil {
@@ -486,21 +497,25 @@ extension GameViewController: MultiplayerManagerDelegate {
                     }
                     
                     let scene = GameScene.newGameScene()
-                    scene.startGame(with: state)
+                    scene.startGame(with: newGameState)
                     scene.onGameMessage = { [weak self] msg in
                         self?.handleGameMessage(msg)
                     }
                     self.gameScene = scene
                     
-                    self.skView?.presentScene(scene)
-                    self.skView?.ignoresSiblingOrder = true
-                    self.skView?.showsFPS = true
-                    self.skView?.showsNodeCount = true
+                    if let skView = self.skView {
+                        skView.presentScene(scene)
+                        skView.ignoresSiblingOrder = true
+                        skView.showsFPS = true
+                        skView.showsNodeCount = true
+                    }
                 }
             } else {
                 // Round restart
                 gameState?.reset(seed: seed)
-                gameScene?.startGame(with: gameState!)
+                if let state = gameState {
+                    gameScene?.startGame(with: state)
+                }
             }
             
         case .playerMove(let row, let col, let direction):
@@ -524,7 +539,7 @@ extension GameViewController: MultiplayerManagerDelegate {
     
     func multiplayerManager(_ manager: MultiplayerManager, didEncounterError error: Error) {
         // Reset UI and show error alert
-        activityIndicator.stopAnimating()
+        activityIndicator?.stopAnimating()
         
         let alert = UIAlertController(
             title: "Connection Error",
@@ -564,9 +579,9 @@ extension GameViewController: UITableViewDelegate, UITableViewDataSource {
     
     func tableView(_ tableView: UITableView, didSelectRowAt indexPath: IndexPath) {
         let peer = discoveredPeers[indexPath.row]
-        multiplayerManager.invitePeer(peer)
-        statusLabel.text = "Connecting to \(peer.displayName)..."
-        activityIndicator.startAnimating()
+        multiplayerManager?.invitePeer(peer)
+        statusLabel?.text = "Connecting to \(peer.displayName)..."
+        activityIndicator?.startAnimating()
         tableView.deselectRow(at: indexPath, animated: true)
     }
 }
