@@ -37,6 +37,7 @@ class GameViewController: UIViewController {
     var connectedPeers: [MCPeerID] = [] // Track connected peers
     var peerToPlayerIndex: [MCPeerID: Int] = [:] // Map peer to player index
     var readyPlayers: Set<Int> = [] // Track which players are ready for next round
+    var isRequestingPermissions: Bool = false // Track if we're in permission request flow
 
     override func viewDidLoad() {
         super.viewDidLoad()
@@ -45,6 +46,39 @@ class GameViewController: UIViewController {
         multiplayerManager.delegate = self
         
         setupLobby()
+        
+        // Request permissions on first launch
+        requestPermissionsIfNeeded()
+    }
+    
+    func requestPermissionsIfNeeded() {
+        // Check if we've already requested permissions
+        let hasRequestedPermissions = UserDefaults.standard.bool(forKey: "tankgame.hasRequestedPermissions")
+        
+        if !hasRequestedPermissions {
+            // Mark that we're requesting permissions
+            UserDefaults.standard.set(true, forKey: "tankgame.hasRequestedPermissions")
+            isRequestingPermissions = true
+            
+            // Trigger permission prompts by briefly starting and stopping browsing/advertising
+            // This will cause iOS to show the Local Network and Bluetooth permission dialogs
+            DispatchQueue.main.asyncAfter(deadline: .now() + 0.5) { [weak self] in
+                guard let self = self else { return }
+                
+                // Start browsing to trigger Local Network permission
+                self.multiplayerManager.startBrowsing()
+                
+                // Start hosting to trigger Bluetooth permission
+                self.multiplayerManager.startHosting()
+                
+                // Stop after a short delay to allow the permission dialogs to appear
+                DispatchQueue.main.asyncAfter(deadline: .now() + 1.0) { [weak self] in
+                    self?.multiplayerManager.stopBrowsing()
+                    self?.multiplayerManager.stopHosting()
+                    self?.isRequestingPermissions = false
+                }
+            }
+        }
     }
     
     func setupLobby() {
@@ -616,6 +650,11 @@ extension GameViewController: MultiplayerManagerDelegate {
     }
     
     func multiplayerManager(_ manager: MultiplayerManager, didEncounterError error: Error) {
+        // Don't show error alerts if we're just requesting permissions on first launch
+        if isRequestingPermissions {
+            return
+        }
+        
         // Reset UI
         activityIndicator.stopAnimating()
         
