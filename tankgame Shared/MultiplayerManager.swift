@@ -93,10 +93,6 @@ class MultiplayerManager: NSObject {
         }
     }
     
-    func sendPositionUpdate(row: Int, col: Int, direction: Direction) {
-        sendMessage(.playerMove(row: row, col: col, direction: direction))
-    }
-    
     // MARK: - Disconnection
     
     func disconnect() {
