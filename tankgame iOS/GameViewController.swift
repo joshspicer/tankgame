@@ -76,7 +76,7 @@ class GameViewController: UIViewController {
         
         // Instructions label
         instructionsLabel = UILabel()
-        instructionsLabel.text = "Battle with a friend on the same network!\nMove with the joystick, tap FIRE to shoot."
+        instructionsLabel.text = "Battle with 2-4 players on the same network!\nMove with the joystick, tap FIRE to shoot."
         instructionsLabel.font = .systemFont(ofSize: 14)
         instructionsLabel.textAlignment = .center
         instructionsLabel.numberOfLines = 0
@@ -308,12 +308,17 @@ class GameViewController: UIViewController {
         
         // Assign player indices: host is always player 0
         peerToPlayerIndex.removeAll()
+        var playerAssignments: [String: Int] = [:]
+        playerAssignments[multiplayerManager.session.myPeerID.displayName] = 0
+        
         for (index, peer) in connectedPeers.enumerated() {
-            peerToPlayerIndex[peer] = index + 1
+            let playerIndex = index + 1
+            peerToPlayerIndex[peer] = playerIndex
+            playerAssignments[peer.displayName] = playerIndex
         }
         
         // Start the game
-        startGame(playerCount: playerCount, localPlayerIndex: 0)
+        startGame(playerCount: playerCount, localPlayerIndex: 0, playerAssignments: playerAssignments)
     }
     
     func updateConnectedPlayersUI() {
@@ -404,7 +409,7 @@ class GameViewController: UIViewController {
         present(alert, animated: true)
     }
     
-    func startGame(playerCount: Int, localPlayerIndex: Int) {
+    func startGame(playerCount: Int, localPlayerIndex: Int, playerAssignments: [String: Int]) {
         // Hide lobby
         lobbyView.isHidden = true
         
@@ -423,7 +428,7 @@ class GameViewController: UIViewController {
         gameState = GameState(seed: seed, playerCount: playerCount, localPlayerIndex: localPlayerIndex)
         
         // Send round start message to all peers
-        multiplayerManager.sendMessage(.roundStart(seed: seed, playerCount: playerCount, hostPlayerIndex: localPlayerIndex))
+        multiplayerManager.sendMessage(.roundStart(seed: seed, playerCount: playerCount, hostPlayerIndex: localPlayerIndex, playerAssignments: playerAssignments))
         
         // Setup game scene
         let scene = GameScene.newGameScene()
@@ -488,8 +493,15 @@ class GameViewController: UIViewController {
         gameState?.reset(seed: seed)
         gameScene?.startGame(with: gameState!)
         
+        // Build player assignments map
+        var playerAssignments: [String: Int] = [:]
+        playerAssignments[multiplayerManager.session.myPeerID.displayName] = currentState.localPlayerIndex
+        for (peer, index) in peerToPlayerIndex {
+            playerAssignments[peer.displayName] = index
+        }
+        
         // Send new round message
-        multiplayerManager.sendMessage(.roundStart(seed: seed, playerCount: currentState.tanks.count, hostPlayerIndex: currentState.localPlayerIndex))
+        multiplayerManager.sendMessage(.roundStart(seed: seed, playerCount: currentState.tanks.count, hostPlayerIndex: currentState.localPlayerIndex, playerAssignments: playerAssignments))
     }
 
     override var supportedInterfaceOrientations: UIInterfaceOrientationMask {
@@ -575,26 +587,12 @@ extension GameViewController: MultiplayerManagerDelegate {
     
     func multiplayerManager(_ manager: MultiplayerManager, didReceiveMessage message: GameMessage, from peerID: MCPeerID) {
         switch message {
-        case .roundStart(let seed, let playerCount, let hostPlayerIndex):
+        case .roundStart(let seed, let playerCount, let hostPlayerIndex, let playerAssignments):
             // Host initiated game start or round restart
             if gameState == nil {
-                // Initial game start - determine local player index
-                // Host is player 0, others are assigned in connection order
-                let localPlayerIndex: Int
-                if let index = peerToPlayerIndex[multiplayerManager.session.myPeerID] {
-                    localPlayerIndex = index
-                } else {
-                    // We're a client, find our index based on connection order
-                    // Host assigns indices, so we need to receive our index from host
-                    // For now, use a simple scheme: we're the peer that's not in the map yet
-                    let allPeers = [peerID] + manager.session.connectedPeers.filter { $0 != peerID }
-                    if let myIndex = allPeers.firstIndex(where: { $0 == manager.session.myPeerID }) {
-                        localPlayerIndex = myIndex + 1
-                    } else {
-                        // Fallback: count how many peers we're connected to
-                        localPlayerIndex = connectedPeers.count
-                    }
-                }
+                // Initial game start - get our player index from assignments
+                let myName = multiplayerManager.session.myPeerID.displayName
+                let localPlayerIndex = playerAssignments[myName] ?? 1 // Default to 1 if not found
                 
                 gameState = GameState(seed: seed, playerCount: playerCount, localPlayerIndex: localPlayerIndex)
                 

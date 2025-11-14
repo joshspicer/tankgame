@@ -9,7 +9,7 @@ import Foundation
 
 // Network message types
 enum GameMessage: Codable {
-    case roundStart(seed: UInt32, playerCount: Int, hostPlayerIndex: Int)
+    case roundStart(seed: UInt32, playerCount: Int, hostPlayerIndex: Int, playerAssignments: [String: Int]) // peerName -> playerIndex
     case playerJoined(playerIndex: Int, peerName: String)
     case playerMove(playerIndex: Int, row: Int, col: Int, direction: Direction)
     case playerShoot(playerIndex: Int, projectile: Projectile)
