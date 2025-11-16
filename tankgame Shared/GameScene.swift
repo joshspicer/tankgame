@@ -55,6 +55,15 @@ class GameScene: SKScene {
     override func didMove(to view: SKView) {
         backgroundColor = .darkGray
         setupScene()
+        
+        // If startGame was called before didMove (e.g., for clients receiving roundStart),
+        // render the grid now that the scene has been set up
+        if gameState != nil {
+            renderGrid()
+            renderTanks()
+            renderProjectiles()
+            updateScore()
+        }
     }
     
     func playSound(_ soundFile: String) {
