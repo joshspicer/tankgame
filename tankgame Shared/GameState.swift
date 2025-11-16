@@ -7,17 +7,7 @@
 
 import Foundation
 
-// Network message types
-enum GameMessage: Codable {
-    case roundStart(seed: UInt32, playerCount: Int, hostPlayerIndex: Int, playerAssignments: [String: Int]) // peerName -> playerIndex
-    case playerJoined(playerIndex: Int, peerName: String)
-    case playerMove(playerIndex: Int, row: Int, col: Int, direction: Direction)
-    case playerShoot(playerIndex: Int, projectile: Projectile)
-    case playerHit(playerIndex: Int)
-    case readyForNextRound(playerIndex: Int)
-    case startGame // Host signals game start
-}
-
+/// Manages the state of a game round including tanks, projectiles, and grid
 final class GameState {
     var grid: [[GridCell]]
     var tanks: [Tank] // Array of all tanks (index = player index)

@@ -19,13 +19,20 @@
 				Actions.sks,
 				Assets.xcassets,
 				Direction.swift,
+				ExplosionEffects.swift,
+				FireButton.swift,
+				GameMessages.swift,
 				GameScene.sks,
 				GameScene.swift,
+				GameSceneRenderer.swift,
+				GameSceneUI.swift,
 				GameState.swift,
 				GridCell.swift,
 				GridGenerator.swift,
+				JoystickController.swift,
 				MultiplayerManager.swift,
 				Projectile.swift,
+				SoundManager.swift,
 				Tank.swift,
 			);
 			target = 0AEBC8152EB14C4300890CC1 /* tankgame iOS */;
@@ -35,8 +42,22 @@
 			membershipExceptions = (
 				Actions.sks,
 				Assets.xcassets,
+				Direction.swift,
+				ExplosionEffects.swift,
+				FireButton.swift,
+				GameMessages.swift,
 				GameScene.sks,
 				GameScene.swift,
+				GameSceneRenderer.swift,
+				GameSceneUI.swift,
+				GameState.swift,
+				GridCell.swift,
+				GridGenerator.swift,
+				JoystickController.swift,
+				MultiplayerManager.swift,
+				Projectile.swift,
+				SoundManager.swift,
+				Tank.swift,
 			);
 			target = 0AEBC8262EB14C4300890CC1 /* tankgame tvOS */;
 		};
@@ -45,8 +66,22 @@
 			membershipExceptions = (
 				Actions.sks,
 				Assets.xcassets,
+				Direction.swift,
+				ExplosionEffects.swift,
+				FireButton.swift,
+				GameMessages.swift,
 				GameScene.sks,
 				GameScene.swift,
+				GameSceneRenderer.swift,
+				GameSceneUI.swift,
+				GameState.swift,
+				GridCell.swift,
+				GridGenerator.swift,
+				JoystickController.swift,
+				MultiplayerManager.swift,
+				Projectile.swift,
+				SoundManager.swift,
+				Tank.swift,
 			);
 			target = 0AEBC8362EB14C4300890CC1 /* tankgame macOS */;
 		};
