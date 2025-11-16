@@ -141,7 +141,7 @@ class GameScene: SKScene {
     override func update(_ currentTime: TimeInterval) {
         guard let state = gameState else { return }
         
-        // Handle continuous movement from joystick
+        // Handle continuous movement from joystick with fluid controls (16 updates/sec)
         if let direction = joystickController.currentDirection, !state.isRoundOver() {
             if currentTime - lastMoveTime > 0.06 { // Move ~16 times per second for fluid controls
                 if state.localTank.move(in: direction, grid: state.grid) {
