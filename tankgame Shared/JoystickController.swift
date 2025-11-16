@@ -99,7 +99,7 @@ class JoystickController {
         let dy = location.y
         let distance = sqrt(dx * dx + dy * dy)
         
-        if distance > 20 {
+        if distance > 15 {
             let angle = atan2(dy, dx)
             
             // Snap to cardinal directions
