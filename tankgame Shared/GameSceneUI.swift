@@ -11,6 +11,7 @@ import SpriteKit
 class GameSceneUI {
     private var statusLabel: SKLabelNode?
     private var scoreLabel: SKLabelNode?
+    private var partyModeLabel: SKLabelNode?
     
     init() {}
     
@@ -31,6 +32,16 @@ class GameSceneUI {
         newScoreLabel.text = "Score: 0 - 0"
         scene.addChild(newScoreLabel)
         scoreLabel = newScoreLabel
+        
+        // Create party mode label (initially hidden)
+        let newPartyModeLabel = SKLabelNode(fontNamed: "Arial-BoldMT")
+        newPartyModeLabel.fontSize = 18
+        newPartyModeLabel.position = CGPoint(x: sceneSize.width / 2, y: sceneSize.height - 80)
+        newPartyModeLabel.text = "🎉 PARTY MODE 🎉"
+        newPartyModeLabel.fontColor = .yellow
+        newPartyModeLabel.isHidden = true
+        scene.addChild(newPartyModeLabel)
+        partyModeLabel = newPartyModeLabel
     }
     
     /// Update status text
@@ -63,6 +74,20 @@ class GameSceneUI {
         
         DispatchQueue.main.asyncAfter(deadline: .now() + 3) { [weak self] in
             self?.statusLabel?.text = "Next round starting..."
+        }
+    }
+    
+    /// Show or hide party mode indicator
+    func setPartyMode(_ enabled: Bool) {
+        partyModeLabel?.isHidden = !enabled
+        // Add pulsing animation when party mode is enabled
+        if enabled {
+            let scaleUp = SKAction.scale(to: 1.1, duration: 0.5)
+            let scaleDown = SKAction.scale(to: 1.0, duration: 0.5)
+            let pulse = SKAction.sequence([scaleUp, scaleDown])
+            partyModeLabel?.run(SKAction.repeatForever(pulse))
+        } else {
+            partyModeLabel?.removeAllActions()
         }
     }
 }

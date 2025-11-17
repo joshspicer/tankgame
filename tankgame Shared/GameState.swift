@@ -14,6 +14,7 @@ final class GameState {
     var projectiles: [Projectile] = []
     var wins: [Int] // Wins for each player
     var localPlayerIndex: Int // Index of the local player in tanks array
+    var isPartyMode: Bool // Party mode flag for enhanced gameplay
     
     // Spawn positions for up to 4 players
     static let spawnPositions: [(row: Int, col: Int, direction: Direction)] = [
@@ -23,9 +24,10 @@ final class GameState {
         (7, 0, .up)         // Player 3: bottom-left
     ]
     
-    init(seed: UInt32, playerCount: Int, localPlayerIndex: Int) {
+    init(seed: UInt32, playerCount: Int, localPlayerIndex: Int, isPartyMode: Bool = false) {
         self.grid = GridGenerator.generate(seed: seed)
         self.localPlayerIndex = localPlayerIndex
+        self.isPartyMode = isPartyMode
         
         // Initialize tanks for all players
         var initialTanks: [Tank] = []

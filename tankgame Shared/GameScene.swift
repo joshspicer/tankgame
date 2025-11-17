@@ -111,6 +111,7 @@ class GameScene: SKScene {
         renderTanks()
         updateScore()
         ui.updateStatus("Fight!")
+        ui.setPartyMode(state.isPartyMode)
     }
     
     func renderGrid() {
@@ -141,9 +142,12 @@ class GameScene: SKScene {
     override func update(_ currentTime: TimeInterval) {
         guard let state = gameState else { return }
         
+        // Party mode increases speed (faster movement)
+        let moveInterval = state.isPartyMode ? 0.06 : 0.12 // Double speed in party mode
+        
         // Handle continuous movement from joystick
         if let direction = joystickController.currentDirection, !state.isRoundOver() {
-            if currentTime - lastMoveTime > 0.12 { // Move ~8 times per second
+            if currentTime - lastMoveTime > moveInterval {
                 if state.localTank.move(in: direction, grid: state.grid) {
                     renderTanks()
                     soundManager.playSound("move.wav")
@@ -161,8 +165,9 @@ class GameScene: SKScene {
             return
         }
         
-        // Update projectiles
-        if currentTime - lastUpdateTime > 0.05 { // ~20 FPS for projectile updates
+        // Update projectiles (faster in party mode)
+        let projectileUpdateInterval = state.isPartyMode ? 0.025 : 0.05
+        if currentTime - lastUpdateTime > projectileUpdateInterval {
             // Save tank alive state before update
             let wasAlive = state.tanks.map { $0.isAlive }
             let tankPositions = state.tanks.map { renderer.gridPosition(row: $0.row, col: $0.col) }
@@ -261,13 +266,54 @@ extension GameScene {
     func handleShoot() {
         guard let state = gameState, state.localTank.isAlive else { return }
         
-        let projectile = state.localTank.shoot()
-        state.projectiles.append(projectile)
-        renderProjectiles()
-        soundManager.playSound("shoot.wav")
-        
-        // Send shoot message
-        onGameMessage?(.playerShoot(playerIndex: state.localPlayerIndex, projectile: projectile))
+        if state.isPartyMode {
+            // In party mode, shoot 3 projectiles in a spread pattern
+            let projectile = state.localTank.shoot()
+            state.projectiles.append(projectile)
+            
+            // Add two more projectiles with slight offset
+            var leftProjectile = projectile
+            var rightProjectile = projectile
+            
+            // Offset based on direction for spread
+            switch state.localTank.direction {
+            case .up, .down:
+                leftProjectile.col -= 1
+                rightProjectile.col += 1
+            case .left, .right:
+                leftProjectile.row -= 1
+                rightProjectile.row += 1
+            }
+            
+            // Only add if not out of bounds
+            if !leftProjectile.isOutOfBounds(gridSize: 8) {
+                state.projectiles.append(leftProjectile)
+            }
+            if !rightProjectile.isOutOfBounds(gridSize: 8) {
+                state.projectiles.append(rightProjectile)
+            }
+            
+            renderProjectiles()
+            soundManager.playSound("shoot.wav")
+            
+            // Send all projectiles
+            onGameMessage?(.playerShoot(playerIndex: state.localPlayerIndex, projectile: projectile))
+            if !leftProjectile.isOutOfBounds(gridSize: 8) {
+                onGameMessage?(.playerShoot(playerIndex: state.localPlayerIndex, projectile: leftProjectile))
+            }
+            if !rightProjectile.isOutOfBounds(gridSize: 8) {
+                onGameMessage?(.playerShoot(playerIndex: state.localPlayerIndex, projectile: rightProjectile))
+            }
+        } else {
+            // Normal mode - single projectile
+            let projectile = state.localTank.shoot()
+            state.projectiles.append(projectile)
+            renderProjectiles()
+            soundManager.playSound("shoot.wav")
+            
+            // Send shoot message
+            onGameMessage?(.playerShoot(playerIndex: state.localPlayerIndex, projectile: projectile))
+        }
     }
 }
 #endif

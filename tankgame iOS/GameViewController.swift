@@ -26,6 +26,7 @@ class GameViewController: UIViewController {
     private var gameScene: GameScene?
     private var gameState: GameState?
     private var skView: SKView?
+    private var isPartyMode: Bool = false
 
     override func viewDidLoad() {
         super.viewDidLoad()
@@ -62,6 +63,10 @@ class GameViewController: UIViewController {
         
         lobbyUI.onStartGameTapped = { [weak self] in
             self?.handleStartGameTapped()
+        }
+        
+        lobbyUI.onPartyModeChanged = { [weak self] isEnabled in
+            self?.isPartyMode = isEnabled
         }
         
         // Setup table view
@@ -179,9 +184,9 @@ class GameViewController: UIViewController {
         }
         
         let seed = UInt32.random(in: 0...UInt32.max)
-        gameState = GameState(seed: seed, playerCount: playerCount, localPlayerIndex: localPlayerIndex)
+        gameState = GameState(seed: seed, playerCount: playerCount, localPlayerIndex: localPlayerIndex, isPartyMode: isPartyMode)
         
-        multiplayerManager.sendMessage(.roundStart(seed: seed, playerCount: playerCount, hostPlayerIndex: localPlayerIndex, playerAssignments: playerAssignments))
+        multiplayerManager.sendMessage(.roundStart(seed: seed, playerCount: playerCount, hostPlayerIndex: localPlayerIndex, playerAssignments: playerAssignments, isPartyMode: isPartyMode))
         
         let scene = GameScene.newGameScene()
         scene.startGame(with: gameState!)
@@ -243,7 +248,7 @@ class GameViewController: UIViewController {
             playerAssignments[peer.displayName] = index
         }
         
-        multiplayerManager.sendMessage(.roundStart(seed: seed, playerCount: currentState.tanks.count, hostPlayerIndex: currentState.localPlayerIndex, playerAssignments: playerAssignments))
+        multiplayerManager.sendMessage(.roundStart(seed: seed, playerCount: currentState.tanks.count, hostPlayerIndex: currentState.localPlayerIndex, playerAssignments: playerAssignments, isPartyMode: currentState.isPartyMode))
     }
 
     override var supportedInterfaceOrientations: UIInterfaceOrientationMask {
@@ -309,12 +314,12 @@ extension GameViewController: MultiplayerManagerDelegate {
     
     func multiplayerManager(_ manager: MultiplayerManager, didReceiveMessage message: GameMessage, from peerID: MCPeerID) {
         switch message {
-        case .roundStart(let seed, let playerCount, let hostPlayerIndex, let playerAssignments):
+        case .roundStart(let seed, let playerCount, let hostPlayerIndex, let playerAssignments, let isPartyMode):
             if gameState == nil {
                 let myName = multiplayerManager.session.myPeerID.displayName
                 let localPlayerIndex = playerAssignments[myName] ?? 1
                 
-                gameState = GameState(seed: seed, playerCount: playerCount, localPlayerIndex: localPlayerIndex)
+                gameState = GameState(seed: seed, playerCount: playerCount, localPlayerIndex: localPlayerIndex, isPartyMode: isPartyMode)
                 
                 DispatchQueue.main.async { [weak self] in
                     guard let self = self, let state = self.gameState else { return }

@@ -23,12 +23,15 @@ class LobbyUI {
     private(set) var instructionsLabel: UILabel!
     private(set) var emptyStateLabel: UILabel!
     private(set) var activityIndicator: UIActivityIndicatorView!
+    private(set) var partyModeSwitch: UISwitch!
+    private(set) var partyModeLabel: UILabel!
     
     // Callbacks
     var onHostTapped: (() -> Void)?
     var onJoinTapped: (() -> Void)?
     var onCancelTapped: (() -> Void)?
     var onStartGameTapped: (() -> Void)?
+    var onPartyModeChanged: ((Bool) -> Void)?
     
     func setup(in parentView: UIView) {
         // Create lobby view
@@ -134,6 +137,19 @@ class LobbyUI {
         emptyStateLabel.translatesAutoresizingMaskIntoConstraints = false
         lobbyView.addSubview(emptyStateLabel)
         
+        // Party Mode controls
+        partyModeLabel = UILabel()
+        partyModeLabel.text = "🎉 Party Mode"
+        partyModeLabel.font = .systemFont(ofSize: 18, weight: .semibold)
+        partyModeLabel.textColor = .label
+        partyModeLabel.translatesAutoresizingMaskIntoConstraints = false
+        lobbyView.addSubview(partyModeLabel)
+        
+        partyModeSwitch = UISwitch()
+        partyModeSwitch.translatesAutoresizingMaskIntoConstraints = false
+        partyModeSwitch.addTarget(self, action: #selector(partyModeSwitchChanged), for: .valueChanged)
+        lobbyView.addSubview(partyModeSwitch)
+        
         setupConstraints(titleLabel: titleLabel)
     }
     
@@ -203,7 +219,14 @@ class LobbyUI {
             
             emptyStateLabel.topAnchor.constraint(equalTo: cancelButton.bottomAnchor, constant: 40),
             emptyStateLabel.leadingAnchor.constraint(equalTo: lobbyView.leadingAnchor, constant: 30),
-            emptyStateLabel.trailingAnchor.constraint(equalTo: lobbyView.trailingAnchor, constant: -30)
+            emptyStateLabel.trailingAnchor.constraint(equalTo: lobbyView.trailingAnchor, constant: -30),
+            
+            // Party mode controls
+            partyModeLabel.bottomAnchor.constraint(equalTo: hostButton.topAnchor, constant: -40),
+            partyModeLabel.leadingAnchor.constraint(equalTo: lobbyView.centerXAnchor, constant: -80),
+            
+            partyModeSwitch.centerYAnchor.constraint(equalTo: partyModeLabel.centerYAnchor),
+            partyModeSwitch.leadingAnchor.constraint(equalTo: partyModeLabel.trailingAnchor, constant: 16)
         ])
     }
     
@@ -221,6 +244,10 @@ class LobbyUI {
     
     @objc private func startGameButtonTapped() {
         onStartGameTapped?()
+    }
+    
+    @objc private func partyModeSwitchChanged() {
+        onPartyModeChanged?(partyModeSwitch.isOn)
     }
     
     /// Reset lobby to initial state
