@@ -21,6 +21,7 @@ class AppDelegate: NSObject, NSApplicationDelegate {
     }
 
     func applicationShouldTerminateAfterLastWindowClosed(_ sender: NSApplication) -> Bool {
+        // TODO: test - Add unit tests to verify this returns true
         return true
     }
 
