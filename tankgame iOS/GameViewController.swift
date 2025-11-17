@@ -56,6 +56,10 @@ class GameViewController: UIViewController {
             self?.handleJoinTapped()
         }
         
+        lobbyUI.onPartyModeTapped = { [weak self] in
+            self?.handlePartyModeTapped()
+        }
+        
         lobbyUI.onCancelTapped = { [weak self] in
             self?.handleCancelTapped()
         }
@@ -84,6 +88,7 @@ class GameViewController: UIViewController {
         multiplayerManager.isHost = true
         lobbyUI.hostButton.isHidden = true
         lobbyUI.joinButton.isHidden = true
+        lobbyUI.partyModeButton.isHidden = true
         lobbyUI.instructionsLabel.isHidden = true
         lobbyUI.cancelButton.isHidden = false
         lobbyUI.connectedPlayersView.isHidden = false
@@ -98,6 +103,7 @@ class GameViewController: UIViewController {
     private func handleJoinTapped() {
         lobbyUI.hostButton.isHidden = true
         lobbyUI.joinButton.isHidden = true
+        lobbyUI.partyModeButton.isHidden = true
         lobbyUI.instructionsLabel.isHidden = true
         lobbyUI.cancelButton.isHidden = false
         lobbyUI.activityIndicator.startAnimating()
@@ -108,9 +114,25 @@ class GameViewController: UIViewController {
         multiplayerManager.startBrowsing()
     }
     
+    private func handlePartyModeTapped() {
+        lobbyUI.hostButton.isHidden = true
+        lobbyUI.joinButton.isHidden = true
+        lobbyUI.partyModeButton.isHidden = true
+        lobbyUI.instructionsLabel.isHidden = true
+        lobbyUI.cancelButton.isHidden = false
+        lobbyUI.connectedPlayersView.isHidden = false
+        lobbyUI.startGameButton.isHidden = false
+        lobbyUI.activityIndicator.startAnimating()
+        lobbyUI.statusLabel.text = "🎉 Party Mode Active!\nSearching for players and hosting..."
+        updateConnectedPlayersUI()
+        
+        multiplayerManager.startPartyMode()
+    }
+    
     private func handleCancelTapped() {
         multiplayerManager.stopHosting()
         multiplayerManager.stopBrowsing()
+        multiplayerManager.stopPartyMode()
         multiplayerCoordinator.clearAll()
         lobbyUI.reset()
         lobbyUI.peerTableView.reloadData()
@@ -280,7 +302,11 @@ extension GameViewController: MultiplayerManagerDelegate {
         multiplayerCoordinator.addConnectedPeer(peerID)
         lobbyUI.activityIndicator.stopAnimating()
         
-        if multiplayerManager.isHost {
+        if multiplayerManager.isPartyMode {
+            // In party mode, stop searching after first connection
+            multiplayerManager.stopBrowsing()
+            lobbyUI.statusLabel.text = "🎉 Connected to \(peerID.displayName)!\nReady to play!"
+        } else if multiplayerManager.isHost {
             lobbyUI.statusLabel.text = "Player joined: \(peerID.displayName)"
         } else {
             lobbyUI.statusLabel.text = "Connected! Waiting for host to start game..."

@@ -29,6 +29,7 @@ class MultiplayerManager: NSObject {
     
     var isHost: Bool = false
     var maxPlayers: Int = 4 // Can be 2, 3, or 4
+    var isPartyMode: Bool = false // Party mode: auto-connect to first available peer
     
     override init() {
         // Generate or retrieve persistent peer ID
@@ -48,6 +49,21 @@ class MultiplayerManager: NSObject {
         
         self.session = MCSession(peer: myPeerID, securityIdentity: nil, encryptionPreference: .required)
         self.session.delegate = self
+    }
+    
+    // MARK: - Party Mode
+    
+    func startPartyMode() {
+        isPartyMode = true
+        isHost = true // Host in party mode
+        startHosting()
+        startBrowsing()
+    }
+    
+    func stopPartyMode() {
+        isPartyMode = false
+        stopHosting()
+        stopBrowsing()
     }
     
     // MARK: - Hosting
@@ -167,6 +183,12 @@ extension MultiplayerManager: MCSessionDelegate {
 
 extension MultiplayerManager: MCNearbyServiceAdvertiserDelegate {
     func advertiser(_ advertiser: MCNearbyServiceAdvertiser, didReceiveInvitationFromPeer peerID: MCPeerID, withContext context: Data?, invitationHandler: @escaping (Bool, MCSession?) -> Void) {
+        // In party mode, auto-accept first invitation
+        if isPartyMode && session.connectedPeers.isEmpty {
+            invitationHandler(true, session)
+            return
+        }
+        
         // Accept invitations if we have room (max 4 players total)
         if session.connectedPeers.count < maxPlayers - 1 {
             invitationHandler(true, session)
@@ -190,6 +212,12 @@ extension MultiplayerManager: MCNearbyServiceBrowserDelegate {
     func browser(_ browser: MCNearbyServiceBrowser, foundPeer peerID: MCPeerID, withDiscoveryInfo info: [String : String]?) {
         DispatchQueue.main.async { [weak self] in
             guard let self = self else { return }
+            
+            // In party mode, auto-invite the first peer found
+            if self.isPartyMode && self.session.connectedPeers.isEmpty {
+                self.invitePeer(peerID)
+            }
+            
             self.delegate?.multiplayerManager(self, didFindPeer: peerID)
         }
     }

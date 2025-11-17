@@ -14,6 +14,7 @@ class LobbyUI {
     private(set) var lobbyView: UIView!
     private(set) var hostButton: UIButton!
     private(set) var joinButton: UIButton!
+    private(set) var partyModeButton: UIButton!
     private(set) var cancelButton: UIButton!
     private(set) var startGameButton: UIButton!
     private(set) var peerTableView: UITableView!
@@ -27,6 +28,7 @@ class LobbyUI {
     // Callbacks
     var onHostTapped: (() -> Void)?
     var onJoinTapped: (() -> Void)?
+    var onPartyModeTapped: (() -> Void)?
     var onCancelTapped: (() -> Void)?
     var onStartGameTapped: (() -> Void)?
     
@@ -56,7 +58,7 @@ class LobbyUI {
         
         // Instructions label
         instructionsLabel = UILabel()
-        instructionsLabel.text = "Battle with 2-4 players on the same network!\nMove with the joystick, tap FIRE to shoot."
+        instructionsLabel.text = "Battle with 2-4 players on the same network!\nMove with the joystick, tap FIRE to shoot.\n\n🎉 Party Mode: Quick auto-connect!"
         instructionsLabel.font = .systemFont(ofSize: 14)
         instructionsLabel.textAlignment = .center
         instructionsLabel.numberOfLines = 0
@@ -73,6 +75,11 @@ class LobbyUI {
         joinButton = createButton(title: "🔍 Join Game", backgroundColor: .systemGreen)
         joinButton.addTarget(self, action: #selector(joinButtonTapped), for: .touchUpInside)
         lobbyView.addSubview(joinButton)
+        
+        // Party Mode button
+        partyModeButton = createButton(title: "🎉 Party Mode", backgroundColor: .systemPurple)
+        partyModeButton.addTarget(self, action: #selector(partyModeButtonTapped), for: .touchUpInside)
+        lobbyView.addSubview(partyModeButton)
         
         // Cancel button
         cancelButton = UIButton(type: .system)
@@ -175,7 +182,12 @@ class LobbyUI {
             joinButton.widthAnchor.constraint(equalToConstant: 240),
             joinButton.heightAnchor.constraint(equalToConstant: 56),
             
-            cancelButton.topAnchor.constraint(equalTo: joinButton.bottomAnchor, constant: 20),
+            partyModeButton.topAnchor.constraint(equalTo: joinButton.bottomAnchor, constant: 20),
+            partyModeButton.centerXAnchor.constraint(equalTo: lobbyView.centerXAnchor),
+            partyModeButton.widthAnchor.constraint(equalToConstant: 240),
+            partyModeButton.heightAnchor.constraint(equalToConstant: 56),
+            
+            cancelButton.topAnchor.constraint(equalTo: partyModeButton.bottomAnchor, constant: 20),
             cancelButton.centerXAnchor.constraint(equalTo: lobbyView.centerXAnchor),
             
             connectedPlayersView.topAnchor.constraint(equalTo: cancelButton.bottomAnchor, constant: 20),
@@ -215,6 +227,10 @@ class LobbyUI {
         onJoinTapped?()
     }
     
+    @objc private func partyModeButtonTapped() {
+        onPartyModeTapped?()
+    }
+    
     @objc private func cancelButtonTapped() {
         onCancelTapped?()
     }
@@ -227,6 +243,7 @@ class LobbyUI {
     func reset() {
         hostButton.isHidden = false
         joinButton.isHidden = false
+        partyModeButton.isHidden = false
         instructionsLabel.isHidden = false
         cancelButton.isHidden = true
         startGameButton.isHidden = true
