@@ -8,14 +8,25 @@
 import SpriteKit
 
 /// Handles all rendering operations for the game scene
-class GameSceneRenderer {
-    // Constants
+/// Responsible for drawing the grid, tanks, and projectiles
+final class GameSceneRenderer {
+    // MARK: - Properties
+    
+    /// Size of each grid tile in points
     let tileSize: CGFloat
+    
+    /// Number of cells in the grid (width and height)
     let gridSize: Int
     
-    // Tank colors for up to 4 players
+    /// Colors assigned to each player (up to 4 players)
     let tankColors: [SKColor] = [.blue, .red, .green, .orange]
     
+    // MARK: - Initialization
+    
+    /// Creates a new renderer with specified grid parameters
+    /// - Parameters:
+    ///   - tileSize: Size of each grid tile in points
+    ///   - gridSize: Number of cells in the grid (typically 8)
     init(tileSize: CGFloat, gridSize: Int) {
         self.tileSize = tileSize
         self.gridSize = gridSize
@@ -23,7 +34,10 @@ class GameSceneRenderer {
     
     // MARK: - Grid Rendering
     
-    /// Render the game grid
+    /// Renders the game grid with walls and empty cells
+    /// - Parameters:
+    ///   - grid: 2D array representing the game grid
+    ///   - gridNode: Parent node to add grid tiles to
     func renderGrid(_ grid: [[GridCell]], in gridNode: SKNode) {
         gridNode.removeAllChildren()
         
@@ -39,7 +53,11 @@ class GameSceneRenderer {
     
     // MARK: - Tank Rendering
     
-    /// Render all tanks
+    /// Renders all player tanks with their current states
+    /// - Parameters:
+    ///   - tanks: Array of tank objects to render
+    ///   - tankExploding: Array indicating which tanks are currently exploding
+    ///   - tankNodes: Parent nodes for each tank
     func renderTanks(_ tanks: [Tank], tankExploding: [Bool], in tankNodes: [SKNode?]) {
         for i in 0..<tanks.count {
             guard let tankNode = tankNodes[i] else { continue }
@@ -55,7 +73,11 @@ class GameSceneRenderer {
         }
     }
     
-    /// Create a tank sprite node
+    /// Creates a tank sprite with body, barrel, and rainbow animation
+    /// - Parameters:
+    ///   - color: Base color for the tank
+    ///   - direction: Direction the tank is facing
+    /// - Returns: Composite node representing the tank
     private func createTankNode(color: SKColor, direction: Direction) -> SKNode {
         let tankNode = SKNode()
         
@@ -80,7 +102,10 @@ class GameSceneRenderer {
     
     // MARK: - Projectile Rendering
     
-    /// Render all projectiles
+    /// Renders all active projectiles with animations
+    /// - Parameters:
+    ///   - projectiles: Array of projectiles to render
+    ///   - projectilesNode: Parent node to add projectile sprites to
     func renderProjectiles(_ projectiles: [Projectile], in projectilesNode: SKNode) {
         projectilesNode.removeAllChildren()
         
@@ -112,7 +137,11 @@ class GameSceneRenderer {
     
     // MARK: - Helper Methods
     
-    /// Convert grid coordinates to scene position
+    /// Converts grid coordinates to scene position in points
+    /// - Parameters:
+    ///   - row: Grid row (0 = top)
+    ///   - col: Grid column (0 = left)
+    /// - Returns: CGPoint in scene coordinates (centered on cell)
     func gridPosition(row: Int, col: Int) -> CGPoint {
         return CGPoint(
             x: CGFloat(col) * tileSize + tileSize / 2,
@@ -120,7 +149,10 @@ class GameSceneRenderer {
         )
     }
     
-    /// Add rainbow color animation to a sprite
+    /// Adds a smooth rainbow color animation to a sprite
+    /// - Parameters:
+    ///   - sprite: Sprite to animate
+    ///   - phaseOffset: Starting phase offset (0.0-1.0) for color cycle
     private func addRainbowAnimation(to sprite: SKSpriteNode, phaseOffset: CGFloat = 0) {
         let animationDuration: TimeInterval = 3.0
         let numberOfColors = 12

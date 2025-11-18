@@ -8,20 +8,38 @@
 import SpriteKit
 
 /// Manages the virtual joystick UI and input processing
-class JoystickController {
-    // Nodes
+/// Provides directional input for tank movement
+final class JoystickController {
+    // MARK: - Properties
+    
+    /// Container node for the joystick
     private var joystickNode: SKNode?
+    
+    /// Visual base circle of the joystick
     private var joystickBase: SKShapeNode?
+    
+    /// Movable handle of the joystick
     private var joystickHandle: SKShapeNode?
     
-    // State
+    /// Whether the joystick is currently being used
     private(set) var isActive = false
+    
+    /// Touch currently controlling the joystick
     private var touchID: UITouch?
+    
+    /// Current direction based on joystick position
     private(set) var currentDirection: Direction?
+    
+    // MARK: - Initialization
     
     init() {}
     
-    /// Setup the joystick UI
+    // MARK: - Setup
+    
+    /// Sets up the joystick UI in the scene
+    /// - Parameters:
+    ///   - scene: Scene to add joystick to
+    ///   - position: Position for the joystick center
     func setup(in scene: SKScene, at position: CGPoint) {
         let newJoystickNode = SKNode()
         newJoystickNode.position = position
@@ -44,14 +62,21 @@ class JoystickController {
         joystickHandle = newJoystickHandle
     }
     
-    /// Get the joystick's center position
+    // MARK: - Position
+    
+    /// Gets the center position of the joystick
     var position: CGPoint {
         return joystickNode?.position ?? .zero
     }
     
     #if os(iOS) || os(tvOS)
-    /// Handle touch began in joystick area
-    /// - Returns: true if touch was handled by joystick
+    // MARK: - Touch Handling
+    
+    /// Handles touch began event in the joystick area
+    /// - Parameters:
+    ///   - touch: The touch event
+    ///   - scene: Scene containing the joystick
+    /// - Returns: true if touch was handled by joystick, false otherwise
     func handleTouchBegan(_ touch: UITouch, in scene: SKScene) -> Bool {
         guard let joystick = joystickNode else { return false }
         
@@ -73,7 +98,10 @@ class JoystickController {
         return false
     }
     
-    /// Handle touch moved
+    /// Handles touch moved event for continuous joystick control
+    /// - Parameters:
+    ///   - touch: The touch event
+    ///   - scene: Scene containing the joystick
     func handleTouchMoved(_ touch: UITouch, in scene: SKScene) {
         guard isActive, touch == touchID, let joystick = joystickNode else { return }
         
@@ -81,7 +109,8 @@ class JoystickController {
         processTouchLocation(location)
     }
     
-    /// Handle touch ended
+    /// Handles touch ended event to reset joystick
+    /// - Parameter touch: The touch event
     func handleTouchEnded(_ touch: UITouch) {
         guard touch == touchID else { return }
         
@@ -91,7 +120,9 @@ class JoystickController {
         joystickHandle?.position = .zero
     }
     
-    /// Process touch location and update joystick state
+    /// Processes touch location and updates joystick handle position and direction
+    /// Snaps to cardinal directions based on angle
+    /// - Parameter location: Touch location relative to joystick center
     private func processTouchLocation(_ location: CGPoint) {
         guard let handle = joystickHandle else { return }
         

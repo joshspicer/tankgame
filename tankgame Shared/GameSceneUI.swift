@@ -8,13 +8,25 @@
 import SpriteKit
 
 /// Manages UI elements in the game scene (status and score labels)
-class GameSceneUI {
+final class GameSceneUI {
+    // MARK: - Properties
+    
+    /// Label showing game status and messages
     private var statusLabel: SKLabelNode?
+    
+    /// Label showing player scores
     private var scoreLabel: SKLabelNode?
+    
+    // MARK: - Initialization
     
     init() {}
     
-    /// Setup UI elements
+    // MARK: - Setup
+    
+    /// Sets up UI elements in the scene
+    /// - Parameters:
+    ///   - scene: Scene to add labels to
+    ///   - sceneSize: Size of the scene for positioning
     func setup(in scene: SKScene, sceneSize: CGSize) {
         // Create status label
         let newStatusLabel = SKLabelNode(fontNamed: "Arial-BoldMT")
@@ -33,12 +45,16 @@ class GameSceneUI {
         scoreLabel = newScoreLabel
     }
     
-    /// Update status text
+    // MARK: - Status Updates
+    
+    /// Updates the status label text
+    /// - Parameter text: New status message to display
     func updateStatus(_ text: String) {
         statusLabel?.text = text
     }
     
-    /// Update score display
+    /// Updates the score label based on current wins
+    /// - Parameter wins: Array of win counts for each player
     func updateScore(wins: [Int]) {
         if wins.count == 2 {
             scoreLabel?.text = "Score: \(wins[0]) - \(wins[1])"
@@ -49,7 +65,10 @@ class GameSceneUI {
         }
     }
     
-    /// Show round end message
+    /// Shows the round end message with winner information
+    /// - Parameters:
+    ///   - winner: Player index of the winner, or nil for a draw
+    ///   - localPlayerIndex: Index of the local player for personalized messages
     func showRoundEnd(winner: Int?, localPlayerIndex: Int) {
         if let winner = winner {
             if winner == localPlayerIndex {

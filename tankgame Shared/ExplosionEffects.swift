@@ -8,17 +8,27 @@
 import SpriteKit
 
 /// Manages explosion animations and visual effects
-class ExplosionEffects {
+/// Creates particle effects when tanks are destroyed
+final class ExplosionEffects {
+    // MARK: - Properties
+    
+    /// Size of each grid tile for scaling effects
     let tileSize: CGFloat
     
+    // MARK: - Initialization
+    
+    /// Creates a new explosion effects manager
+    /// - Parameter tileSize: Size of grid tiles for appropriate scaling
     init(tileSize: CGFloat) {
         self.tileSize = tileSize
     }
     
-    /// Create an explosion effect at a specific position
+    // MARK: - Effects
+    
+    /// Creates an explosion effect at a specific position
     /// - Parameters:
     ///   - position: Position for the explosion center
-    ///   - color: Color of the explosion
+    ///   - color: Base color for the explosion particles
     ///   - parentNode: Node to add explosion particles to
     ///   - completion: Called when the explosion animation completes
     func createExplosion(at position: CGPoint, color: SKColor, in parentNode: SKNode, completion: @escaping () -> Void) {

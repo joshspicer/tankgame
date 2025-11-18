@@ -8,13 +8,26 @@
 import SpriteKit
 
 /// Manages the fire button UI and interactions
-class FireButton {
+/// Allows players to shoot projectiles
+final class FireButton {
+    // MARK: - Properties
+    
+    /// The visual button node
     private var buttonNode: SKShapeNode?
+    
+    /// Callback invoked when the button is tapped
     var onTap: (() -> Void)?
+    
+    // MARK: - Initialization
     
     init() {}
     
-    /// Setup the fire button
+    // MARK: - Setup
+    
+    /// Sets up the fire button in the scene
+    /// - Parameters:
+    ///   - scene: Scene to add the button to
+    ///   - position: Position for the button center
     func setup(in scene: SKScene, at position: CGPoint) {
         let newFireButton = SKShapeNode(circleOfRadius: 40)
         newFireButton.position = position
@@ -34,14 +47,19 @@ class FireButton {
         newFireButton.addChild(fireLabel)
     }
     
-    /// Get the button's position
+    // MARK: - Position
+    
+    /// Gets the position of the button
     var position: CGPoint {
         return buttonNode?.position ?? .zero
     }
     
     #if os(iOS) || os(tvOS)
-    /// Check if a touch is within the fire button and handle it
-    /// - Returns: true if touch was handled by button
+    // MARK: - Touch Handling
+    
+    /// Checks if a touch is within the fire button and triggers the tap callback
+    /// - Parameter location: Touch location in scene coordinates
+    /// - Returns: true if touch was handled by the button, false otherwise
     func handleTouch(at location: CGPoint) -> Bool {
         guard let button = buttonNode else { return false }
         
