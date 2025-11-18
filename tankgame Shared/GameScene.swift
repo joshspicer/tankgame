@@ -112,6 +112,7 @@ class GameScene: SKScene {
     func startGame(with state: GameState) {
         self.gameState = state
         tankExploding = Array(repeating: false, count: state.tanks.count)
+        lastShootTime = -999 // Reset cooldown to allow immediate shooting
         renderGrid()
         renderTanks()
         updateScore()

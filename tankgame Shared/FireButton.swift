@@ -23,26 +23,27 @@ class FireButton {
         newFireButton.strokeColor = .white
         newFireButton.lineWidth = 3
         newFireButton.alpha = 0.7
+        newFireButton.zPosition = 0
         scene.addChild(newFireButton)
         buttonNode = newFireButton
         
-        // Add fire label
+        // Setup cooldown overlay (initially hidden) - between button and label
+        let overlay = SKShapeNode(circleOfRadius: 40)
+        overlay.fillColor = .black
+        overlay.strokeColor = .clear
+        overlay.alpha = 0
+        overlay.zPosition = 1
+        newFireButton.addChild(overlay)
+        cooldownOverlay = overlay
+        
+        // Add fire label on top
         let fireLabel = SKLabelNode(fontNamed: "Arial-BoldMT")
         fireLabel.text = "FIRE"
         fireLabel.fontSize = 14
         fireLabel.fontColor = .white
         fireLabel.verticalAlignmentMode = .center
+        fireLabel.zPosition = 2
         newFireButton.addChild(fireLabel)
-        
-        // Setup cooldown overlay (initially hidden)
-        let overlay = SKShapeNode(circleOfRadius: 40)
-        overlay.position = position
-        overlay.fillColor = .black
-        overlay.strokeColor = .clear
-        overlay.alpha = 0
-        overlay.zPosition = 1
-        scene.addChild(overlay)
-        cooldownOverlay = overlay
     }
     
     /// Get the button's position
