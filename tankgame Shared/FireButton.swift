@@ -10,6 +10,7 @@ import SpriteKit
 /// Manages the fire button UI and interactions
 class FireButton {
     private var buttonNode: SKShapeNode?
+    private var cooldownOverlay: SKShapeNode?
     var onTap: (() -> Void)?
     
     init() {}
@@ -32,11 +33,35 @@ class FireButton {
         fireLabel.fontColor = .white
         fireLabel.verticalAlignmentMode = .center
         newFireButton.addChild(fireLabel)
+        
+        // Setup cooldown overlay (initially hidden)
+        let overlay = SKShapeNode(circleOfRadius: 40)
+        overlay.position = position
+        overlay.fillColor = .black
+        overlay.strokeColor = .clear
+        overlay.alpha = 0
+        overlay.zPosition = 1
+        scene.addChild(overlay)
+        cooldownOverlay = overlay
     }
     
     /// Get the button's position
     var position: CGPoint {
         return buttonNode?.position ?? .zero
+    }
+    
+    /// Update cooldown visual indicator
+    /// - Parameter progress: Progress from 0 (ready) to 1 (just shot)
+    func updateCooldown(progress: CGFloat) {
+        guard let overlay = cooldownOverlay else { return }
+        
+        if progress > 0 {
+            // Show cooldown overlay with opacity based on progress
+            overlay.alpha = 0.6 * progress
+        } else {
+            // Hide overlay when ready
+            overlay.alpha = 0
+        }
     }
     
     #if os(iOS) || os(tvOS)

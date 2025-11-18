@@ -35,6 +35,11 @@ class GameScene: SKScene {
     var lastUpdateTime: TimeInterval = 0
     var lastMoveTime: TimeInterval = 0
     
+    // Shooting cooldown
+    var lastShootTime: TimeInterval = -999 // Initialize to allow immediate first shot
+    let shootCooldown: TimeInterval = 0.5 // Half second cooldown
+    var currentGameTime: TimeInterval = 0 // Track current game time
+    
     // Explosion state
     var tankExploding: [Bool] = [false, false, false, false]
     
@@ -140,6 +145,14 @@ class GameScene: SKScene {
     
     override func update(_ currentTime: TimeInterval) {
         guard let state = gameState else { return }
+        
+        // Update current game time
+        self.currentGameTime = currentTime
+        
+        // Update fire button cooldown visual
+        let cooldownRemaining = max(0, shootCooldown - (currentTime - lastShootTime))
+        let cooldownProgress = cooldownRemaining / shootCooldown
+        fireButton.updateCooldown(progress: cooldownProgress)
         
         // Handle continuous movement from joystick
         if let direction = joystickController.currentDirection, !state.isRoundOver() {
@@ -261,10 +274,16 @@ extension GameScene {
     func handleShoot() {
         guard let state = gameState, state.localTank.isAlive else { return }
         
+        // Check if cooldown has elapsed using game time
+        guard currentGameTime - lastShootTime >= shootCooldown else { return }
+        
         let projectile = state.localTank.shoot()
         state.projectiles.append(projectile)
         renderProjectiles()
         soundManager.playSound("shoot.wav")
+        
+        // Update last shoot time
+        lastShootTime = currentGameTime
         
         // Send shoot message
         onGameMessage?(.playerShoot(playerIndex: state.localPlayerIndex, projectile: projectile))
