@@ -9,13 +9,26 @@ import Foundation
 
 /// Manages the state of a game round including tanks, projectiles, and grid
 final class GameState {
-    var grid: [[GridCell]]
-    var tanks: [Tank] // Array of all tanks (index = player index)
-    var projectiles: [Projectile] = []
-    var wins: [Int] // Wins for each player
-    var localPlayerIndex: Int // Index of the local player in tanks array
+    // MARK: - Properties
     
-    // Spawn positions for up to 4 players
+    /// The game grid containing walls and empty spaces
+    var grid: [[GridCell]]
+    
+    /// Array of all tanks (index corresponds to player index)
+    var tanks: [Tank]
+    
+    /// Active projectiles in the game
+    var projectiles: [Projectile] = []
+    
+    /// Win count for each player (index corresponds to player index)
+    var wins: [Int]
+    
+    /// Index of the local player in the tanks array
+    var localPlayerIndex: Int
+    
+    // MARK: - Constants
+    
+    /// Spawn positions for up to 4 players at the corners of the grid
     static let spawnPositions: [(row: Int, col: Int, direction: Direction)] = [
         (0, 0, .down),      // Player 0: top-left
         (7, 7, .up),        // Player 1: bottom-right
@@ -23,6 +36,13 @@ final class GameState {
         (7, 0, .up)         // Player 3: bottom-left
     ]
     
+    // MARK: - Initialization
+    
+    /// Creates a new game state
+    /// - Parameters:
+    ///   - seed: Random seed for grid generation
+    ///   - playerCount: Number of players (2-4)
+    ///   - localPlayerIndex: Index of the local player
     init(seed: UInt32, playerCount: Int, localPlayerIndex: Int) {
         self.grid = GridGenerator.generate(seed: seed)
         self.localPlayerIndex = localPlayerIndex
@@ -39,6 +59,10 @@ final class GameState {
         self.wins = Array(repeating: 0, count: playerCount)
     }
     
+    // MARK: - Round Management
+    
+    /// Resets the game state for a new round
+    /// - Parameter seed: Random seed for the new grid
     func reset(seed: UInt32) {
         self.grid = GridGenerator.generate(seed: seed)
         self.projectiles = []
@@ -50,11 +74,18 @@ final class GameState {
         }
     }
     
+    // MARK: - Computed Properties
+    
+    /// Convenience accessor for the local player's tank
     var localTank: Tank {
         get { tanks[localPlayerIndex] }
         set { tanks[localPlayerIndex] = newValue }
     }
     
+    // MARK: - Game Logic
+    
+    /// Updates all projectiles and checks for collisions
+    /// Removes projectiles that go out of bounds, hit walls, or hit tanks
     func updateProjectiles() {
         var activeProjectiles: [Projectile] = []
         
@@ -86,11 +117,18 @@ final class GameState {
         projectiles = activeProjectiles
     }
     
+    // MARK: - Round State Queries
+    
+    /// Checks if the current round is over
+    /// A round is over when 1 or fewer tanks remain alive
+    /// - Returns: true if the round has ended
     func isRoundOver() -> Bool {
         let aliveTanks = tanks.filter { $0.isAlive }
         return aliveTanks.count <= 1
     }
     
+    /// Checks if the local player won the round
+    /// - Returns: true if the local player is the sole survivor
     func localPlayerWon() -> Bool {
         // Local player won if they're the only one alive
         if !tanks[localPlayerIndex].isAlive {
@@ -101,6 +139,8 @@ final class GameState {
         return aliveTanks.count == 1
     }
     
+    /// Gets the player index of the round winner
+    /// - Returns: Player index if there's exactly one survivor, nil otherwise
     func getWinner() -> Int? {
         let aliveTanks = tanks.enumerated().filter { $0.element.isAlive }
         if aliveTanks.count == 1 {

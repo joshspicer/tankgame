@@ -7,7 +7,13 @@
 
 import Foundation
 
+/// Generates procedural game grids with walls and empty spaces
 struct GridGenerator {
+    
+    /// Generates an 8x8 grid with procedurally placed walls
+    /// - Parameter seed: Random seed for reproducible generation
+    /// - Returns: 8x8 grid with walls and empty cells
+    /// - Note: Spawn corners and border paths are kept clear for gameplay
     static func generate(seed: UInt32) -> [[GridCell]] {
         var rng = SeededRandomNumberGenerator(seed: seed)
         var grid = Array(repeating: Array(repeating: GridCell.empty, count: 8), count: 8)
@@ -49,20 +55,28 @@ struct GridGenerator {
     }
 }
 
-// Seeded random number generator for consistent grid generation
+// MARK: - Seeded Random Number Generator
+
+/// Random number generator with deterministic output based on seed
+/// Uses a linear congruential generator algorithm
 struct SeededRandomNumberGenerator: RandomNumberGenerator {
     private var state: UInt32
     
+    /// Creates a new seeded random number generator
+    /// - Parameter seed: Initial seed value
     init(seed: UInt32) {
         self.state = seed
     }
     
+    /// Generates the next random UInt64 value
     mutating func next() -> UInt64 {
         // Linear congruential generator
         state = state &* 1664525 &+ 1013904223
         return UInt64(state)
     }
     
+    /// Generates a random double value between 0.0 and 1.0
+    /// - Returns: Random value in range [0.0, 1.0]
     mutating func nextDouble() -> Double {
         // Note: next() returns UInt64(state) where state is UInt32, so value is always <= UInt32.max
         let value = next()
