@@ -7,6 +7,7 @@
 
 import UIKit
 import MultipeerConnectivity
+import QuartzCore
 
 /// Manages the lobby user interface
 class LobbyUI {
@@ -36,18 +37,38 @@ class LobbyUI {
         lobbyView.backgroundColor = .systemBackground
         parentView.addSubview(lobbyView)
         
+        // Add gradient background
+        let gradientLayer = CAGradientLayer()
+        gradientLayer.frame = parentView.bounds
+        gradientLayer.colors = [
+            UIColor.systemBlue.withAlphaComponent(0.1).cgColor,
+            UIColor.systemBackground.cgColor,
+            UIColor.systemGreen.withAlphaComponent(0.05).cgColor
+        ]
+        gradientLayer.locations = [0.0, 0.5, 1.0]
+        lobbyView.layer.insertSublayer(gradientLayer, at: 0)
+        
         // Title label
         let titleLabel = UILabel()
-        titleLabel.text = "🎮 Tank Game"
-        titleLabel.font = .systemFont(ofSize: 36, weight: .bold)
+        titleLabel.text = "TANK GAME"
+        titleLabel.font = .systemFont(ofSize: 48, weight: .black)
         titleLabel.textAlignment = .center
+        titleLabel.textColor = .label
         titleLabel.translatesAutoresizingMaskIntoConstraints = false
         lobbyView.addSubview(titleLabel)
+        
+        // Tank emoji below title
+        let tankEmojiLabel = UILabel()
+        tankEmojiLabel.text = "🎯"
+        tankEmojiLabel.font = .systemFont(ofSize: 60)
+        tankEmojiLabel.textAlignment = .center
+        tankEmojiLabel.translatesAutoresizingMaskIntoConstraints = false
+        lobbyView.addSubview(tankEmojiLabel)
         
         // Status label
         statusLabel = UILabel()
         statusLabel.text = "Choose an option to start"
-        statusLabel.font = .systemFont(ofSize: 18, weight: .medium)
+        statusLabel.font = .systemFont(ofSize: 17, weight: .regular)
         statusLabel.textAlignment = .center
         statusLabel.numberOfLines = 0
         statusLabel.textColor = .secondaryLabel
@@ -57,20 +78,20 @@ class LobbyUI {
         // Instructions label
         instructionsLabel = UILabel()
         instructionsLabel.text = "Battle with 2-4 players on the same network!\nMove with the joystick, tap FIRE to shoot."
-        instructionsLabel.font = .systemFont(ofSize: 14)
+        instructionsLabel.font = .systemFont(ofSize: 15, weight: .regular)
         instructionsLabel.textAlignment = .center
         instructionsLabel.numberOfLines = 0
-        instructionsLabel.textColor = .secondaryLabel
+        instructionsLabel.textColor = .tertiaryLabel
         instructionsLabel.translatesAutoresizingMaskIntoConstraints = false
         lobbyView.addSubview(instructionsLabel)
         
         // Host button
-        hostButton = createButton(title: "🎯 Host Game", backgroundColor: .systemBlue)
+        hostButton = createButton(title: "Host Game", backgroundColor: .systemBlue, icon: "🎯")
         hostButton.addTarget(self, action: #selector(hostButtonTapped), for: .touchUpInside)
         lobbyView.addSubview(hostButton)
         
         // Join button
-        joinButton = createButton(title: "🔍 Join Game", backgroundColor: .systemGreen)
+        joinButton = createButton(title: "Join Game", backgroundColor: .systemGreen, icon: "🔍")
         joinButton.addTarget(self, action: #selector(joinButtonTapped), for: .touchUpInside)
         lobbyView.addSubview(joinButton)
         
@@ -85,7 +106,7 @@ class LobbyUI {
         lobbyView.addSubview(cancelButton)
         
         // Start Game button (for host)
-        startGameButton = createButton(title: "🚀 Start Game", backgroundColor: .systemGreen)
+        startGameButton = createButton(title: "Start Game", backgroundColor: .systemGreen, icon: "🚀")
         startGameButton.isHidden = true
         startGameButton.addTarget(self, action: #selector(startGameButtonTapped), for: .touchUpInside)
         lobbyView.addSubview(startGameButton)
@@ -134,27 +155,55 @@ class LobbyUI {
         emptyStateLabel.translatesAutoresizingMaskIntoConstraints = false
         lobbyView.addSubview(emptyStateLabel)
         
-        setupConstraints(titleLabel: titleLabel)
+        setupConstraints(titleLabel: titleLabel, tankEmojiLabel: tankEmojiLabel)
     }
     
-    private func createButton(title: String, backgroundColor: UIColor) -> UIButton {
+    private func createButton(title: String, backgroundColor: UIColor, icon: String) -> UIButton {
         let button = UIButton(type: .system)
-        button.setTitle(title, for: .normal)
-        button.titleLabel?.font = .systemFont(ofSize: 20, weight: .semibold)
+        
+        // Create stack view for icon and text
+        let stackView = UIStackView()
+        stackView.axis = .horizontal
+        stackView.spacing = 12
+        stackView.alignment = .center
+        stackView.isUserInteractionEnabled = false
+        stackView.translatesAutoresizingMaskIntoConstraints = false
+        
+        let iconLabel = UILabel()
+        iconLabel.text = icon
+        iconLabel.font = .systemFont(ofSize: 24)
+        
+        let textLabel = UILabel()
+        textLabel.text = title
+        textLabel.font = .systemFont(ofSize: 20, weight: .semibold)
+        textLabel.textColor = .white
+        
+        stackView.addArrangedSubview(iconLabel)
+        stackView.addArrangedSubview(textLabel)
+        
+        button.addSubview(stackView)
         button.backgroundColor = backgroundColor
-        button.setTitleColor(.white, for: .normal)
-        button.layer.cornerRadius = 16
+        button.layer.cornerRadius = 14
         button.layer.shadowColor = UIColor.black.cgColor
-        button.layer.shadowOpacity = 0.2
-        button.layer.shadowOffset = CGSize(width: 0, height: 2)
-        button.layer.shadowRadius = 4
+        button.layer.shadowOpacity = 0.15
+        button.layer.shadowOffset = CGSize(width: 0, height: 4)
+        button.layer.shadowRadius = 8
         button.translatesAutoresizingMaskIntoConstraints = false
+        
+        NSLayoutConstraint.activate([
+            stackView.centerXAnchor.constraint(equalTo: button.centerXAnchor),
+            stackView.centerYAnchor.constraint(equalTo: button.centerYAnchor)
+        ])
+        
         return button
     }
     
-    private func setupConstraints(titleLabel: UILabel) {
+    private func setupConstraints(titleLabel: UILabel, tankEmojiLabel: UILabel) {
         NSLayoutConstraint.activate([
-            titleLabel.topAnchor.constraint(equalTo: lobbyView.safeAreaLayoutGuide.topAnchor, constant: 80),
+            tankEmojiLabel.topAnchor.constraint(equalTo: lobbyView.safeAreaLayoutGuide.topAnchor, constant: 60),
+            tankEmojiLabel.centerXAnchor.constraint(equalTo: lobbyView.centerXAnchor),
+            
+            titleLabel.topAnchor.constraint(equalTo: tankEmojiLabel.bottomAnchor, constant: 16),
             titleLabel.centerXAnchor.constraint(equalTo: lobbyView.centerXAnchor),
             
             statusLabel.topAnchor.constraint(equalTo: titleLabel.bottomAnchor, constant: 16),
