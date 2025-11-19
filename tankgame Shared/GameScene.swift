@@ -8,42 +8,82 @@
 import SpriteKit
 
 /// Main game scene that coordinates all game elements
+/// Acts as the central coordinator between game state, rendering, input, and audio
 class GameScene: SKScene {
     
-    // Game state
+    // MARK: - Game State
+    
+    /// Current game state managing tanks, projectiles, and grid
     var gameState: GameState?
+    
+    /// Callback for sending game messages over the network
     var onGameMessage: ((GameMessage) -> Void)?
     
-    // Constants
+    // MARK: - Constants
+    
+    /// Size of each grid tile in points
     let tileSize: CGFloat = 64
+    
+    /// Number of cells in the grid
     let gridSize = 8
     
-    // Nodes
+    // MARK: - Scene Nodes
+    
+    /// Container node for grid tiles
     var gridNode: SKNode?
-    var tankNodes: [SKNode?] = [nil, nil, nil, nil] // Support up to 4 tanks
+    
+    /// Container nodes for each tank (up to 4 players)
+    var tankNodes: [SKNode?] = [nil, nil, nil, nil]
+    
+    /// Container node for all projectiles
     var projectilesNode: SKNode?
     
-    // Components
+    // MARK: - Component Dependencies
+    
+    /// Handles all rendering operations
     private var renderer: GameSceneRenderer!
+    
+    /// Manages sound playback
     private var soundManager: SoundManager!
+    
+    /// Creates explosion particle effects
     private var explosionEffects: ExplosionEffects!
+    
+    /// Handles joystick input
     private var joystickController: JoystickController!
+    
+    /// Handles fire button input
     private var fireButton: FireButton!
+    
+    /// Manages UI labels
     private var ui: GameSceneUI!
     
-    // Update timer
+    // MARK: - Timing
+    
+    /// Time of last update call
     var lastUpdateTime: TimeInterval = 0
+    
+    /// Time of last tank movement
     var lastMoveTime: TimeInterval = 0
     
-    // Explosion state
+    // MARK: - Explosion State
+    
+    /// Tracks which tanks are currently exploding
     var tankExploding: [Bool] = [false, false, false, false]
     
+    // MARK: - Scene Lifecycle
+    
+    // MARK: - Scene Lifecycle
+    
+    /// Factory method to create a new game scene
+    /// - Returns: Configured GameScene instance
     class func newGameScene() -> GameScene {
         let scene = GameScene(size: CGSize(width: 600, height: 800))
         scene.scaleMode = .aspectFit
         return scene
     }
     
+    /// Called when the scene is presented in a view
     override func didMove(to view: SKView) {
         backgroundColor = .darkGray
         setupComponents()
@@ -59,6 +99,9 @@ class GameScene: SKScene {
         }
     }
     
+    // MARK: - Setup
+    
+    /// Initializes all component dependencies
     private func setupComponents() {
         renderer = GameSceneRenderer(tileSize: tileSize, gridSize: gridSize)
         soundManager = SoundManager(scene: self)
@@ -68,6 +111,7 @@ class GameScene: SKScene {
         ui = GameSceneUI()
     }
     
+    /// Sets up the scene hierarchy with all nodes and UI elements
     func setupScene() {
         // Create grid container (centered)
         let newGridNode = SKNode()
@@ -104,6 +148,10 @@ class GameScene: SKScene {
         }
     }
     
+    // MARK: - Game Management
+    
+    /// Starts a new game with the provided state
+    /// - Parameter state: Initial game state
     func startGame(with state: GameState) {
         self.gameState = state
         tankExploding = Array(repeating: false, count: state.tanks.count)
@@ -113,31 +161,42 @@ class GameScene: SKScene {
         ui.updateStatus("Fight!")
     }
     
+    // MARK: - Rendering
+    
+    /// Renders the game grid
     func renderGrid() {
         guard let state = gameState, let grid = gridNode else { return }
         renderer.renderGrid(state.grid, in: grid)
     }
     
+    /// Renders all player tanks
     func renderTanks() {
         guard let state = gameState else { return }
         renderer.renderTanks(state.tanks, tankExploding: tankExploding, in: tankNodes)
     }
     
+    /// Renders all active projectiles
     func renderProjectiles() {
         guard let state = gameState, let projectiles = projectilesNode else { return }
         renderer.renderProjectiles(state.projectiles, in: projectiles)
     }
     
+    /// Updates the score UI with current win counts
     func updateScore() {
         guard let state = gameState else { return }
         ui.updateScore(wins: state.wins)
     }
     
+    /// Shows the round end UI with winner information
+    /// - Parameter winner: Player index of the winner, or nil for a draw
     func showRoundEnd(winner: Int?) {
         guard let state = gameState else { return }
         ui.showRoundEnd(winner: winner, localPlayerIndex: state.localPlayerIndex)
     }
     
+    // MARK: - Game Loop
+    
+    /// Main game loop that handles continuous movement, projectile updates, and collision detection
     override func update(_ currentTime: TimeInterval) {
         guard let state = gameState else { return }
         
@@ -221,9 +280,10 @@ class GameScene: SKScene {
 }
 
 #if os(iOS) || os(tvOS)
-// Touch-based event handling
-extension GameScene {
+// MARK: - Touch-Based Input (iOS/tvOS)
 
+extension GameScene {
+    /// Handles touch began events for joystick and fire button
     override func touchesBegan(_ touches: Set<UITouch>, with event: UIEvent?) {
         guard gameState != nil else { return }
         
@@ -242,22 +302,26 @@ extension GameScene {
         }
     }
     
+    /// Handles touch moved events for continuous joystick control
     override func touchesMoved(_ touches: Set<UITouch>, with event: UIEvent?) {
         for touch in touches {
             joystickController.handleTouchMoved(touch, in: self)
         }
     }
     
+    /// Handles touch ended events to reset joystick
     override func touchesEnded(_ touches: Set<UITouch>, with event: UIEvent?) {
         for touch in touches {
             joystickController.handleTouchEnded(touch)
         }
     }
     
+    /// Handles touch cancelled events (treated same as touch ended)
     override func touchesCancelled(_ touches: Set<UITouch>, with event: UIEvent?) {
         touchesEnded(touches, with: event)
     }
     
+    /// Handles the fire button tap to shoot a projectile
     func handleShoot() {
         guard let state = gameState, state.localTank.isAlive else { return }
         
@@ -273,8 +337,10 @@ extension GameScene {
 #endif
 
 #if os(OSX)
-// Mouse-based event handling
+// MARK: - Mouse-Based Input (macOS)
+
 extension GameScene {
+    /// Handles mouse down events (macOS support can be added later)
     override func mouseDown(with event: NSEvent) {
         // macOS support can be added later
     }

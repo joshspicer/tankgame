@@ -8,28 +8,62 @@
 import Foundation
 import MultipeerConnectivity
 
+/// Delegate protocol for multiplayer manager events
 protocol MultiplayerManagerDelegate: AnyObject {
+    /// Called when a new peer is discovered
     func multiplayerManager(_ manager: MultiplayerManager, didFindPeer peerID: MCPeerID)
+    
+    /// Called when a peer is no longer discoverable
     func multiplayerManager(_ manager: MultiplayerManager, didLosePeer peerID: MCPeerID)
+    
+    /// Called when successfully connected to a peer
     func multiplayerManager(_ manager: MultiplayerManager, didConnectToPeer peerID: MCPeerID)
+    
+    /// Called when disconnected from a peer
     func multiplayerManager(_ manager: MultiplayerManager, didDisconnectFromPeer peerID: MCPeerID)
+    
+    /// Called when a game message is received from a peer
     func multiplayerManager(_ manager: MultiplayerManager, didReceiveMessage message: GameMessage, from peerID: MCPeerID)
+    
+    /// Called when an error occurs
     func multiplayerManager(_ manager: MultiplayerManager, didEncounterError error: Error)
 }
 
-class MultiplayerManager: NSObject {
+/// Manages low-level MultipeerConnectivity for game networking
+/// Handles peer discovery, connections, and message passing
+final class MultiplayerManager: NSObject {
+    
+    // MARK: - Constants
+    
+    /// Service type identifier for peer discovery
     static let serviceType = "tankgame"
     
+    // MARK: - Properties
+    
+    /// Delegate to receive multiplayer events
     weak var delegate: MultiplayerManagerDelegate?
     
+    /// This device's peer ID
     private let myPeerID: MCPeerID
+    
+    /// Active multipeer session
     private(set) var session: MCSession!
+    
+    /// Service advertiser for hosting
     private var advertiser: MCNearbyServiceAdvertiser?
+    
+    /// Service browser for joining
     private var browser: MCNearbyServiceBrowser?
     
+    /// Whether this device is hosting the game
     var isHost: Bool = false
-    var maxPlayers: Int = 4 // Can be 2, 3, or 4
     
+    /// Maximum number of players allowed (2-4)
+    var maxPlayers: Int = 4
+    
+    // MARK: - Initialization
+    
+    /// Creates a new multiplayer manager with a persistent peer ID
     override init() {
         // Generate or retrieve persistent peer ID
         let peerID: MCPeerID
@@ -52,12 +86,14 @@ class MultiplayerManager: NSObject {
     
     // MARK: - Hosting
     
+    /// Starts advertising as a host for other players to discover
     func startHosting() {
         advertiser = MCNearbyServiceAdvertiser(peer: myPeerID, discoveryInfo: nil, serviceType: Self.serviceType)
         advertiser?.delegate = self
         advertiser?.startAdvertisingPeer()
     }
     
+    /// Stops advertising as a host
     func stopHosting() {
         advertiser?.stopAdvertisingPeer()
         advertiser = nil
@@ -65,23 +101,29 @@ class MultiplayerManager: NSObject {
     
     // MARK: - Browsing
     
+    /// Starts browsing for available hosts
     func startBrowsing() {
         browser = MCNearbyServiceBrowser(peer: myPeerID, serviceType: Self.serviceType)
         browser?.delegate = self
         browser?.startBrowsingForPeers()
     }
     
+    /// Stops browsing for hosts
     func stopBrowsing() {
         browser?.stopBrowsingForPeers()
         browser = nil
     }
     
+    /// Invites a discovered peer to join the session
+    /// - Parameter peerID: The peer to invite
     func invitePeer(_ peerID: MCPeerID) {
         browser?.invitePeer(peerID, to: session, withContext: nil, timeout: 30)
     }
     
     // MARK: - Messaging
     
+    /// Sends a game message to all connected peers
+    /// - Parameter message: The game message to send
     func sendMessage(_ message: GameMessage) {
         guard !session.connectedPeers.isEmpty else { return }
         
