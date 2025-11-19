@@ -30,8 +30,31 @@ class GameSceneRenderer {
         for row in 0..<gridSize {
             for col in 0..<gridSize {
                 let cell = grid[row][col]
-                let tile = SKSpriteNode(color: cell == .wall ? .black : .white, size: CGSize(width: tileSize - 2, height: tileSize - 2))
+                var tileColor: SKColor
+                
+                switch cell {
+                case .empty:
+                    tileColor = .white
+                case .wall:
+                    tileColor = .black
+                case .destructibleWall:
+                    tileColor = .darkGray // Different color for destructible walls
+                }
+                
+                let tile = SKSpriteNode(color: tileColor, size: CGSize(width: tileSize - 2, height: tileSize - 2))
                 tile.position = gridPosition(row: row, col: col)
+                
+                // Add a pattern to destructible walls to make them distinct
+                if cell == .destructibleWall {
+                    let stripe1 = SKSpriteNode(color: .gray, size: CGSize(width: tileSize - 2, height: 4))
+                    stripe1.position = CGPoint(x: 0, y: -8)
+                    tile.addChild(stripe1)
+                    
+                    let stripe2 = SKSpriteNode(color: .gray, size: CGSize(width: tileSize - 2, height: 4))
+                    stripe2.position = CGPoint(x: 0, y: 8)
+                    tile.addChild(stripe2)
+                }
+                
                 gridNode.addChild(tile)
             }
         }

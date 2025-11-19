@@ -77,8 +77,19 @@ final class GameState {
         for var projectile in projectiles {
             projectile.advance()
             
-            // Check if out of bounds or hit wall
-            if projectile.isOutOfBounds(gridSize: 8) || projectile.hits(grid: grid) {
+            // Check if out of bounds
+            if projectile.isOutOfBounds(gridSize: 8) {
+                continue // Remove this projectile
+            }
+            
+            // Check if hit destructible wall - destroy it
+            if projectile.hitsDestructibleWall(grid: grid) {
+                grid[projectile.row][projectile.col] = .empty
+                continue // Remove this projectile
+            }
+            
+            // Check if hit solid wall
+            if projectile.hits(grid: grid) {
                 continue // Remove this projectile
             }
             

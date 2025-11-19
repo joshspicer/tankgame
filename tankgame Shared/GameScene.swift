@@ -229,8 +229,26 @@ class GameScene: SKScene {
             let previousHealth = state.tanks.map { $0.health }
             let tankPositions = state.tanks.map { renderer.gridPosition(row: $0.row, col: $0.col) }
             
+            // Save grid state to detect wall destruction
+            let previousGrid = state.grid
+            
             state.updateProjectiles()
             renderProjectiles()
+            
+            // Check if any walls were destroyed and re-render grid
+            var gridChanged = false
+            for row in 0..<state.grid.count {
+                for col in 0..<state.grid[row].count {
+                    if previousGrid[row][col] != state.grid[row][col] {
+                        gridChanged = true
+                        break
+                    }
+                }
+                if gridChanged { break }
+            }
+            if gridChanged {
+                renderGrid()
+            }
             
             // Check which tanks were hit and trigger effects
             for i in 0..<state.tanks.count {
