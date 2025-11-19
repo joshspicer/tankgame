@@ -11,6 +11,7 @@ import SpriteKit
 class FireButton {
     private var buttonNode: SKShapeNode?
     var onTap: (() -> Void)?
+    private var isPressed = false
     
     init() {}
     
@@ -40,9 +41,9 @@ class FireButton {
     }
     
     #if os(iOS) || os(tvOS)
-    /// Check if a touch is within the fire button and handle it
+    /// Check if a touch began within the fire button
     /// - Returns: true if touch was handled by button
-    func handleTouch(at location: CGPoint) -> Bool {
+    func handleTouchBegan(at location: CGPoint) -> Bool {
         guard let button = buttonNode else { return false }
         
         let dx = location.x - button.position.x
@@ -50,11 +51,44 @@ class FireButton {
         let distance = sqrt(dx * dx + dy * dy)
         
         if distance < 50 {
-            onTap?()
+            isPressed = true
+            // Visual feedback: make button brighter when pressed
+            button.alpha = 1.0
             return true
         }
         
         return false
+    }
+    
+    /// Check if a touch ended within the fire button and fire if it was pressed
+    /// - Returns: true if touch was handled by button
+    func handleTouchEnded(at location: CGPoint) -> Bool {
+        guard let button = buttonNode else { return false }
+        
+        // Reset visual state
+        button.alpha = 0.7
+        
+        if isPressed {
+            isPressed = false
+            
+            // Check if release was still within button area
+            let dx = location.x - button.position.x
+            let dy = location.y - button.position.y
+            let distance = sqrt(dx * dx + dy * dy)
+            
+            if distance < 50 {
+                onTap?()
+                return true
+            }
+        }
+        
+        return false
+    }
+    
+    /// Reset button state (for touch cancelled)
+    func reset() {
+        isPressed = false
+        buttonNode?.alpha = 0.7
     }
     #endif
 }

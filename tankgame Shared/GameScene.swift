@@ -231,7 +231,7 @@ extension GameScene {
             let location = touch.location(in: self)
             
             // Check if touching fire button
-            if fireButton.handleTouch(at: location) {
+            if fireButton.handleTouchBegan(at: location) {
                 continue
             }
             
@@ -250,11 +250,20 @@ extension GameScene {
     
     override func touchesEnded(_ touches: Set<UITouch>, with event: UIEvent?) {
         for touch in touches {
+            let location = touch.location(in: self)
+            
+            // Check if releasing fire button
+            if fireButton.handleTouchEnded(at: location) {
+                continue
+            }
+            
+            // Handle joystick release
             joystickController.handleTouchEnded(touch)
         }
     }
     
     override func touchesCancelled(_ touches: Set<UITouch>, with event: UIEvent?) {
+        fireButton.reset()
         touchesEnded(touches, with: event)
     }
     
