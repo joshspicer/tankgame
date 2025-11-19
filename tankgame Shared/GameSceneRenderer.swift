@@ -59,18 +59,60 @@ class GameSceneRenderer {
     private func createTankNode(color: SKColor, direction: Direction) -> SKNode {
         let tankNode = SKNode()
         
-        // Tank body (square)
-        let body = SKSpriteNode(color: color, size: CGSize(width: tileSize * 0.7, height: tileSize * 0.7))
+        // Shadow for depth (underneath)
+        let shadow = SKSpriteNode(color: .black.withAlphaComponent(0.3), 
+                                 size: CGSize(width: tileSize * 0.75, height: tileSize * 0.75))
+        shadow.position = CGPoint(x: 2, y: -2)
+        shadow.zPosition = -1
+        tankNode.addChild(shadow)
+        
+        // Tank treads (left and right)
+        let leftTread = SKSpriteNode(color: color.withAlphaComponent(0.6), 
+                                    size: CGSize(width: tileSize * 0.25, height: tileSize * 0.75))
+        leftTread.position = CGPoint(x: -tileSize * 0.25, y: 0)
+        tankNode.addChild(leftTread)
+        
+        let rightTread = SKSpriteNode(color: color.withAlphaComponent(0.6), 
+                                     size: CGSize(width: tileSize * 0.25, height: tileSize * 0.75))
+        rightTread.position = CGPoint(x: tileSize * 0.25, y: 0)
+        tankNode.addChild(rightTread)
+        
+        // Tank body (main hull)
+        let body = SKSpriteNode(color: color, size: CGSize(width: tileSize * 0.6, height: tileSize * 0.65))
         tankNode.addChild(body)
         
-        // Tank barrel (rectangle)
-        let barrel = SKSpriteNode(color: color.withAlphaComponent(0.8), size: CGSize(width: tileSize * 0.2, height: tileSize * 0.5))
-        barrel.position = CGPoint(x: 0, y: tileSize * 0.35)
+        // Turret (slightly smaller than body)
+        let turret = SKSpriteNode(color: color.withAlphaComponent(0.9), 
+                                 size: CGSize(width: tileSize * 0.45, height: tileSize * 0.45))
+        turret.position = CGPoint(x: 0, y: 0)
+        tankNode.addChild(turret)
+        
+        // Barrel (thinner and longer)
+        let barrel = SKSpriteNode(color: color.withAlphaComponent(0.8), 
+                                 size: CGSize(width: tileSize * 0.15, height: tileSize * 0.55))
+        barrel.position = CGPoint(x: 0, y: tileSize * 0.38)
         tankNode.addChild(barrel)
         
-        // Add rainbow animation to body and barrel
+        // Barrel tip highlight
+        let barrelTip = SKSpriteNode(color: .white.withAlphaComponent(0.7), 
+                                    size: CGSize(width: tileSize * 0.15, height: tileSize * 0.1))
+        barrelTip.position = CGPoint(x: 0, y: tileSize * 0.6)
+        tankNode.addChild(barrelTip)
+        
+        // Add rainbow animation with different phases for depth
         addRainbowAnimation(to: body, phaseOffset: 0)
+        addRainbowAnimation(to: turret, phaseOffset: 0.08)
         addRainbowAnimation(to: barrel, phaseOffset: 0.15)
+        addRainbowAnimation(to: leftTread, phaseOffset: 0.25)
+        addRainbowAnimation(to: rightTread, phaseOffset: 0.25)
+        
+        // Add subtle idle pulsing animation
+        let pulseUp = SKAction.scale(to: 1.02, duration: 1.0)
+        let pulseDown = SKAction.scale(to: 0.98, duration: 1.0)
+        let pulseSequence = SKAction.sequence([pulseUp, pulseDown])
+        let repeatPulse = SKAction.repeatForever(pulseSequence)
+        body.run(repeatPulse)
+        turret.run(repeatPulse)
         
         // Rotate based on direction
         tankNode.zRotation = CGFloat(direction.angle)
