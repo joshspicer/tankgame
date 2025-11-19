@@ -30,10 +30,59 @@ class GameSceneRenderer {
         for row in 0..<gridSize {
             for col in 0..<gridSize {
                 let cell = grid[row][col]
-                let tile = SKSpriteNode(color: cell == .wall ? .black : .white, size: CGSize(width: tileSize - 2, height: tileSize - 2))
+                let tile = createTileNode(for: cell)
                 tile.position = gridPosition(row: row, col: col)
                 gridNode.addChild(tile)
             }
+        }
+    }
+    
+    /// Create a tile node based on cell type
+    private func createTileNode(for cell: GridCell) -> SKSpriteNode {
+        let tileSize = CGSize(width: tileSize - 2, height: tileSize - 2)
+        
+        switch cell {
+        case .empty:
+            return SKSpriteNode(color: .white, size: tileSize)
+            
+        case .wall:
+            // Solid black wall
+            return SKSpriteNode(color: .black, size: tileSize)
+            
+        case .breakableWall:
+            // Brown/dark gray breakable wall with texture
+            let tile = SKSpriteNode(color: SKColor(red: 0.4, green: 0.3, blue: 0.2, alpha: 1.0), size: tileSize)
+            // Add a subtle pattern to distinguish from regular walls
+            let innerSquare = SKSpriteNode(color: SKColor(red: 0.5, green: 0.4, blue: 0.3, alpha: 1.0), 
+                                          size: CGSize(width: tileSize.width * 0.6, height: tileSize.height * 0.6))
+            tile.addChild(innerSquare)
+            return tile
+            
+        case .hazard:
+            // Red/orange hazard (lava/water)
+            let tile = SKSpriteNode(color: SKColor(red: 0.8, green: 0.2, blue: 0.0, alpha: 0.7), size: tileSize)
+            // Add pulsing animation to hazards
+            let fadeOut = SKAction.fadeAlpha(to: 0.4, duration: 1.0)
+            let fadeIn = SKAction.fadeAlpha(to: 0.7, duration: 1.0)
+            let pulse = SKAction.sequence([fadeOut, fadeIn])
+            tile.run(SKAction.repeatForever(pulse))
+            return tile
+            
+        case .powerUp:
+            // Yellow/gold power-up with sparkle
+            let tile = SKSpriteNode(color: .white, size: tileSize)
+            let powerUpIcon = SKSpriteNode(color: SKColor(red: 1.0, green: 0.84, blue: 0.0, alpha: 1.0), 
+                                          size: CGSize(width: tileSize.width * 0.5, height: tileSize.height * 0.5))
+            tile.addChild(powerUpIcon)
+            // Add rotation animation
+            let rotate = SKAction.rotate(byAngle: .pi * 2, duration: 2.0)
+            powerUpIcon.run(SKAction.repeatForever(rotate))
+            // Add scale animation
+            let scaleUp = SKAction.scale(to: 1.2, duration: 0.5)
+            let scaleDown = SKAction.scale(to: 0.8, duration: 0.5)
+            let scaleSequence = SKAction.sequence([scaleUp, scaleDown])
+            powerUpIcon.run(SKAction.repeatForever(scaleSequence))
+            return tile
         }
     }
     

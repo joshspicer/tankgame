@@ -31,8 +31,8 @@ struct Tank: Codable {
             return false
         }
         
-        // Check if cell is empty
-        guard grid[newRow][newCol] == .empty else {
+        // Check if cell is blocked (walls block movement)
+        guard !grid[newRow][newCol].isBlocking else {
             return false
         }
         

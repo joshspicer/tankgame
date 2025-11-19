@@ -61,8 +61,17 @@ final class GameState {
         for var projectile in projectiles {
             projectile.advance()
             
-            // Check if out of bounds or hit wall
-            if projectile.isOutOfBounds(gridSize: 8) || projectile.hits(grid: grid) {
+            // Check if out of bounds
+            if projectile.isOutOfBounds(gridSize: 8) {
+                continue // Remove this projectile
+            }
+            
+            // Check if hit a wall or breakable wall
+            if projectile.hits(grid: grid) {
+                // Destroy breakable walls
+                if grid[projectile.row][projectile.col].isDestructible {
+                    grid[projectile.row][projectile.col] = .empty
+                }
                 continue // Remove this projectile
             }
             
@@ -84,6 +93,23 @@ final class GameState {
         }
         
         projectiles = activeProjectiles
+        
+        // Check if any tank is on a hazard
+        for i in 0..<tanks.count {
+            let tank = tanks[i]
+            if tank.isAlive && grid[tank.row][tank.col].isDangerous {
+                tanks[i].isAlive = false
+            }
+        }
+        
+        // Check if any tank collected a power-up
+        for i in 0..<tanks.count {
+            let tank = tanks[i]
+            if tank.isAlive && grid[tank.row][tank.col] == .powerUp {
+                // For now, just remove the power-up (could add effects later)
+                grid[tank.row][tank.col] = .empty
+            }
+        }
     }
     
     func isRoundOver() -> Bool {

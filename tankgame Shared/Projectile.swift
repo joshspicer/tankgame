@@ -27,7 +27,9 @@ struct Projectile: Codable {
               col >= 0, col < grid[0].count else {
             return false
         }
-        return grid[row][col] == .wall
+        // Projectiles are blocked by walls and breakable walls
+        // They pass through hazards and power-ups
+        return grid[row][col].isBlocking
     }
     
     func hits(tank: Tank) -> Bool {
