@@ -31,46 +31,79 @@ class LobbyUI {
     var onStartGameTapped: (() -> Void)?
     
     func setup(in parentView: UIView) {
-        // Create lobby view
+        // Create lobby view with gradient background
         lobbyView = UIView(frame: parentView.bounds)
         lobbyView.backgroundColor = .systemBackground
         parentView.addSubview(lobbyView)
         
-        // Title label
+        // Add gradient background layer
+        let gradientLayer = CAGradientLayer()
+        gradientLayer.frame = parentView.bounds
+        gradientLayer.colors = [
+            UIColor.systemBlue.withAlphaComponent(0.05).cgColor,
+            UIColor.systemPurple.withAlphaComponent(0.05).cgColor
+        ]
+        gradientLayer.locations = [0.0, 1.0]
+        lobbyView.layer.insertSublayer(gradientLayer, at: 0)
+        
+        // Tank emoji with larger size and animation
+        let tankEmoji = UILabel()
+        tankEmoji.text = "🎮"
+        tankEmoji.font = .systemFont(ofSize: 72)
+        tankEmoji.textAlignment = .center
+        tankEmoji.translatesAutoresizingMaskIntoConstraints = false
+        lobbyView.addSubview(tankEmoji)
+        
+        // Animate the tank emoji
+        UIView.animate(withDuration: 1.5, delay: 0, options: [.repeat, .autoreverse], animations: {
+            tankEmoji.transform = CGAffineTransform(scaleX: 1.1, y: 1.1)
+        })
+        
+        // Title label with enhanced styling
         let titleLabel = UILabel()
-        titleLabel.text = "🎮 Tank Game"
-        titleLabel.font = .systemFont(ofSize: 36, weight: .bold)
+        titleLabel.text = "TANK BATTLE"
+        titleLabel.font = .systemFont(ofSize: 44, weight: .black)
         titleLabel.textAlignment = .center
+        titleLabel.textColor = .label
         titleLabel.translatesAutoresizingMaskIntoConstraints = false
         lobbyView.addSubview(titleLabel)
         
+        // Subtitle for more context
+        let subtitleLabel = UILabel()
+        subtitleLabel.text = "Multiplayer Mayhem"
+        subtitleLabel.font = .systemFont(ofSize: 18, weight: .semibold)
+        subtitleLabel.textAlignment = .center
+        subtitleLabel.textColor = .systemBlue
+        subtitleLabel.translatesAutoresizingMaskIntoConstraints = false
+        lobbyView.addSubview(subtitleLabel)
+        
         // Status label
         statusLabel = UILabel()
-        statusLabel.text = "Choose an option to start"
-        statusLabel.font = .systemFont(ofSize: 18, weight: .medium)
+        statusLabel.text = "Ready to battle?"
+        statusLabel.font = .systemFont(ofSize: 20, weight: .medium)
         statusLabel.textAlignment = .center
         statusLabel.numberOfLines = 0
         statusLabel.textColor = .secondaryLabel
         statusLabel.translatesAutoresizingMaskIntoConstraints = false
         lobbyView.addSubview(statusLabel)
         
-        // Instructions label
+        // Instructions label with improved formatting
         instructionsLabel = UILabel()
-        instructionsLabel.text = "Battle with 2-4 players on the same network!\nMove with the joystick, tap FIRE to shoot."
-        instructionsLabel.font = .systemFont(ofSize: 14)
+        instructionsLabel.text = "⚡️ 2-4 Players • Same Network\n🕹️ Move with Joystick • 💥 Tap FIRE to Shoot"
+        instructionsLabel.font = .systemFont(ofSize: 15, weight: .regular)
         instructionsLabel.textAlignment = .center
         instructionsLabel.numberOfLines = 0
         instructionsLabel.textColor = .secondaryLabel
         instructionsLabel.translatesAutoresizingMaskIntoConstraints = false
         lobbyView.addSubview(instructionsLabel)
         
-        // Host button
-        hostButton = createButton(title: "🎯 Host Game", backgroundColor: .systemBlue)
+        // Host button with enhanced styling
+        hostButton = createButton(title: "🎯 HOST GAME", backgroundColor: .systemBlue)
         hostButton.addTarget(self, action: #selector(hostButtonTapped), for: .touchUpInside)
         lobbyView.addSubview(hostButton)
         
-        // Join button
-        joinButton = createButton(title: "🔍 Join Game", backgroundColor: .systemGreen)
+        // Join button with enhanced styling
+        joinButton = createButton(title: "🔍 JOIN GAME", backgroundColor: .systemGreen)
         joinButton.addTarget(self, action: #selector(joinButtonTapped), for: .touchUpInside)
         lobbyView.addSubview(joinButton)
         
@@ -134,46 +167,66 @@ class LobbyUI {
         emptyStateLabel.translatesAutoresizingMaskIntoConstraints = false
         lobbyView.addSubview(emptyStateLabel)
         
-        setupConstraints(titleLabel: titleLabel)
+        setupConstraints(tankEmoji: tankEmoji, titleLabel: titleLabel, subtitleLabel: subtitleLabel)
     }
     
     private func createButton(title: String, backgroundColor: UIColor) -> UIButton {
         let button = UIButton(type: .system)
         button.setTitle(title, for: .normal)
-        button.titleLabel?.font = .systemFont(ofSize: 20, weight: .semibold)
+        button.titleLabel?.font = .systemFont(ofSize: 18, weight: .bold)
         button.backgroundColor = backgroundColor
         button.setTitleColor(.white, for: .normal)
         button.layer.cornerRadius = 16
         button.layer.shadowColor = UIColor.black.cgColor
-        button.layer.shadowOpacity = 0.2
-        button.layer.shadowOffset = CGSize(width: 0, height: 2)
-        button.layer.shadowRadius = 4
+        button.layer.shadowOpacity = 0.3
+        button.layer.shadowOffset = CGSize(width: 0, height: 4)
+        button.layer.shadowRadius = 6
         button.translatesAutoresizingMaskIntoConstraints = false
+        
+        // Add subtle animation on creation
+        button.transform = CGAffineTransform(scaleX: 0.95, y: 0.95)
+        UIView.animate(withDuration: 0.3, delay: 0, usingSpringWithDamping: 0.7, initialSpringVelocity: 0.5, options: [], animations: {
+            button.transform = .identity
+        })
+        
         return button
     }
     
-    private func setupConstraints(titleLabel: UILabel) {
+    private func setupConstraints(tankEmoji: UILabel, titleLabel: UILabel, subtitleLabel: UILabel) {
         NSLayoutConstraint.activate([
-            titleLabel.topAnchor.constraint(equalTo: lobbyView.safeAreaLayoutGuide.topAnchor, constant: 80),
+            // Tank emoji at top
+            tankEmoji.topAnchor.constraint(equalTo: lobbyView.safeAreaLayoutGuide.topAnchor, constant: 60),
+            tankEmoji.centerXAnchor.constraint(equalTo: lobbyView.centerXAnchor),
+            
+            // Title below emoji
+            titleLabel.topAnchor.constraint(equalTo: tankEmoji.bottomAnchor, constant: 16),
             titleLabel.centerXAnchor.constraint(equalTo: lobbyView.centerXAnchor),
             
-            statusLabel.topAnchor.constraint(equalTo: titleLabel.bottomAnchor, constant: 16),
+            // Subtitle below title
+            subtitleLabel.topAnchor.constraint(equalTo: titleLabel.bottomAnchor, constant: 8),
+            subtitleLabel.centerXAnchor.constraint(equalTo: lobbyView.centerXAnchor),
+            
+            // Status label
+            statusLabel.topAnchor.constraint(equalTo: subtitleLabel.bottomAnchor, constant: 24),
             statusLabel.leadingAnchor.constraint(equalTo: lobbyView.leadingAnchor, constant: 30),
             statusLabel.trailingAnchor.constraint(equalTo: lobbyView.trailingAnchor, constant: -30),
             
-            instructionsLabel.topAnchor.constraint(equalTo: statusLabel.bottomAnchor, constant: 12),
+            // Instructions
+            instructionsLabel.topAnchor.constraint(equalTo: statusLabel.bottomAnchor, constant: 16),
             instructionsLabel.leadingAnchor.constraint(equalTo: lobbyView.leadingAnchor, constant: 30),
             instructionsLabel.trailingAnchor.constraint(equalTo: lobbyView.trailingAnchor, constant: -30),
             
+            // Host button with larger size
             hostButton.topAnchor.constraint(equalTo: instructionsLabel.bottomAnchor, constant: 50),
             hostButton.centerXAnchor.constraint(equalTo: lobbyView.centerXAnchor),
-            hostButton.widthAnchor.constraint(equalToConstant: 240),
-            hostButton.heightAnchor.constraint(equalToConstant: 56),
+            hostButton.widthAnchor.constraint(equalToConstant: 260),
+            hostButton.heightAnchor.constraint(equalToConstant: 60),
             
-            joinButton.topAnchor.constraint(equalTo: hostButton.bottomAnchor, constant: 20),
+            // Join button
+            joinButton.topAnchor.constraint(equalTo: hostButton.bottomAnchor, constant: 16),
             joinButton.centerXAnchor.constraint(equalTo: lobbyView.centerXAnchor),
-            joinButton.widthAnchor.constraint(equalToConstant: 240),
-            joinButton.heightAnchor.constraint(equalToConstant: 56),
+            joinButton.widthAnchor.constraint(equalToConstant: 260),
+            joinButton.heightAnchor.constraint(equalToConstant: 60),
             
             cancelButton.topAnchor.constraint(equalTo: joinButton.bottomAnchor, constant: 20),
             cancelButton.centerXAnchor.constraint(equalTo: lobbyView.centerXAnchor),
@@ -234,6 +287,6 @@ class LobbyUI {
         peerTableView.isHidden = true
         emptyStateLabel.isHidden = true
         activityIndicator.stopAnimating()
-        statusLabel.text = "Choose an option to start"
+        statusLabel.text = "Ready to battle?"
     }
 }
