@@ -25,14 +25,14 @@ Tests for the `Tank` entity covering:
 #### `ProjectileTests.swift`
 Tests for the `Projectile` entity covering:
 - Initialization
-- Movement in all directions
-- Boundary detection
-- Wall collision
-- Tank hit detection
+- Advance (movement) in all directions
+- Out-of-bounds detection
+- Wall collision detection (hits grid)
+- Tank collision detection (hits tank)
 - Dead tank exclusion
 - Codable conformance
 
-**Test Coverage**: 12+ test cases
+**Test Coverage**: 15+ test cases
 
 #### `DirectionTests.swift`
 Tests for the `Direction` enum covering:
@@ -73,7 +73,7 @@ Tests for the `GameState` class covering:
 ## Total Test Coverage
 
 - **5 test files**
-- **67+ test cases**
+- **70+ test cases**
 - Covers all core game entities and logic
 - Tests both happy paths and edge cases
 - Validates Codable conformance for network synchronization

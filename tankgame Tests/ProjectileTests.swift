@@ -22,66 +22,16 @@ final class ProjectileTests: XCTestCase {
     
     // MARK: - Movement Tests
     
-    func testMoveInDirection() {
+    func testAdvanceInDirection() {
         var projectile = Projectile(row: 3, col: 3, direction: .up)
-        let grid: [[GridCell]] = Array(repeating: Array(repeating: .empty, count: 8), count: 8)
         
-        let result = projectile.move(grid: grid)
+        projectile.advance()
         
-        XCTAssertTrue(result)
         XCTAssertEqual(projectile.row, 2)
         XCTAssertEqual(projectile.col, 3)
     }
     
-    func testMoveBlockedByWall() {
-        var projectile = Projectile(row: 3, col: 3, direction: .up)
-        var grid: [[GridCell]] = Array(repeating: Array(repeating: .empty, count: 8), count: 8)
-        grid[2][3] = .wall
-        
-        let result = projectile.move(grid: grid)
-        
-        XCTAssertFalse(result)
-        XCTAssertEqual(projectile.row, 3) // Position unchanged
-        XCTAssertEqual(projectile.col, 3)
-    }
-    
-    func testMoveOutOfBoundsTop() {
-        var projectile = Projectile(row: 0, col: 3, direction: .up)
-        let grid: [[GridCell]] = Array(repeating: Array(repeating: .empty, count: 8), count: 8)
-        
-        let result = projectile.move(grid: grid)
-        
-        XCTAssertFalse(result)
-    }
-    
-    func testMoveOutOfBoundsBottom() {
-        var projectile = Projectile(row: 7, col: 3, direction: .down)
-        let grid: [[GridCell]] = Array(repeating: Array(repeating: .empty, count: 8), count: 8)
-        
-        let result = projectile.move(grid: grid)
-        
-        XCTAssertFalse(result)
-    }
-    
-    func testMoveOutOfBoundsLeft() {
-        var projectile = Projectile(row: 3, col: 0, direction: .left)
-        let grid: [[GridCell]] = Array(repeating: Array(repeating: .empty, count: 8), count: 8)
-        
-        let result = projectile.move(grid: grid)
-        
-        XCTAssertFalse(result)
-    }
-    
-    func testMoveOutOfBoundsRight() {
-        var projectile = Projectile(row: 3, col: 7, direction: .right)
-        let grid: [[GridCell]] = Array(repeating: Array(repeating: .empty, count: 8), count: 8)
-        
-        let result = projectile.move(grid: grid)
-        
-        XCTAssertFalse(result)
-    }
-    
-    func testMoveInAllDirections() {
+    func testAdvanceInAllDirections() {
         let testCases: [(Direction, Int, Int)] = [
             (.up, 2, 3),
             (.down, 4, 3),
@@ -91,17 +41,81 @@ final class ProjectileTests: XCTestCase {
         
         for (direction, expectedRow, expectedCol) in testCases {
             var projectile = Projectile(row: 3, col: 3, direction: direction)
-            let grid: [[GridCell]] = Array(repeating: Array(repeating: .empty, count: 8), count: 8)
             
-            let moved = projectile.move(grid: grid)
+            projectile.advance()
             
-            XCTAssertTrue(moved, "Failed to move in direction \(direction)")
             XCTAssertEqual(projectile.row, expectedRow, "Wrong row for direction \(direction)")
             XCTAssertEqual(projectile.col, expectedCol, "Wrong col for direction \(direction)")
         }
     }
     
-    // MARK: - Collision Tests
+    // MARK: - Bounds Tests
+    
+    func testIsOutOfBoundsTop() {
+        let projectile = Projectile(row: -1, col: 3, direction: .up)
+        
+        XCTAssertTrue(projectile.isOutOfBounds(gridSize: 8))
+    }
+    
+    func testIsOutOfBoundsBottom() {
+        let projectile = Projectile(row: 8, col: 3, direction: .down)
+        
+        XCTAssertTrue(projectile.isOutOfBounds(gridSize: 8))
+    }
+    
+    func testIsOutOfBoundsLeft() {
+        let projectile = Projectile(row: 3, col: -1, direction: .left)
+        
+        XCTAssertTrue(projectile.isOutOfBounds(gridSize: 8))
+    }
+    
+    func testIsOutOfBoundsRight() {
+        let projectile = Projectile(row: 3, col: 8, direction: .right)
+        
+        XCTAssertTrue(projectile.isOutOfBounds(gridSize: 8))
+    }
+    
+    func testIsNotOutOfBounds() {
+        let projectile = Projectile(row: 3, col: 3, direction: .up)
+        
+        XCTAssertFalse(projectile.isOutOfBounds(gridSize: 8))
+    }
+    
+    func testIsNotOutOfBoundsAtEdges() {
+        let edgePositions = [(0, 0), (0, 7), (7, 0), (7, 7)]
+        
+        for (row, col) in edgePositions {
+            let projectile = Projectile(row: row, col: col, direction: .up)
+            XCTAssertFalse(projectile.isOutOfBounds(gridSize: 8), "(\(row), \(col)) should be in bounds")
+        }
+    }
+    
+    // MARK: - Wall Collision Tests
+    
+    func testHitsWall() {
+        var grid: [[GridCell]] = Array(repeating: Array(repeating: .empty, count: 8), count: 8)
+        grid[3][4] = .wall
+        
+        let projectile = Projectile(row: 3, col: 4, direction: .right)
+        
+        XCTAssertTrue(projectile.hits(grid: grid))
+    }
+    
+    func testDoesNotHitEmptyCell() {
+        let grid: [[GridCell]] = Array(repeating: Array(repeating: .empty, count: 8), count: 8)
+        let projectile = Projectile(row: 3, col: 4, direction: .right)
+        
+        XCTAssertFalse(projectile.hits(grid: grid))
+    }
+    
+    func testHitsReturnsFalseWhenOutOfBounds() {
+        let grid: [[GridCell]] = Array(repeating: Array(repeating: .empty, count: 8), count: 8)
+        let projectile = Projectile(row: -1, col: 4, direction: .up)
+        
+        XCTAssertFalse(projectile.hits(grid: grid))
+    }
+    
+    // MARK: - Tank Collision Tests
     
     func testHitsTankAtPosition() {
         let projectile = Projectile(row: 3, col: 4, direction: .right)
