@@ -7,16 +7,30 @@
 
 import UIKit
 
-/// Manages permission requests for local network and Bluetooth
-class PermissionManager {
+/// Manages permission requests for local network and Bluetooth access
+/// Required for MultipeerConnectivity to function properly
+final class PermissionManager {
+    
+    // MARK: - Properties
+    
+    /// Reference to multiplayer manager for triggering permission prompts
     private weak var multiplayerManager: MultiplayerManager?
+    
+    /// Flag indicating if permission request is in progress
     private var isRequestingPermissions = false
     
+    // MARK: - Initialization
+    
+    /// Creates a new permission manager
+    /// - Parameter multiplayerManager: Manager to use for triggering permission prompts
     init(multiplayerManager: MultiplayerManager) {
         self.multiplayerManager = multiplayerManager
     }
     
-    /// Request permissions if needed on first launch
+    // MARK: - Permission Requests
+    
+    /// Requests permissions on first app launch
+    /// Triggers iOS system prompts for Local Network and Bluetooth access
     func requestPermissionsIfNeeded() {
         // Check if we've already requested permissions
         let hasRequestedPermissions = UserDefaults.standard.bool(forKey: "tankgame.hasRequestedPermissions")
@@ -47,12 +61,15 @@ class PermissionManager {
         }
     }
     
-    /// Check if currently requesting permissions
+    /// Checks if permission request is currently in progress
     var isRequesting: Bool {
         return isRequestingPermissions
     }
     
-    /// Show alert for permission denial
+    // MARK: - Permission Alerts
+    
+    /// Shows an alert explaining how to enable permissions in Settings
+    /// - Parameter viewController: View controller to present the alert on
     static func showPermissionDeniedAlert(on viewController: UIViewController) {
         let alert = UIAlertController(
             title: "Local Network Access Required",
