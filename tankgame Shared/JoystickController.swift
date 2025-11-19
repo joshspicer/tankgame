@@ -28,17 +28,21 @@ class JoystickController {
         scene.addChild(newJoystickNode)
         joystickNode = newJoystickNode
         
+        // Use adaptive colors for dark mode support
+        let baseColor = UIColor(named: "JoystickBaseColor") ?? UIColor.gray
+        let handleColor = UIColor(named: "JoystickHandleColor") ?? UIColor.white
+        
         let newJoystickBase = SKShapeNode(circleOfRadius: 50)
-        newJoystickBase.fillColor = .gray
-        newJoystickBase.strokeColor = .white
+        newJoystickBase.fillColor = SKColor(baseColor)
+        newJoystickBase.strokeColor = SKColor(handleColor)
         newJoystickBase.lineWidth = 2
         newJoystickBase.alpha = 0.5
         newJoystickNode.addChild(newJoystickBase)
         joystickBase = newJoystickBase
         
         let newJoystickHandle = SKShapeNode(circleOfRadius: 25)
-        newJoystickHandle.fillColor = .white
-        newJoystickHandle.strokeColor = .white
+        newJoystickHandle.fillColor = SKColor(handleColor)
+        newJoystickHandle.strokeColor = SKColor(handleColor)
         newJoystickHandle.alpha = 0.8
         newJoystickNode.addChild(newJoystickHandle)
         joystickHandle = newJoystickHandle

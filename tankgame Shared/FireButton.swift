@@ -16,10 +16,12 @@ class FireButton {
     
     /// Setup the fire button
     func setup(in scene: SKScene, at position: CGPoint) {
+        let strokeColor = UIColor(named: "ButtonStrokeColor") ?? UIColor.white
+        
         let newFireButton = SKShapeNode(circleOfRadius: 40)
         newFireButton.position = position
         newFireButton.fillColor = .red
-        newFireButton.strokeColor = .white
+        newFireButton.strokeColor = SKColor(strokeColor)
         newFireButton.lineWidth = 3
         newFireButton.alpha = 0.7
         scene.addChild(newFireButton)
@@ -29,7 +31,7 @@ class FireButton {
         let fireLabel = SKLabelNode(fontNamed: "Arial-BoldMT")
         fireLabel.text = "FIRE"
         fireLabel.fontSize = 14
-        fireLabel.fontColor = .white
+        fireLabel.fontColor = SKColor(strokeColor)
         fireLabel.verticalAlignmentMode = .center
         newFireButton.addChild(fireLabel)
     }
