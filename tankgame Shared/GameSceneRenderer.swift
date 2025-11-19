@@ -48,7 +48,7 @@ class GameSceneRenderer {
             let tank = tanks[i]
             if tank.isAlive || tankExploding[i] {
                 let color = tankColors[i]
-                let tankSprite = createTankNode(color: color, direction: tank.direction)
+                let tankSprite = createTankNode(color: color, direction: tank.direction, health: tank.health, maxHealth: tank.maxHealth)
                 tankSprite.position = gridPosition(row: tank.row, col: tank.col)
                 tankNode.addChild(tankSprite)
             }
@@ -56,7 +56,7 @@ class GameSceneRenderer {
     }
     
     /// Create a tank sprite node
-    private func createTankNode(color: SKColor, direction: Direction) -> SKNode {
+    private func createTankNode(color: SKColor, direction: Direction, health: Int, maxHealth: Int) -> SKNode {
         let tankNode = SKNode()
         
         // Tank body (square)
@@ -72,6 +72,24 @@ class GameSceneRenderer {
         addRainbowAnimation(to: body, phaseOffset: 0)
         addRainbowAnimation(to: barrel, phaseOffset: 0.15)
         
+        // Add health bar above tank
+        let healthBarWidth = tileSize * 0.6
+        let healthBarHeight = tileSize * 0.08
+        let healthBarY = tileSize * 0.45
+        
+        // Background bar (red)
+        let healthBarBg = SKSpriteNode(color: .red, size: CGSize(width: healthBarWidth, height: healthBarHeight))
+        healthBarBg.position = CGPoint(x: 0, y: healthBarY)
+        healthBarBg.zPosition = 1
+        tankNode.addChild(healthBarBg)
+        
+        // Foreground bar (green) - scaled based on health
+        let healthPercent = CGFloat(health) / CGFloat(maxHealth)
+        let healthBarFg = SKSpriteNode(color: .green, size: CGSize(width: healthBarWidth * healthPercent, height: healthBarHeight))
+        healthBarFg.position = CGPoint(x: -healthBarWidth * (1.0 - healthPercent) / 2.0, y: healthBarY)
+        healthBarFg.zPosition = 2
+        tankNode.addChild(healthBarFg)
+        
         // Rotate based on direction
         tankNode.zRotation = CGFloat(direction.angle)
         
@@ -85,6 +103,10 @@ class GameSceneRenderer {
         projectilesNode.removeAllChildren()
         
         for projectile in projectiles {
+            // Create trail effect
+            let trail = createProjectileTrail(at: gridPosition(row: projectile.row, col: projectile.col))
+            projectilesNode.addChild(trail)
+            
             // Make projectile larger and more visible
             let bullet = SKSpriteNode(color: .yellow, size: CGSize(width: tileSize * 0.5, height: tileSize * 0.5))
             bullet.zPosition = 5
@@ -107,6 +129,109 @@ class GameSceneRenderer {
             bullet.run(repeatRotation)
             
             projectilesNode.addChild(bullet)
+        }
+    }
+    
+    /// Create a trail effect for projectiles
+    private func createProjectileTrail(at position: CGPoint) -> SKNode {
+        let trailNode = SKNode()
+        trailNode.position = position
+        trailNode.zPosition = 4
+        
+        // Create 3 fading trail particles behind the projectile
+        for i in 0..<3 {
+            let trailParticle = SKShapeNode(circleOfRadius: tileSize * 0.15 * (1.0 - CGFloat(i) * 0.3))
+            trailParticle.fillColor = .orange
+            trailParticle.strokeColor = .clear
+            trailParticle.alpha = 0.7 - CGFloat(i) * 0.2
+            trailParticle.position = CGPoint(x: 0, y: -CGFloat(i) * tileSize * 0.1)
+            
+            // Fade out animation
+            let fadeOut = SKAction.fadeOut(withDuration: 0.2)
+            let scale = SKAction.scale(to: 0.5, duration: 0.2)
+            let group = SKAction.group([fadeOut, scale])
+            let remove = SKAction.removeFromParent()
+            trailParticle.run(SKAction.sequence([group, remove]))
+            
+            trailNode.addChild(trailParticle)
+        }
+        
+        return trailNode
+    }
+    
+    // MARK: - Power-Up Rendering
+    
+    /// Render all power-ups
+    func renderPowerUps(_ powerUps: [PowerUp], in powerUpsNode: SKNode) {
+        powerUpsNode.removeAllChildren()
+        
+        for powerUp in powerUps {
+            guard powerUp.isActive else { continue }
+            
+            let powerUpSprite = createPowerUpNode(type: powerUp.type)
+            powerUpSprite.position = gridPosition(row: powerUp.row, col: powerUp.col)
+            powerUpsNode.addChild(powerUpSprite)
+        }
+    }
+    
+    /// Create a power-up sprite node
+    private func createPowerUpNode(type: PowerUpType) -> SKNode {
+        let node = SKNode()
+        
+        // Background circle
+        let bg = SKShapeNode(circleOfRadius: tileSize * 0.3)
+        bg.fillColor = colorForPowerUp(type: type)
+        bg.strokeColor = .white
+        bg.lineWidth = 3
+        bg.alpha = 0.9
+        node.addChild(bg)
+        
+        // Icon (simple shape based on type)
+        let icon: SKNode
+        switch type {
+        case .health:
+            // Cross for health
+            let vertical = SKSpriteNode(color: .white, size: CGSize(width: 4, height: 16))
+            let horizontal = SKSpriteNode(color: .white, size: CGSize(width: 16, height: 4))
+            icon = SKNode()
+            icon.addChild(vertical)
+            icon.addChild(horizontal)
+        case .rapidFire:
+            // Lightning bolt shape
+            let bolt = SKShapeNode(circleOfRadius: 6)
+            bolt.fillColor = .white
+            icon = bolt
+        case .speedBoost:
+            // Arrow for speed
+            let arrow = SKShapeNode(rect: CGRect(x: -4, y: -8, width: 8, height: 16))
+            arrow.fillColor = .white
+            icon = arrow
+        }
+        
+        node.addChild(icon)
+        
+        // Pulsing animation
+        let scaleUp = SKAction.scale(to: 1.2, duration: 0.5)
+        let scaleDown = SKAction.scale(to: 1.0, duration: 0.5)
+        let pulse = SKAction.sequence([scaleUp, scaleDown])
+        node.run(SKAction.repeatForever(pulse))
+        
+        // Rotation animation
+        let rotate = SKAction.rotate(byAngle: .pi * 2, duration: 3.0)
+        node.run(SKAction.repeatForever(rotate))
+        
+        return node
+    }
+    
+    /// Get color for power-up type
+    private func colorForPowerUp(type: PowerUpType) -> SKColor {
+        switch type {
+        case .health:
+            return .green
+        case .rapidFire:
+            return .orange
+        case .speedBoost:
+            return .cyan
         }
     }
     

@@ -32,6 +32,7 @@
 				JoystickController.swift,
 				MultiplayerManager.swift,
 				Projectile.swift,
+				PowerUp.swift,
 				SoundManager.swift,
 				Tank.swift,
 			);
@@ -56,6 +57,7 @@
 				JoystickController.swift,
 				MultiplayerManager.swift,
 				Projectile.swift,
+				PowerUp.swift,
 				SoundManager.swift,
 				Tank.swift,
 			);
@@ -80,6 +82,7 @@
 				JoystickController.swift,
 				MultiplayerManager.swift,
 				Projectile.swift,
+				PowerUp.swift,
 				SoundManager.swift,
 				Tank.swift,
 			);

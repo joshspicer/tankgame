@@ -22,6 +22,7 @@ class GameScene: SKScene {
     var gridNode: SKNode?
     var tankNodes: [SKNode?] = [nil, nil, nil, nil] // Support up to 4 tanks
     var projectilesNode: SKNode?
+    var powerUpsNode: SKNode?
     
     // Components
     private var renderer: GameSceneRenderer!
@@ -34,6 +35,7 @@ class GameScene: SKScene {
     // Update timer
     var lastUpdateTime: TimeInterval = 0
     var lastMoveTime: TimeInterval = 0
+    var lastPowerUpCheck: TimeInterval = 0
     
     // Explosion state
     var tankExploding: [Bool] = [false, false, false, false]
@@ -55,6 +57,7 @@ class GameScene: SKScene {
             renderGrid()
             renderTanks()
             renderProjectiles()
+            renderPowerUps()
             updateScore()
         }
     }
@@ -85,6 +88,12 @@ class GameScene: SKScene {
         addChild(newProjectilesNode)
         projectilesNode = newProjectilesNode
         
+        // Create power-ups container
+        let newPowerUpsNode = SKNode()
+        newPowerUpsNode.position = gridOffset
+        addChild(newPowerUpsNode)
+        powerUpsNode = newPowerUpsNode
+        
         // Create tank nodes for all possible players
         for i in 0..<4 {
             let tankNode = SKNode()
@@ -109,6 +118,7 @@ class GameScene: SKScene {
         tankExploding = Array(repeating: false, count: state.tanks.count)
         renderGrid()
         renderTanks()
+        renderPowerUps()
         updateScore()
         ui.updateStatus("Fight!")
     }
@@ -128,6 +138,11 @@ class GameScene: SKScene {
         renderer.renderProjectiles(state.projectiles, in: projectiles)
     }
     
+    func renderPowerUps() {
+        guard let state = gameState, let powerUps = powerUpsNode else { return }
+        renderer.renderPowerUps(state.powerUps, in: powerUps)
+    }
+    
     func updateScore() {
         guard let state = gameState else { return }
         ui.updateScore(wins: state.wins)
@@ -140,6 +155,37 @@ class GameScene: SKScene {
     
     override func update(_ currentTime: TimeInterval) {
         guard let state = gameState else { return }
+        
+        // Update power-up timers
+        if lastUpdateTime > 0 {
+            let delta = currentTime - lastUpdateTime
+            state.updatePowerUpTimers(delta: delta)
+        }
+        
+        // Check for power-up collection every 0.2 seconds
+        if currentTime - lastPowerUpCheck > 0.2 {
+            let collected = state.checkPowerUpCollisions()
+            for (playerIndex, powerUpType) in collected {
+                // Play sound for power-up collection
+                soundManager.playSound("move.wav") // Using existing sound, can add specific power-up sound later
+                
+                // Show visual feedback if local player collected
+                if playerIndex == state.localPlayerIndex {
+                    // Flash effect on collection
+                    if let tankNode = tankNodes[playerIndex] {
+                        let flash = SKAction.sequence([
+                            SKAction.scale(to: 1.3, duration: 0.1),
+                            SKAction.scale(to: 1.0, duration: 0.1)
+                        ])
+                        tankNode.run(flash)
+                    }
+                }
+            }
+            if !collected.isEmpty {
+                renderPowerUps()
+            }
+            lastPowerUpCheck = currentTime
+        }
         
         // Handle continuous movement from joystick
         if let direction = joystickController.currentDirection, !state.isRoundOver() {
@@ -163,15 +209,31 @@ class GameScene: SKScene {
         
         // Update projectiles
         if currentTime - lastUpdateTime > 0.05 { // ~20 FPS for projectile updates
-            // Save tank alive state before update
+            // Save tank alive state and health before update
             let wasAlive = state.tanks.map { $0.isAlive }
+            let previousHealth = state.tanks.map { $0.health }
             let tankPositions = state.tanks.map { renderer.gridPosition(row: $0.row, col: $0.col) }
             
             state.updateProjectiles()
             renderProjectiles()
             
-            // Check which tanks were hit and trigger explosions
+            // Check which tanks were hit and trigger effects
             for i in 0..<state.tanks.count {
+                // Tank took damage but didn't die - show damage flash
+                if wasAlive[i] && state.tanks[i].isAlive && previousHealth[i] > state.tanks[i].health {
+                    soundManager.playSound("hit.wav")
+                    if let tankNode = tankNodes[i] {
+                        // Flash the tank white briefly
+                        let flash = SKAction.sequence([
+                            SKAction.colorize(with: .white, colorBlendFactor: 0.8, duration: 0.1),
+                            SKAction.colorize(withColorBlendFactor: 0.0, duration: 0.1)
+                        ])
+                        tankNode.run(flash)
+                    }
+                    renderTanks() // Update health bar
+                }
+                
+                // Tank was destroyed
                 if wasAlive[i] && !state.tanks[i].isAlive {
                     soundManager.playSound("hit.wav")
                     if let tankNode = tankNodes[i] {

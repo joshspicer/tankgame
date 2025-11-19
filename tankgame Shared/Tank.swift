@@ -12,12 +12,16 @@ struct Tank: Codable {
     var col: Int
     var direction: Direction
     var isAlive: Bool
+    var health: Int
+    var maxHealth: Int
     
-    init(row: Int, col: Int, direction: Direction = .down) {
+    init(row: Int, col: Int, direction: Direction = .down, maxHealth: Int = 3) {
         self.row = row
         self.col = col
         self.direction = direction
         self.isAlive = true
+        self.health = maxHealth
+        self.maxHealth = maxHealth
     }
     
     mutating func move(in direction: Direction, grid: [[GridCell]]) -> Bool {
@@ -45,5 +49,20 @@ struct Tank: Codable {
     func shoot() -> Projectile {
         let offset = direction.offset
         return Projectile(row: row + offset.row, col: col + offset.col, direction: direction)
+    }
+    
+    /// Take damage and return true if tank is destroyed
+    mutating func takeDamage(_ amount: Int = 1) -> Bool {
+        health = max(0, health - amount)
+        if health <= 0 {
+            isAlive = false
+            return true
+        }
+        return false
+    }
+    
+    /// Heal the tank
+    mutating func heal(_ amount: Int = 1) {
+        health = min(maxHealth, health + amount)
     }
 }
