@@ -8,28 +8,66 @@
 import UIKit
 import MultipeerConnectivity
 
-/// Manages the lobby user interface
-class LobbyUI {
-    // UI Elements
+/// Manages the lobby user interface for multiplayer game setup
+/// Provides Host/Join options, peer discovery UI, and connected players list
+final class LobbyUI {
+    
+    // MARK: - UI Elements
+    
+    /// Main container view for the lobby
     private(set) var lobbyView: UIView!
+    
+    /// Button to host a new game
     private(set) var hostButton: UIButton!
+    
+    /// Button to join an existing game
     private(set) var joinButton: UIButton!
+    
+    /// Button to cancel hosting/joining
     private(set) var cancelButton: UIButton!
+    
+    /// Button to start the game (host only)
     private(set) var startGameButton: UIButton!
+    
+    /// Table view showing available/connected peers
     private(set) var peerTableView: UITableView!
+    
+    /// Container for connected players list
     private(set) var connectedPlayersView: UIView!
+    
+    /// Label showing connected player count
     private(set) var connectedPlayersLabel: UILabel!
+    
+    /// Label showing current status/instructions
     private(set) var statusLabel: UILabel!
+    
+    /// Label showing game instructions
     private(set) var instructionsLabel: UILabel!
+    
+    /// Label shown when no peers are found
     private(set) var emptyStateLabel: UILabel!
+    
+    /// Activity indicator for loading states
     private(set) var activityIndicator: UIActivityIndicatorView!
     
-    // Callbacks
+    // MARK: - Callbacks
+    
+    /// Called when the host button is tapped
     var onHostTapped: (() -> Void)?
+    
+    /// Called when the join button is tapped
     var onJoinTapped: (() -> Void)?
+    
+    /// Called when the cancel button is tapped
     var onCancelTapped: (() -> Void)?
+    
+    /// Called when the start game button is tapped
     var onStartGameTapped: (() -> Void)?
     
+    // MARK: - Setup
+    
+    /// Sets up all lobby UI elements in the parent view
+    /// - Parameter parentView: View to add the lobby UI to
     func setup(in parentView: UIView) {
         // Create lobby view
         lobbyView = UIView(frame: parentView.bounds)
@@ -137,6 +175,13 @@ class LobbyUI {
         setupConstraints(titleLabel: titleLabel)
     }
     
+    // MARK: - Button Creation
+    
+    /// Creates a styled button with the specified appearance
+    /// - Parameters:
+    ///   - title: Button title text
+    ///   - backgroundColor: Button background color
+    /// - Returns: Configured UIButton
     private func createButton(title: String, backgroundColor: UIColor) -> UIButton {
         let button = UIButton(type: .system)
         button.setTitle(title, for: .normal)
@@ -152,6 +197,10 @@ class LobbyUI {
         return button
     }
     
+    // MARK: - Layout
+    
+    /// Sets up Auto Layout constraints for all UI elements
+    /// - Parameter titleLabel: The title label to anchor other elements to
     private func setupConstraints(titleLabel: UILabel) {
         NSLayoutConstraint.activate([
             titleLabel.topAnchor.constraint(equalTo: lobbyView.safeAreaLayoutGuide.topAnchor, constant: 80),
@@ -207,6 +256,8 @@ class LobbyUI {
         ])
     }
     
+    // MARK: - Button Actions
+    
     @objc private func hostButtonTapped() {
         onHostTapped?()
     }
@@ -223,7 +274,9 @@ class LobbyUI {
         onStartGameTapped?()
     }
     
-    /// Reset lobby to initial state
+    // MARK: - State Management
+    
+    /// Resets the lobby to its initial state
     func reset() {
         hostButton.isHidden = false
         joinButton.isHidden = false
