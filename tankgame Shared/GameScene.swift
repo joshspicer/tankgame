@@ -22,6 +22,8 @@ class GameScene: SKScene {
     var gridNode: SKNode?
     var tankNodes: [SKNode?] = [nil, nil, nil, nil] // Support up to 4 tanks
     var projectilesNode: SKNode?
+    var powerUpNode: SKNode?
+    var healthNode: SKNode?
     
     // Components
     private var renderer: GameSceneRenderer!
@@ -85,6 +87,18 @@ class GameScene: SKScene {
         addChild(newProjectilesNode)
         projectilesNode = newProjectilesNode
         
+        // Create power-up container
+        let newPowerUpNode = SKNode()
+        newPowerUpNode.position = gridOffset
+        addChild(newPowerUpNode)
+        powerUpNode = newPowerUpNode
+        
+        // Create health indicators container
+        let newHealthNode = SKNode()
+        newHealthNode.position = gridOffset
+        addChild(newHealthNode)
+        healthNode = newHealthNode
+        
         // Create tank nodes for all possible players
         for i in 0..<4 {
             let tankNode = SKNode()
@@ -109,6 +123,8 @@ class GameScene: SKScene {
         tankExploding = Array(repeating: false, count: state.tanks.count)
         renderGrid()
         renderTanks()
+        renderPowerUps()
+        renderHealthIndicators()
         updateScore()
         ui.updateStatus("Fight!")
     }
@@ -126,6 +142,16 @@ class GameScene: SKScene {
     func renderProjectiles() {
         guard let state = gameState, let projectiles = projectilesNode else { return }
         renderer.renderProjectiles(state.projectiles, in: projectiles)
+    }
+    
+    func renderPowerUps() {
+        guard let state = gameState, let powerUps = powerUpNode else { return }
+        renderer.renderPowerUps(state.powerUps, in: powerUps)
+    }
+    
+    func renderHealthIndicators() {
+        guard let state = gameState, let health = healthNode else { return }
+        renderer.renderHealthIndicators(state.tanks, currentTime: state.currentTime, in: health)
     }
     
     func updateScore() {
@@ -163,12 +189,17 @@ class GameScene: SKScene {
         
         // Update projectiles
         if currentTime - lastUpdateTime > 0.05 { // ~20 FPS for projectile updates
+            let deltaTime = currentTime - lastUpdateTime
+            
             // Save tank alive state before update
             let wasAlive = state.tanks.map { $0.isAlive }
             let tankPositions = state.tanks.map { renderer.gridPosition(row: $0.row, col: $0.col) }
             
             state.updateProjectiles()
+            state.updatePowerUps(deltaTime: deltaTime)
             renderProjectiles()
+            renderPowerUps()
+            renderHealthIndicators()
             
             // Check which tanks were hit and trigger explosions
             for i in 0..<state.tanks.count {
@@ -259,10 +290,16 @@ extension GameScene {
     }
     
     func handleShoot() {
-        guard let state = gameState, state.localTank.isAlive else { return }
+        guard let state = gameState else { return }
+        guard state.localTank.isAlive else { return }
+        guard state.localTank.canShoot(currentTime: state.currentTime) else { return }
         
-        let projectile = state.localTank.shoot()
+        let localIndex = state.localPlayerIndex
+        let projectile = state.localTank.shoot(ownerIndex: localIndex)
+        state.localTank.recordShot(currentTime: state.currentTime)
         state.projectiles.append(projectile)
+        state.statistics[localIndex].recordShot()
+        
         renderProjectiles()
         soundManager.playSound("shoot.wav")
         

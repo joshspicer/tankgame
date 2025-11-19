@@ -14,6 +14,8 @@ enum GameMessage: Codable {
     case playerMove(playerIndex: Int, row: Int, col: Int, direction: Direction)
     case playerShoot(playerIndex: Int, projectile: Projectile)
     case playerHit(playerIndex: Int)
+    case powerUpSpawned(powerUp: PowerUp)
+    case powerUpCollected(playerIndex: Int, powerUpIndex: Int, powerUpType: PowerUpType)
     case readyForNextRound(playerIndex: Int)
     case startGame // Host signals game start
 }

@@ -34,13 +34,19 @@ struct GridGenerator {
         
         // Generate random wall density between 15% and 30%
         let wallDensity = 0.15 + (rng.nextDouble() * 0.15)
+        let destructibleWallDensity = 0.08 + (rng.nextDouble() * 0.08)
         
         // Add random walls with variable density only to interior cells
         for row in 0..<8 {
             for col in 0..<8 {
                 let key = "\(row),\(col)"
-                if !protectedCells.contains(key) && !borderCells.contains(key) && rng.nextDouble() < wallDensity {
-                    grid[row][col] = .wall
+                if !protectedCells.contains(key) && !borderCells.contains(key) {
+                    let rand = rng.nextDouble()
+                    if rand < wallDensity {
+                        grid[row][col] = .wall
+                    } else if rand < wallDensity + destructibleWallDensity {
+                        grid[row][col] = .destructibleWall
+                    }
                 }
             }
         }

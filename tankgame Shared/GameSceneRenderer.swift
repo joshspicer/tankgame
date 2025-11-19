@@ -30,7 +30,16 @@ class GameSceneRenderer {
         for row in 0..<gridSize {
             for col in 0..<gridSize {
                 let cell = grid[row][col]
-                let tile = SKSpriteNode(color: cell == .wall ? .black : .white, size: CGSize(width: tileSize - 2, height: tileSize - 2))
+                let color: SKColor
+                switch cell {
+                case .wall:
+                    color = .black
+                case .destructibleWall:
+                    color = .brown
+                case .empty:
+                    color = .white
+                }
+                let tile = SKSpriteNode(color: color, size: CGSize(width: tileSize - 2, height: tileSize - 2))
                 tile.position = gridPosition(row: row, col: col)
                 gridNode.addChild(tile)
             }
@@ -76,6 +85,76 @@ class GameSceneRenderer {
         tankNode.zRotation = CGFloat(direction.angle)
         
         return tankNode
+    }
+    
+    // MARK: - Power-up Rendering
+    
+    /// Render power-ups on the grid
+    func renderPowerUps(_ powerUps: [PowerUp], in powerUpNode: SKNode) {
+        powerUpNode.removeAllChildren()
+        
+        for powerUp in powerUps where powerUp.isActive {
+            let size = CGSize(width: tileSize * 0.6, height: tileSize * 0.6)
+            let powerUpSprite = SKSpriteNode(color: .clear, size: size)
+            powerUpSprite.position = gridPosition(row: powerUp.row, col: powerUp.col)
+            powerUpSprite.zPosition = 3
+            
+            // Add emoji label
+            let label = SKLabelNode(text: powerUp.type.emoji)
+            label.fontSize = tileSize * 0.5
+            label.verticalAlignmentMode = .center
+            powerUpSprite.addChild(label)
+            
+            // Add pulsing animation
+            let scaleUp = SKAction.scale(to: 1.3, duration: 0.5)
+            let scaleDown = SKAction.scale(to: 1.0, duration: 0.5)
+            let pulse = SKAction.sequence([scaleUp, scaleDown])
+            powerUpSprite.run(SKAction.repeatForever(pulse))
+            
+            // Add rotation for visual interest
+            let rotate = SKAction.rotate(byAngle: .pi * 2, duration: 3.0)
+            powerUpSprite.run(SKAction.repeatForever(rotate))
+            
+            powerUpNode.addChild(powerUpSprite)
+        }
+    }
+    
+    /// Render health indicators above tanks
+    func renderHealthIndicators(_ tanks: [Tank], currentTime: TimeInterval, in healthNode: SKNode) {
+        healthNode.removeAllChildren()
+        
+        for (index, tank) in tanks.enumerated() {
+            guard tank.isAlive else { continue }
+            
+            let position = gridPosition(row: tank.row, col: tank.col)
+            let healthPosition = CGPoint(x: position.x, y: position.y + tileSize * 0.6)
+            
+            // Health hearts
+            for i in 0..<tank.health {
+                let heart = SKLabelNode(text: "❤️")
+                heart.fontSize = tileSize * 0.2
+                heart.position = CGPoint(
+                    x: healthPosition.x + CGFloat(i - 1) * tileSize * 0.2,
+                    y: healthPosition.y
+                )
+                heart.zPosition = 10
+                healthNode.addChild(heart)
+            }
+            
+            // Active power-up indicators
+            let activePowerUps = tank.activePowerUps.filter { !$0.isExpired(currentTime: currentTime) }
+            for (i, powerUp) in activePowerUps.enumerated() {
+                let indicator = SKLabelNode(text: powerUp.type.emoji)
+                indicator.fontSize = tileSize * 0.15
+                indicator.position = CGPoint(
+                    x: healthPosition.x + CGFloat(i) * tileSize * 0.2,
+                    y: healthPosition.y - tileSize * 0.25
+                )
+                indicator.alpha = 0.8
+                indicator.zPosition = 10
+                healthNode.addChild(indicator)
+            }
+        }
     }
     
     // MARK: - Projectile Rendering

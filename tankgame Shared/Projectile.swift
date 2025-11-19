@@ -11,6 +11,7 @@ struct Projectile: Codable {
     var row: Int
     var col: Int
     var direction: Direction
+    var ownerIndex: Int? // Index of the player who fired this projectile
     
     mutating func advance() {
         let offset = direction.offset
@@ -27,7 +28,15 @@ struct Projectile: Codable {
               col >= 0, col < grid[0].count else {
             return false
         }
-        return grid[row][col] == .wall
+        return grid[row][col] == .wall || grid[row][col] == .destructibleWall
+    }
+    
+    func hitsDestructibleWall(grid: [[GridCell]]) -> Bool {
+        guard row >= 0, row < grid.count,
+              col >= 0, col < grid[0].count else {
+            return false
+        }
+        return grid[row][col].canBeDestroyed
     }
     
     func hits(tank: Tank) -> Bool {
