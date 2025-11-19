@@ -24,6 +24,11 @@ class LobbyUI {
     private(set) var emptyStateLabel: UILabel!
     private(set) var activityIndicator: UIActivityIndicatorView!
     
+    // Gradient layer reference for frame updates
+    private var gradientLayer: CAGradientLayer?
+    private var tankEmoji: UILabel!
+    private var isAnimating = false
+    
     // Callbacks
     var onHostTapped: (() -> Void)?
     var onJoinTapped: (() -> Void)?
@@ -32,32 +37,37 @@ class LobbyUI {
     
     func setup(in parentView: UIView) {
         // Create lobby view with gradient background
-        lobbyView = UIView(frame: parentView.bounds)
+        lobbyView = UIView()
         lobbyView.backgroundColor = .systemBackground
+        lobbyView.translatesAutoresizingMaskIntoConstraints = false
         parentView.addSubview(lobbyView)
         
-        // Add gradient background layer
-        let gradientLayer = CAGradientLayer()
-        gradientLayer.frame = parentView.bounds
-        gradientLayer.colors = [
+        // Pin lobbyView to parentView edges
+        NSLayoutConstraint.activate([
+            lobbyView.topAnchor.constraint(equalTo: parentView.topAnchor),
+            lobbyView.leadingAnchor.constraint(equalTo: parentView.leadingAnchor),
+            lobbyView.trailingAnchor.constraint(equalTo: parentView.trailingAnchor),
+            lobbyView.bottomAnchor.constraint(equalTo: parentView.bottomAnchor)
+        ])
+        
+        // Add gradient background layer (frame will be updated in updateGradientFrame)
+        let gradient = CAGradientLayer()
+        gradient.colors = [
             UIColor.systemBlue.withAlphaComponent(0.05).cgColor,
             UIColor.systemPurple.withAlphaComponent(0.05).cgColor
         ]
-        gradientLayer.locations = [0.0, 1.0]
-        lobbyView.layer.insertSublayer(gradientLayer, at: 0)
+        gradient.locations = [0.0, 1.0]
+        lobbyView.layer.insertSublayer(gradient, at: 0)
+        self.gradientLayer = gradient
         
-        // Tank emoji with larger size and animation
-        let tankEmoji = UILabel()
+        // Tank emoji with larger size (animation deferred)
+        tankEmoji = UILabel()
         tankEmoji.text = "🎮"
         tankEmoji.font = .systemFont(ofSize: 72)
         tankEmoji.textAlignment = .center
         tankEmoji.translatesAutoresizingMaskIntoConstraints = false
+        tankEmoji.isAccessibilityElement = false
         lobbyView.addSubview(tankEmoji)
-        
-        // Animate the tank emoji
-        UIView.animate(withDuration: 1.5, delay: 0, options: [.repeat, .autoreverse], animations: {
-            tankEmoji.transform = CGAffineTransform(scaleX: 1.1, y: 1.1)
-        })
         
         // Title label with enhanced styling
         let titleLabel = UILabel()
@@ -99,11 +109,15 @@ class LobbyUI {
         
         // Host button with enhanced styling
         hostButton = createButton(title: "🎯 HOST GAME", backgroundColor: .systemBlue)
+        hostButton.accessibilityLabel = "Host Game"
+        hostButton.accessibilityHint = "Creates a new game and waits for other players to join"
         hostButton.addTarget(self, action: #selector(hostButtonTapped), for: .touchUpInside)
         lobbyView.addSubview(hostButton)
         
         // Join button with enhanced styling
         joinButton = createButton(title: "🔍 JOIN GAME", backgroundColor: .systemGreen)
+        joinButton.accessibilityLabel = "Join Game"
+        joinButton.accessibilityHint = "Search for and join an existing game"
         joinButton.addTarget(self, action: #selector(joinButtonTapped), for: .touchUpInside)
         lobbyView.addSubview(joinButton)
         
@@ -182,13 +196,6 @@ class LobbyUI {
         button.layer.shadowOffset = CGSize(width: 0, height: 4)
         button.layer.shadowRadius = 6
         button.translatesAutoresizingMaskIntoConstraints = false
-        
-        // Add subtle animation on creation
-        button.transform = CGAffineTransform(scaleX: 0.95, y: 0.95)
-        UIView.animate(withDuration: 0.3, delay: 0, usingSpringWithDamping: 0.7, initialSpringVelocity: 0.5, options: [], animations: {
-            button.transform = .identity
-        })
-        
         return button
     }
     
@@ -288,5 +295,34 @@ class LobbyUI {
         emptyStateLabel.isHidden = true
         activityIndicator.stopAnimating()
         statusLabel.text = "Ready to battle?"
+    }
+    
+    /// Update gradient layer frame (call from viewDidLayoutSubviews)
+    func updateGradientFrame() {
+        gradientLayer?.frame = lobbyView.bounds
+    }
+    
+    /// Start animations (call from viewDidAppear)
+    func startAnimations() {
+        guard !isAnimating else { return }
+        isAnimating = true
+        
+        UIView.animate(
+            withDuration: 1.5,
+            delay: 0,
+            options: [.repeat, .autoreverse],
+            animations: { [weak self] in
+                self?.tankEmoji.transform = CGAffineTransform(scaleX: 1.1, y: 1.1)
+            }
+        )
+    }
+    
+    /// Stop animations (call from viewWillDisappear)
+    func stopAnimations() {
+        guard isAnimating else { return }
+        isAnimating = false
+        
+        tankEmoji.layer.removeAllAnimations()
+        tankEmoji.transform = .identity
     }
 }

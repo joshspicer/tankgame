@@ -43,6 +43,23 @@ class GameViewController: UIViewController {
         permissionManager.requestPermissionsIfNeeded()
     }
     
+    override func viewDidLayoutSubviews() {
+        super.viewDidLayoutSubviews()
+        lobbyUI.updateGradientFrame()
+    }
+    
+    override func viewDidAppear(_ animated: Bool) {
+        super.viewDidAppear(animated)
+        if lobbyUI.lobbyView.isHidden == false {
+            lobbyUI.startAnimations()
+        }
+    }
+    
+    override func viewWillDisappear(_ animated: Bool) {
+        super.viewWillDisappear(animated)
+        lobbyUI.stopAnimations()
+    }
+    
     private func setupLobby() {
         lobbyUI = LobbyUI()
         lobbyUI.setup(in: view)
