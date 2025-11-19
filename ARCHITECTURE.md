@@ -161,12 +161,27 @@ None - this is a pure refactoring that maintains all existing functionality.
 4. Confirm explosions animate properly
 5. Validate permissions are requested correctly
 
+## Testing
+
+The modular architecture enables comprehensive unit testing. The `tankgame Tests` directory contains:
+
+- **TankTests.swift** - 15+ tests for Tank entity (movement, shooting, collision)
+- **ProjectileTests.swift** - 12+ tests for Projectile entity (movement, hit detection)
+- **DirectionTests.swift** - 10+ tests for Direction enum (offsets, opposites)
+- **GridGeneratorTests.swift** - 10+ tests for grid generation (determinism, randomness)
+- **GameStateTests.swift** - 20+ tests for game state management
+
+**Total: 67+ unit tests** covering core game logic and entities.
+
+See `tankgame Tests/README.md` for detailed test documentation.
+
 ## Future Improvements
 
-Now that the codebase is modular, future enhancements become easier:
-- Add unit tests for individual components
+Now that the codebase is modular and tested, future enhancements become easier:
+- ✅ ~~Add unit tests for individual components~~ (Completed!)
 - Implement alternative input methods (keyboard, gamepad)
 - Add new visual effects without touching rendering logic
 - Swap networking implementations
 - Create different UI themes
 - Support additional platforms more easily
+- Add tests for UI components and rendering logic
