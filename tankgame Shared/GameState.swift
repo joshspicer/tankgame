@@ -8,6 +8,12 @@
 import Foundation
 
 /// Manages the state of a game round including tanks, projectiles, and grid
+/// 
+/// This class is the single source of truth for the game state and handles:
+/// - Grid generation and storage
+/// - Tank positions and status for all players
+/// - Projectile movement and collision detection
+/// - Round win tracking
 final class GameState {
     var grid: [[GridCell]]
     var tanks: [Tank] // Array of all tanks (index = player index)
@@ -15,14 +21,11 @@ final class GameState {
     var wins: [Int] // Wins for each player
     var localPlayerIndex: Int // Index of the local player in tanks array
     
-    // Spawn positions for up to 4 players
-    static let spawnPositions: [(row: Int, col: Int, direction: Direction)] = [
-        (0, 0, .down),      // Player 0: top-left
-        (7, 7, .up),        // Player 1: bottom-right
-        (0, 7, .down),      // Player 2: top-right
-        (7, 0, .up)         // Player 3: bottom-left
-    ]
-    
+    /// Initializes a new game state with the specified parameters
+    /// - Parameters:
+    ///   - seed: Random seed for grid generation (ensures all players have same grid)
+    ///   - playerCount: Number of players (2-4)
+    ///   - localPlayerIndex: Index of this device's player
     init(seed: UInt32, playerCount: Int, localPlayerIndex: Int) {
         self.grid = GridGenerator.generate(seed: seed)
         self.localPlayerIndex = localPlayerIndex
@@ -30,7 +33,7 @@ final class GameState {
         // Initialize tanks for all players
         var initialTanks: [Tank] = []
         for i in 0..<playerCount {
-            let spawn = GameState.spawnPositions[i]
+            let spawn = GameConfiguration.spawnPositions[i]
             initialTanks.append(Tank(row: spawn.row, col: spawn.col, direction: spawn.direction))
         }
         self.tanks = initialTanks
@@ -45,7 +48,7 @@ final class GameState {
         
         // Reset all tanks to their spawn positions
         for i in 0..<tanks.count {
-            let spawn = GameState.spawnPositions[i]
+            let spawn = GameConfiguration.spawnPositions[i]
             tanks[i] = Tank(row: spawn.row, col: spawn.col, direction: spawn.direction)
         }
     }
@@ -62,7 +65,7 @@ final class GameState {
             projectile.advance()
             
             // Check if out of bounds or hit wall
-            if projectile.isOutOfBounds(gridSize: 8) || projectile.hits(grid: grid) {
+            if projectile.isOutOfBounds(gridSize: GameConfiguration.gridSize) || projectile.hits(grid: grid) {
                 continue // Remove this projectile
             }
             

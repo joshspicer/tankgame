@@ -77,19 +77,29 @@ class MultiplayerManager: NSObject {
     }
     
     func invitePeer(_ peerID: MCPeerID) {
-        browser?.invitePeer(peerID, to: session, withContext: nil, timeout: 30)
+        browser?.invitePeer(peerID, to: session, withContext: nil, timeout: GameConfiguration.connectionTimeout)
     }
     
     // MARK: - Messaging
     
-    func sendMessage(_ message: GameMessage) {
-        guard !session.connectedPeers.isEmpty else { return }
+    /// Send a game message to all connected peers
+    /// - Parameter message: The game message to send
+    /// - Returns: Boolean indicating success
+    @discardableResult
+    func sendMessage(_ message: GameMessage) -> Bool {
+        guard !session.connectedPeers.isEmpty else { 
+            print("Warning: Attempted to send message with no connected peers")
+            return false 
+        }
         
         do {
             let data = try JSONEncoder().encode(message)
             try session.send(data, toPeers: session.connectedPeers, with: .reliable)
+            return true
         } catch {
             print("Error sending message: \(error.localizedDescription)")
+            delegate?.multiplayerManager(self, didEncounterError: error)
+            return false
         }
     }
     
@@ -139,14 +149,50 @@ extension MultiplayerManager: MCSessionDelegate {
     }
     
     func session(_ session: MCSession, didReceive data: Data, fromPeer peerID: MCPeerID) {
+        // Validate data size to prevent malformed messages
+        guard data.count > 0 && data.count < 1_000_000 else { // 1MB limit
+            print("Warning: Received invalid data size from \(peerID.displayName)")
+            return
+        }
+        
         do {
             let message = try JSONDecoder().decode(GameMessage.self, from: data)
+            
+            // Additional validation for message content
+            guard validateMessage(message) else {
+                print("Warning: Received invalid message from \(peerID.displayName)")
+                return
+            }
+            
             DispatchQueue.main.async { [weak self] in
                 guard let self = self else { return }
                 self.delegate?.multiplayerManager(self, didReceiveMessage: message, from: peerID)
             }
         } catch {
             print("Error decoding message: \(error.localizedDescription)")
+            DispatchQueue.main.async { [weak self] in
+                guard let self = self else { return }
+                self.delegate?.multiplayerManager(self, didEncounterError: error)
+            }
+        }
+    }
+    
+    /// Validates that a received message has valid values
+    private func validateMessage(_ message: GameMessage) -> Bool {
+        switch message {
+        case .playerMove(let playerIndex, let row, let col, _):
+            // Validate player index and grid positions
+            return playerIndex >= 0 && playerIndex < GameConfiguration.maxPlayers &&
+                   row >= 0 && row < GameConfiguration.gridSize &&
+                   col >= 0 && col < GameConfiguration.gridSize
+        case .playerShoot(let playerIndex, _, _):
+            return playerIndex >= 0 && playerIndex < GameConfiguration.maxPlayers
+        case .roundStart(let seed, let playerCount):
+            return playerCount >= GameConfiguration.minPlayers && 
+                   playerCount <= GameConfiguration.maxPlayers &&
+                   seed > 0
+        case .roundEnd, .playerReady:
+            return true // These don't have values to validate
         }
     }
     
@@ -167,8 +213,8 @@ extension MultiplayerManager: MCSessionDelegate {
 
 extension MultiplayerManager: MCNearbyServiceAdvertiserDelegate {
     func advertiser(_ advertiser: MCNearbyServiceAdvertiser, didReceiveInvitationFromPeer peerID: MCPeerID, withContext context: Data?, invitationHandler: @escaping (Bool, MCSession?) -> Void) {
-        // Accept invitations if we have room (max 4 players total)
-        if session.connectedPeers.count < maxPlayers - 1 {
+        // Accept invitations if we have room
+        if session.connectedPeers.count < GameConfiguration.maxPlayers - 1 {
             invitationHandler(true, session)
         } else {
             invitationHandler(false, nil)

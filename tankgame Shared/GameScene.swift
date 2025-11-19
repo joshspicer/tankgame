@@ -14,10 +14,6 @@ class GameScene: SKScene {
     var gameState: GameState?
     var onGameMessage: ((GameMessage) -> Void)?
     
-    // Constants
-    let tileSize: CGFloat = 64
-    let gridSize = 8
-    
     // Nodes
     var gridNode: SKNode?
     var tankNodes: [SKNode?] = [nil, nil, nil, nil] // Support up to 4 tanks
@@ -39,7 +35,10 @@ class GameScene: SKScene {
     var tankExploding: [Bool] = [false, false, false, false]
     
     class func newGameScene() -> GameScene {
-        let scene = GameScene(size: CGSize(width: 600, height: 800))
+        let scene = GameScene(size: CGSize(
+            width: GameConfiguration.sceneWidth, 
+            height: GameConfiguration.sceneHeight
+        ))
         scene.scaleMode = .aspectFit
         return scene
     }
@@ -60,9 +59,12 @@ class GameScene: SKScene {
     }
     
     private func setupComponents() {
-        renderer = GameSceneRenderer(tileSize: tileSize, gridSize: gridSize)
+        renderer = GameSceneRenderer(
+            tileSize: GameConfiguration.tileSize, 
+            gridSize: GameConfiguration.gridSize
+        )
         soundManager = SoundManager(scene: self)
-        explosionEffects = ExplosionEffects(tileSize: tileSize)
+        explosionEffects = ExplosionEffects(tileSize: GameConfiguration.tileSize)
         joystickController = JoystickController()
         fireButton = FireButton()
         ui = GameSceneUI()
@@ -71,10 +73,7 @@ class GameScene: SKScene {
     func setupScene() {
         // Create grid container (centered)
         let newGridNode = SKNode()
-        let gridOffset = CGPoint(
-            x: (size.width - CGFloat(gridSize) * tileSize) / 2,
-            y: (size.height - CGFloat(gridSize) * tileSize) / 2 + 50
-        )
+        let gridOffset = GameConfiguration.gridOffset(for: size)
         newGridNode.position = gridOffset
         addChild(newGridNode)
         gridNode = newGridNode
@@ -94,8 +93,8 @@ class GameScene: SKScene {
         }
         
         // Setup components
-        joystickController.setup(in: self, at: CGPoint(x: 80, y: 100))
-        fireButton.setup(in: self, at: CGPoint(x: size.width - 80, y: 100))
+        joystickController.setup(in: self, at: GameConfiguration.joystickPosition)
+        fireButton.setup(in: self, at: GameConfiguration.fireButtonPosition(for: size.width))
         ui.setup(in: self, sceneSize: size)
         
         // Setup fire button callback
@@ -143,7 +142,7 @@ class GameScene: SKScene {
         
         // Handle continuous movement from joystick
         if let direction = joystickController.currentDirection, !state.isRoundOver() {
-            if currentTime - lastMoveTime > 0.12 { // Move ~8 times per second
+            if currentTime - lastMoveTime > GameConfiguration.movementInterval {
                 if state.localTank.move(in: direction, grid: state.grid) {
                     renderTanks()
                     soundManager.playSound("move.wav")
@@ -162,7 +161,7 @@ class GameScene: SKScene {
         }
         
         // Update projectiles
-        if currentTime - lastUpdateTime > 0.05 { // ~20 FPS for projectile updates
+        if currentTime - lastUpdateTime > GameConfiguration.projectileUpdateInterval {
             // Save tank alive state before update
             let wasAlive = state.tanks.map { $0.isAlive }
             let tankPositions = state.tanks.map { renderer.gridPosition(row: $0.row, col: $0.col) }
@@ -189,7 +188,7 @@ class GameScene: SKScene {
                 let winner = state.getWinner()
                 
                 // Wait for explosion to complete before showing round end
-                DispatchQueue.main.asyncAfter(deadline: .now() + 1.0) { [weak self] in
+                DispatchQueue.main.asyncAfter(deadline: .now() + GameConfiguration.explosionDelay) { [weak self] in
                     guard let self = self, let state = self.gameState else { return }
                     
                     // Update score and play win/lose sound
