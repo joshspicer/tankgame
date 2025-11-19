@@ -59,18 +59,36 @@ class GameSceneRenderer {
     private func createTankNode(color: SKColor, direction: Direction) -> SKNode {
         let tankNode = SKNode()
         
-        // Tank body (square)
-        let body = SKSpriteNode(color: color, size: CGSize(width: tileSize * 0.7, height: tileSize * 0.7))
+        // Tank tracks (left)
+        let leftTrack = SKSpriteNode(color: color.withAlphaComponent(0.6), size: CGSize(width: tileSize * 0.15, height: tileSize * 0.8))
+        leftTrack.position = CGPoint(x: -tileSize * 0.3, y: 0)
+        tankNode.addChild(leftTrack)
+        
+        // Tank tracks (right)
+        let rightTrack = SKSpriteNode(color: color.withAlphaComponent(0.6), size: CGSize(width: tileSize * 0.15, height: tileSize * 0.8))
+        rightTrack.position = CGPoint(x: tileSize * 0.3, y: 0)
+        tankNode.addChild(rightTrack)
+        
+        // Tank body (main hull)
+        let body = SKSpriteNode(color: color, size: CGSize(width: tileSize * 0.5, height: tileSize * 0.7))
         tankNode.addChild(body)
         
-        // Tank barrel (rectangle)
-        let barrel = SKSpriteNode(color: color.withAlphaComponent(0.8), size: CGSize(width: tileSize * 0.2, height: tileSize * 0.5))
-        barrel.position = CGPoint(x: 0, y: tileSize * 0.35)
+        // Turret (circular top)
+        let turret = SKSpriteNode(color: color.withAlphaComponent(0.9), size: CGSize(width: tileSize * 0.35, height: tileSize * 0.35))
+        turret.position = CGPoint(x: 0, y: 0)
+        tankNode.addChild(turret)
+        
+        // Tank barrel (cannon)
+        let barrel = SKSpriteNode(color: color.withAlphaComponent(0.8), size: CGSize(width: tileSize * 0.15, height: tileSize * 0.5))
+        barrel.position = CGPoint(x: 0, y: tileSize * 0.4)
         tankNode.addChild(barrel)
         
-        // Add rainbow animation to body and barrel
-        addRainbowAnimation(to: body, phaseOffset: 0)
-        addRainbowAnimation(to: barrel, phaseOffset: 0.15)
+        // Add rainbow animation to all components
+        addRainbowAnimation(to: leftTrack, phaseOffset: 0)
+        addRainbowAnimation(to: rightTrack, phaseOffset: 0.05)
+        addRainbowAnimation(to: body, phaseOffset: 0.1)
+        addRainbowAnimation(to: turret, phaseOffset: 0.2)
+        addRainbowAnimation(to: barrel, phaseOffset: 0.3)
         
         // Rotate based on direction
         tankNode.zRotation = CGFloat(direction.angle)
