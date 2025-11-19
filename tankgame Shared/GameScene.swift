@@ -6,6 +6,9 @@
 //
 
 import SpriteKit
+#if os(iOS)
+import UIKit
+#endif
 
 /// Main game scene that coordinates all game elements
 class GameScene: SKScene {
@@ -36,6 +39,7 @@ class GameScene: SKScene {
     var lastUpdateTime: TimeInterval = 0
     var lastMoveTime: TimeInterval = 0
     var lastPowerUpCheck: TimeInterval = 0
+    var lastFireTime: TimeInterval = 0
     
     // Explosion state
     var tankExploding: [Bool] = [false, false, false, false]
@@ -130,7 +134,7 @@ class GameScene: SKScene {
     
     func renderTanks() {
         guard let state = gameState else { return }
-        renderer.renderTanks(state.tanks, tankExploding: tankExploding, in: tankNodes)
+        renderer.renderTanks(state.tanks, tankExploding: tankExploding, in: tankNodes, activePowerUps: state.activePowerUps)
     }
     
     func renderProjectiles() {
@@ -169,6 +173,14 @@ class GameScene: SKScene {
                 // Play sound for power-up collection
                 soundManager.playSound("move.wav") // Using existing sound, can add specific power-up sound later
                 
+                // Trigger haptic feedback on local player collection
+                #if os(iOS)
+                if playerIndex == state.localPlayerIndex {
+                    let impactFeedback = UIImpactFeedbackGenerator(style: .light)
+                    impactFeedback.impactOccurred()
+                }
+                #endif
+                
                 // Show visual feedback if local player collected
                 if playerIndex == state.localPlayerIndex {
                     // Flash effect on collection
@@ -189,7 +201,10 @@ class GameScene: SKScene {
         
         // Handle continuous movement from joystick
         if let direction = joystickController.currentDirection, !state.isRoundOver() {
-            if currentTime - lastMoveTime > 0.12 { // Move ~8 times per second
+            // Check if speed boost is active for local player
+            let moveInterval: TimeInterval = state.hasPowerUp(.speedBoost, for: state.localPlayerIndex) ? 0.08 : 0.12
+            
+            if currentTime - lastMoveTime > moveInterval { // Move faster with speed boost
                 if state.localTank.move(in: direction, grid: state.grid) {
                     renderTanks()
                     soundManager.playSound("move.wav")
@@ -222,6 +237,15 @@ class GameScene: SKScene {
                 // Tank took damage but didn't die - show damage flash
                 if wasAlive[i] && state.tanks[i].isAlive && previousHealth[i] > state.tanks[i].health {
                     soundManager.playSound("hit.wav")
+                    
+                    // Trigger haptic feedback on local player hit
+                    #if os(iOS)
+                    if i == state.localPlayerIndex {
+                        let impactFeedback = UIImpactFeedbackGenerator(style: .medium)
+                        impactFeedback.impactOccurred()
+                    }
+                    #endif
+                    
                     if let tankNode = tankNodes[i] {
                         // Flash the tank white briefly
                         let flash = SKAction.sequence([
@@ -236,6 +260,15 @@ class GameScene: SKScene {
                 // Tank was destroyed
                 if wasAlive[i] && !state.tanks[i].isAlive {
                     soundManager.playSound("hit.wav")
+                    
+                    // Trigger strong haptic feedback on local player death
+                    #if os(iOS)
+                    if i == state.localPlayerIndex {
+                        let impactFeedback = UIImpactFeedbackGenerator(style: .heavy)
+                        impactFeedback.impactOccurred()
+                    }
+                    #endif
+                    
                     if let tankNode = tankNodes[i] {
                         let color = renderer.tankColors[i]
                         explosionEffects.createExplosion(at: tankPositions[i], color: color, in: tankNode) { [weak self] in
@@ -323,10 +356,17 @@ extension GameScene {
     func handleShoot() {
         guard let state = gameState, state.localTank.isAlive else { return }
         
+        // Check if enough time has passed since last shot (rapid fire reduces cooldown)
+        let fireInterval: TimeInterval = state.hasPowerUp(.rapidFire, for: state.localPlayerIndex) ? 0.15 : 0.3
+        let currentTime = Date().timeIntervalSinceReferenceDate
+        
+        guard currentTime - lastFireTime >= fireInterval else { return }
+        
         let projectile = state.localTank.shoot()
         state.projectiles.append(projectile)
         renderProjectiles()
         soundManager.playSound("shoot.wav")
+        lastFireTime = currentTime
         
         // Send shoot message
         onGameMessage?(.playerShoot(playerIndex: state.localPlayerIndex, projectile: projectile))

@@ -40,7 +40,7 @@ class GameSceneRenderer {
     // MARK: - Tank Rendering
     
     /// Render all tanks
-    func renderTanks(_ tanks: [Tank], tankExploding: [Bool], in tankNodes: [SKNode?]) {
+    func renderTanks(_ tanks: [Tank], tankExploding: [Bool], in tankNodes: [SKNode?], activePowerUps: [[PowerUpType: TimeInterval]] = []) {
         for i in 0..<tanks.count {
             guard let tankNode = tankNodes[i] else { continue }
             tankNode.removeAllChildren()
@@ -48,7 +48,8 @@ class GameSceneRenderer {
             let tank = tanks[i]
             if tank.isAlive || tankExploding[i] {
                 let color = tankColors[i]
-                let tankSprite = createTankNode(color: color, direction: tank.direction, health: tank.health, maxHealth: tank.maxHealth)
+                let powerUpsForTank = i < activePowerUps.count ? activePowerUps[i] : [:]
+                let tankSprite = createTankNode(color: color, direction: tank.direction, health: tank.health, maxHealth: tank.maxHealth, activePowerUps: powerUpsForTank)
                 tankSprite.position = gridPosition(row: tank.row, col: tank.col)
                 tankNode.addChild(tankSprite)
             }
@@ -56,7 +57,7 @@ class GameSceneRenderer {
     }
     
     /// Create a tank sprite node
-    private func createTankNode(color: SKColor, direction: Direction, health: Int, maxHealth: Int) -> SKNode {
+    private func createTankNode(color: SKColor, direction: Direction, health: Int, maxHealth: Int, activePowerUps: [PowerUpType: TimeInterval]) -> SKNode {
         let tankNode = SKNode()
         
         // Tank body (square)
@@ -89,6 +90,38 @@ class GameSceneRenderer {
         healthBarFg.position = CGPoint(x: -healthBarWidth * (1.0 - healthPercent) / 2.0, y: healthBarY)
         healthBarFg.zPosition = 2
         tankNode.addChild(healthBarFg)
+        
+        // Add power-up glow effects
+        if activePowerUps[.speedBoost] != nil {
+            let glowNode = SKShapeNode(circleOfRadius: tileSize * 0.5)
+            glowNode.fillColor = .clear
+            glowNode.strokeColor = .cyan
+            glowNode.lineWidth = 3
+            glowNode.alpha = 0.7
+            glowNode.zPosition = -1
+            tankNode.addChild(glowNode)
+            
+            // Pulsing animation for speed boost
+            let pulse = SKAction.sequence([
+                SKAction.fadeAlpha(to: 0.3, duration: 0.3),
+                SKAction.fadeAlpha(to: 0.7, duration: 0.3)
+            ])
+            glowNode.run(SKAction.repeatForever(pulse))
+        }
+        
+        if activePowerUps[.rapidFire] != nil {
+            let glowNode = SKShapeNode(circleOfRadius: tileSize * 0.5)
+            glowNode.fillColor = .clear
+            glowNode.strokeColor = .orange
+            glowNode.lineWidth = 3
+            glowNode.alpha = 0.7
+            glowNode.zPosition = -1
+            tankNode.addChild(glowNode)
+            
+            // Rotating animation for rapid fire
+            let rotate = SKAction.rotate(byAngle: .pi * 2, duration: 1.0)
+            glowNode.run(SKAction.repeatForever(rotate))
+        }
         
         // Rotate based on direction
         tankNode.zRotation = CGFloat(direction.angle)
