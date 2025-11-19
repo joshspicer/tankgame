@@ -123,6 +123,11 @@ class GameScene: SKScene {
         renderer.renderTanks(state.tanks, tankExploding: tankExploding, in: tankNodes)
     }
     
+    func renderTanksWithSmoothing() {
+        guard let state = gameState else { return }
+        renderer.renderTanksWithSmoothing(state.tanks, tankExploding: tankExploding, in: tankNodes, duration: 0.08)
+    }
+    
     func renderProjectiles() {
         guard let state = gameState, let projectiles = projectilesNode else { return }
         renderer.renderProjectiles(state.projectiles, in: projectiles)
@@ -143,9 +148,12 @@ class GameScene: SKScene {
         
         // Handle continuous movement from joystick
         if let direction = joystickController.currentDirection, !state.isRoundOver() {
-            if currentTime - lastMoveTime > 0.12 { // Move ~8 times per second
+            // Diagonal movement is slightly slower to maintain game balance
+            let moveInterval = direction.isDiagonal ? 0.15 : 0.10
+            
+            if currentTime - lastMoveTime > moveInterval {
                 if state.localTank.move(in: direction, grid: state.grid) {
-                    renderTanks()
+                    renderTanksWithSmoothing()
                     soundManager.playSound("move.wav")
                     lastMoveTime = currentTime
                     
