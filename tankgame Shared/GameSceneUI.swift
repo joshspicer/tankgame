@@ -21,6 +21,11 @@ class GameSceneUI {
         newStatusLabel.fontSize = 20
         newStatusLabel.position = CGPoint(x: sceneSize.width / 2, y: sceneSize.height - 50)
         newStatusLabel.text = "Waiting for game..."
+        #if os(iOS) || os(tvOS)
+        newStatusLabel.fontColor = SKColor(UIColor.label)
+        #elseif os(OSX)
+        newStatusLabel.fontColor = SKColor(NSColor.labelColor)
+        #endif
         scene.addChild(newStatusLabel)
         statusLabel = newStatusLabel
         
@@ -29,6 +34,11 @@ class GameSceneUI {
         newScoreLabel.fontSize = 16
         newScoreLabel.position = CGPoint(x: sceneSize.width / 2, y: 30)
         newScoreLabel.text = "Score: 0 - 0"
+        #if os(iOS) || os(tvOS)
+        newScoreLabel.fontColor = SKColor(UIColor.label)
+        #elseif os(OSX)
+        newScoreLabel.fontColor = SKColor(NSColor.labelColor)
+        #endif
         scene.addChild(newScoreLabel)
         scoreLabel = newScoreLabel
     }

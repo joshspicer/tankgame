@@ -27,10 +27,19 @@ class GameSceneRenderer {
     func renderGrid(_ grid: [[GridCell]], in gridNode: SKNode) {
         gridNode.removeAllChildren()
         
+        // Use adaptive colors for light and dark mode
+        #if os(iOS) || os(tvOS)
+        let wallColor = SKColor(UIColor.label)
+        let floorColor = SKColor(UIColor.systemBackground)
+        #elseif os(OSX)
+        let wallColor = SKColor(NSColor.labelColor)
+        let floorColor = SKColor(NSColor.controlBackgroundColor)
+        #endif
+        
         for row in 0..<gridSize {
             for col in 0..<gridSize {
                 let cell = grid[row][col]
-                let tile = SKSpriteNode(color: cell == .wall ? .black : .white, size: CGSize(width: tileSize - 2, height: tileSize - 2))
+                let tile = SKSpriteNode(color: cell == .wall ? wallColor : floorColor, size: CGSize(width: tileSize - 2, height: tileSize - 2))
                 tile.position = gridPosition(row: row, col: col)
                 gridNode.addChild(tile)
             }

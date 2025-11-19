@@ -16,10 +16,16 @@ class FireButton {
     
     /// Setup the fire button
     func setup(in scene: SKScene, at position: CGPoint) {
+        #if os(iOS) || os(tvOS)
+        let strokeColor = SKColor(UIColor.label)
+        #elseif os(OSX)
+        let strokeColor = SKColor(NSColor.labelColor)
+        #endif
+        
         let newFireButton = SKShapeNode(circleOfRadius: 40)
         newFireButton.position = position
         newFireButton.fillColor = .red
-        newFireButton.strokeColor = .white
+        newFireButton.strokeColor = strokeColor
         newFireButton.lineWidth = 3
         newFireButton.alpha = 0.7
         scene.addChild(newFireButton)
