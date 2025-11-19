@@ -1,2 +1,9 @@
 .xcuserstate
 .DS_Store
+
+# Test artifacts
+*.xcresult
+*.coverage
+xcuserdata/
+DerivedData/
+
