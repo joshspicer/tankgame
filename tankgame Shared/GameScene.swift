@@ -204,8 +204,15 @@ class GameScene: SKScene {
             let wasAlive = state.tanks.map { $0.isAlive }
             let tankPositions = state.tanks.map { renderer.gridPosition(row: $0.row, col: $0.col) }
             
-            state.updateProjectiles()
+            // Update projectiles and check if grid changed
+            let gridChanged = state.updateProjectilesAndCheckGridChange()
             state.updatePowerUps(deltaTime: deltaTime)
+            
+            // Re-render grid if destructible walls were destroyed
+            if gridChanged {
+                renderGrid()
+            }
+            
             renderProjectiles()
             renderPowerUps()
             renderHealthIndicators()

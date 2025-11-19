@@ -79,6 +79,7 @@ final class GameState {
     
     func updateProjectiles() {
         var activeProjectiles: [Projectile] = []
+        var gridChanged = false
         
         for var projectile in projectiles {
             projectile.advance()
@@ -91,6 +92,7 @@ final class GameState {
             // Check if hit destructible wall - destroy it and remove projectile
             if projectile.hitsDestructibleWall(grid: grid) {
                 grid[projectile.row][projectile.col] = .empty
+                gridChanged = true
                 continue
             }
             
@@ -123,6 +125,58 @@ final class GameState {
         }
         
         projectiles = activeProjectiles
+    }
+    
+    /// Returns true if the grid was modified (for re-rendering)
+    func updateProjectilesAndCheckGridChange() -> Bool {
+        var activeProjectiles: [Projectile] = []
+        var gridChanged = false
+        
+        for var projectile in projectiles {
+            projectile.advance()
+            
+            // Check if out of bounds
+            if projectile.isOutOfBounds(gridSize: 8) {
+                continue // Remove this projectile
+            }
+            
+            // Check if hit destructible wall - destroy it and remove projectile
+            if projectile.hitsDestructibleWall(grid: grid) {
+                grid[projectile.row][projectile.col] = .empty
+                gridChanged = true
+                continue
+            }
+            
+            // Check if hit regular wall
+            if projectile.hits(grid: grid) {
+                continue // Remove this projectile
+            }
+            
+            // Check if hit any tank
+            var hitTank = false
+            for i in 0..<tanks.count {
+                if projectile.hits(tank: tanks[i]) {
+                    tanks[i].takeDamage(currentTime: currentTime)
+                    hitTank = true
+                    
+                    // Update statistics
+                    if let shooterIndex = projectile.ownerIndex {
+                        statistics[shooterIndex].hits += 1
+                    }
+                    
+                    break
+                }
+            }
+            
+            if hitTank {
+                continue
+            }
+            
+            activeProjectiles.append(projectile)
+        }
+        
+        projectiles = activeProjectiles
+        return gridChanged
     }
     
     /// Update power-ups and spawn new ones

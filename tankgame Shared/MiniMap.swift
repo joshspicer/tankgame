@@ -39,9 +39,9 @@ class MiniMap {
     func update(grid: [[GridCell]], tanks: [Tank], projectiles: [Projectile]) {
         guard let container = miniMapNode else { return }
         
-        // Clear previous content except background
-        for child in container.children where child is SKSpriteNode && child.color != SKColor.black.withAlphaComponent(0.5) {
-            child.removeFromParent()
+        // Clear all children except the first one (background)
+        while container.children.count > 1 {
+            container.children[1].removeFromParent()
         }
         
         // Draw grid
