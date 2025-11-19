@@ -32,6 +32,7 @@ class GameScene: SKScene {
     private var joystickController: JoystickController!
     private var fireButton: FireButton!
     private var ui: GameSceneUI!
+    private var miniMap: MiniMap!
     
     // Update timer
     var lastUpdateTime: TimeInterval = 0
@@ -68,6 +69,7 @@ class GameScene: SKScene {
         joystickController = JoystickController()
         fireButton = FireButton()
         ui = GameSceneUI()
+        miniMap = MiniMap(gridSize: gridSize)
     }
     
     func setupScene() {
@@ -111,6 +113,7 @@ class GameScene: SKScene {
         joystickController.setup(in: self, at: CGPoint(x: 80, y: 100))
         fireButton.setup(in: self, at: CGPoint(x: size.width - 80, y: 100))
         ui.setup(in: self, sceneSize: size)
+        miniMap.setup(in: self, sceneSize: size)
         
         // Setup fire button callback
         fireButton.onTap = { [weak self] in
@@ -125,6 +128,7 @@ class GameScene: SKScene {
         renderTanks()
         renderPowerUps()
         renderHealthIndicators()
+        updateMiniMap()
         updateScore()
         ui.updateStatus("Fight!")
     }
@@ -152,6 +156,11 @@ class GameScene: SKScene {
     func renderHealthIndicators() {
         guard let state = gameState, let health = healthNode else { return }
         renderer.renderHealthIndicators(state.tanks, currentTime: state.currentTime, in: health)
+    }
+    
+    func updateMiniMap() {
+        guard let state = gameState else { return }
+        miniMap.update(grid: state.grid, tanks: state.tanks, projectiles: state.projectiles)
     }
     
     func updateScore() {
@@ -200,6 +209,12 @@ class GameScene: SKScene {
             renderProjectiles()
             renderPowerUps()
             renderHealthIndicators()
+            updateMiniMap()
+            
+            // Update statistics display
+            if state.localPlayerIndex < state.statistics.count {
+                ui.updateStatistics(state.statistics[state.localPlayerIndex])
+            }
             
             // Check which tanks were hit and trigger explosions
             for i in 0..<state.tanks.count {

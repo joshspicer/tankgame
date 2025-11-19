@@ -207,6 +207,12 @@ class GameViewController: UIViewController {
         case .playerShoot(let playerIndex, let projectile):
             multiplayerManager.sendMessage(.playerShoot(playerIndex: playerIndex, projectile: projectile))
             
+        case .powerUpSpawned(let powerUp):
+            multiplayerManager.sendMessage(.powerUpSpawned(powerUp: powerUp))
+            
+        case .powerUpCollected(let playerIndex, let powerUpIndex, let powerUpType):
+            multiplayerManager.sendMessage(.powerUpCollected(playerIndex: playerIndex, powerUpIndex: powerUpIndex, powerUpType: powerUpType))
+            
         case .readyForNextRound(let playerIndex):
             multiplayerCoordinator.markPlayerReady(playerIndex)
             checkAndStartNextRound()
@@ -355,7 +361,29 @@ extension GameViewController: MultiplayerManagerDelegate {
             
         case .playerShoot(let playerIndex, let projectile):
             gameState?.projectiles.append(projectile)
+            if let state = gameState, playerIndex < state.statistics.count {
+                state.statistics[playerIndex].recordShot()
+            }
             gameScene?.renderProjectiles()
+            
+        case .powerUpSpawned(let powerUp):
+            gameState?.powerUps.append(powerUp)
+            gameScene?.renderPowerUps()
+            
+        case .powerUpCollected(let playerIndex, let powerUpIndex, let powerUpType):
+            if let state = gameState {
+                if powerUpIndex < state.powerUps.count {
+                    state.powerUps[powerUpIndex].isActive = false
+                }
+                if playerIndex < state.tanks.count {
+                    state.tanks[playerIndex].applyPowerUp(powerUpType, currentTime: state.currentTime)
+                }
+                if playerIndex < state.statistics.count {
+                    state.statistics[playerIndex].powerUpsCollected += 1
+                }
+                gameScene?.renderPowerUps()
+                gameScene?.renderHealthIndicators()
+            }
             
         case .readyForNextRound(let playerIndex):
             multiplayerCoordinator.markPlayerReady(playerIndex)

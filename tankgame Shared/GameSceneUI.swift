@@ -11,6 +11,7 @@ import SpriteKit
 class GameSceneUI {
     private var statusLabel: SKLabelNode?
     private var scoreLabel: SKLabelNode?
+    private var statisticsLabel: SKLabelNode?
     
     init() {}
     
@@ -31,6 +32,17 @@ class GameSceneUI {
         newScoreLabel.text = "Score: 0 - 0"
         scene.addChild(newScoreLabel)
         scoreLabel = newScoreLabel
+        
+        // Create statistics label (top-right corner)
+        let newStatisticsLabel = SKLabelNode(fontNamed: "Arial")
+        newStatisticsLabel.fontSize = 12
+        newStatisticsLabel.position = CGPoint(x: sceneSize.width - 80, y: sceneSize.height - 40)
+        newStatisticsLabel.horizontalAlignmentMode = .right
+        newStatisticsLabel.verticalAlignmentMode = .top
+        newStatisticsLabel.text = "Stats"
+        newStatisticsLabel.alpha = 0.8
+        scene.addChild(newStatisticsLabel)
+        statisticsLabel = newStatisticsLabel
     }
     
     /// Update status text
@@ -47,6 +59,17 @@ class GameSceneUI {
             let scoreText = wins.enumerated().map { "P\($0.offset+1): \($0.element)" }.joined(separator: " | ")
             scoreLabel?.text = scoreText
         }
+    }
+    
+    /// Update statistics display for local player
+    func updateStatistics(_ stats: PlayerStatistics) {
+        let accuracyText = String(format: "%.0f%%", stats.accuracy)
+        statisticsLabel?.text = """
+        Shots: \(stats.shotsFired)
+        Hits: \(stats.hits)
+        Accuracy: \(accuracyText)
+        Power-ups: \(stats.powerUpsCollected)
+        """
     }
     
     /// Show round end message
