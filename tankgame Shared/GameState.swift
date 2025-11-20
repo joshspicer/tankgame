@@ -59,10 +59,24 @@ final class GameState {
         var activeProjectiles: [Projectile] = []
         
         for var projectile in projectiles {
+            // Check if would hit wall before advancing
+            let wallCheck = projectile.wouldHitWall(grid: grid)
+            
+            if wallCheck.hits {
+                // Try to bounce
+                if projectile.bounce(wallRow: wallCheck.wallRow, wallCol: wallCheck.wallCol) {
+                    // Successfully bounced, keep projectile active
+                    activeProjectiles.append(projectile)
+                }
+                // If bounce failed (no bounces remaining), projectile is removed
+                continue
+            }
+            
+            // No wall ahead, advance normally
             projectile.advance()
             
-            // Check if out of bounds or hit wall
-            if projectile.isOutOfBounds(gridSize: 8) || projectile.hits(grid: grid) {
+            // Check if out of bounds
+            if projectile.isOutOfBounds(gridSize: 8) {
                 continue // Remove this projectile
             }
             
