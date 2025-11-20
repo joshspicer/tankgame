@@ -167,7 +167,6 @@ class GameScene: SKScene {
                     // Light haptic feedback for movement
                     #if os(iOS)
                     movementFeedback?.selectionChanged()
-                    movementFeedback?.prepare()
                     #endif
                     
                     lastMoveTime = currentTime

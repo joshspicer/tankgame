@@ -17,7 +17,17 @@ class FireButton {
     private var isPressed = false
     var onTap: (() -> Void)?
     
-    init() {}
+    #if os(iOS)
+    // Haptic feedback generator (reused for efficiency)
+    private var impactFeedback: UIImpactFeedbackGenerator?
+    #endif
+    
+    init() {
+        #if os(iOS)
+        impactFeedback = UIImpactFeedbackGenerator(style: .medium)
+        impactFeedback?.prepare()
+        #endif
+    }
     
     /// Setup the fire button
     func setup(in scene: SKScene, at position: CGPoint) {
@@ -58,8 +68,8 @@ class FireButton {
         if distance < 60 {
             // Trigger haptic feedback
             #if os(iOS)
-            let generator = UIImpactFeedbackGenerator(style: .medium)
-            generator.impactOccurred()
+            impactFeedback?.impactOccurred()
+            impactFeedback?.prepare()
             #endif
             
             // Visual feedback animation
@@ -83,9 +93,9 @@ class FireButton {
         let brighten = SKAction.run {
             button.alpha = 1.0
         }
-        let dim = SKAction.run { [weak self] in
+        let dim = SKAction.run { [unowned self] in
             button.alpha = 0.8
-            self?.isPressed = false
+            self.isPressed = false
         }
         
         let sequence = SKAction.sequence([scaleDown, brighten, scaleUp, dim])
