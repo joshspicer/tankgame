@@ -161,10 +161,35 @@ None - this is a pure refactoring that maintains all existing functionality.
 4. Confirm explosions animate properly
 5. Validate permissions are requested correctly
 
+## Testing
+
+The codebase includes comprehensive unit tests for all core game components.
+
+### Test Coverage
+
+**Test Files** (5 files, 93+ tests):
+- `TankTests.swift` - 17 tests for Tank entity movement, shooting, and boundaries
+- `ProjectileTests.swift` - 19 tests for Projectile movement and collision detection
+- `DirectionTests.swift` - 12 tests for Direction enum calculations
+- `GridGeneratorTests.swift` - 15 tests for procedural generation and spawn protection
+- `GameStateTests.swift` - 30+ tests for game logic, round management, and winner detection
+
+### Test Highlights
+
+✅ **Deterministic Testing**: Seeded random generation ensures consistent test results
+✅ **Edge Case Coverage**: Boundary conditions, collision detection, null cases
+✅ **Integration Tests**: Complete game scenarios validating component interactions
+✅ **Codable Conformance**: Network serialization validation
+✅ **Spawn Protection**: Verification that all 4 player spawn areas remain clear
+
+See `tankgame Tests/README.md` for detailed testing documentation.
+
 ## Future Improvements
 
-Now that the codebase is modular, future enhancements become easier:
-- Add unit tests for individual components
+Now that the codebase is modular and well-tested, future enhancements become easier:
+- ~~Add unit tests for individual components~~ ✅ **Complete**
+- Add UI tests for game scenes and multiplayer lobby
+- Add performance tests for rendering and networking
 - Implement alternative input methods (keyboard, gamepad)
 - Add new visual effects without touching rendering logic
 - Swap networking implementations
