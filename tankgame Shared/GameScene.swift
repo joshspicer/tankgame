@@ -273,10 +273,68 @@ extension GameScene {
 #endif
 
 #if os(OSX)
-// Mouse-based event handling
+// Keyboard and mouse-based event handling for macOS
 extension GameScene {
+    // Track currently pressed keys for movement
+    private static var pressedKeys: Set<UInt16> = []
+    
+    override func keyDown(with event: NSEvent) {
+        guard let state = gameState, !state.isRoundOver() else { return }
+        
+        // Add key to pressed keys set
+        GameScene.pressedKeys.insert(event.keyCode)
+        
+        // Determine direction based on pressed keys
+        updateMovementFromKeyboard()
+    }
+    
+    override func keyUp(with event: NSEvent) {
+        // Remove key from pressed keys set
+        GameScene.pressedKeys.remove(event.keyCode)
+        
+        // Update movement based on remaining pressed keys
+        updateMovementFromKeyboard()
+    }
+    
+    private func updateMovementFromKeyboard() {
+        guard let state = gameState, !state.isRoundOver() else { return }
+        
+        // Key codes for arrow keys and WASD
+        let upKeys: Set<UInt16> = [126, 13]    // Up arrow, W
+        let downKeys: Set<UInt16> = [125, 1]   // Down arrow, S
+        let leftKeys: Set<UInt16> = [123, 0]   // Left arrow, A
+        let rightKeys: Set<UInt16> = [124, 2]  // Right arrow, D
+        
+        // Determine direction based on pressed keys (prioritize most recent)
+        var direction: Direction? = nil
+        
+        if !GameScene.pressedKeys.isEmpty {
+            if GameScene.pressedKeys.contains(where: upKeys.contains) {
+                direction = .up
+            } else if GameScene.pressedKeys.contains(where: downKeys.contains) {
+                direction = .down
+            } else if GameScene.pressedKeys.contains(where: leftKeys.contains) {
+                direction = .left
+            } else if GameScene.pressedKeys.contains(where: rightKeys.contains) {
+                direction = .right
+            }
+        }
+        
+        // Update joystick controller's current direction for the update loop
+        joystickController.setDirection(direction)
+    }
+    
     override func mouseDown(with event: NSEvent) {
-        // macOS support can be added later
+        guard let state = gameState, state.localTank.isAlive else { return }
+        
+        // Shoot on mouse click
+        let projectile = state.localTank.shoot()
+        state.projectiles.append(projectile)
+        renderProjectiles()
+        soundManager.playSound("shoot.wav")
+        
+        // Send shoot message
+        onGameMessage?(.playerShoot(playerIndex: state.localPlayerIndex, projectile: projectile))
     }
 }
 #endif

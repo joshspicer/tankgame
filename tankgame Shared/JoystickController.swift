@@ -129,4 +129,9 @@ class JoystickController {
         }
     }
     #endif
+    
+    /// Set direction from external source (e.g., keyboard input on macOS)
+    func setDirection(_ direction: Direction?) {
+        currentDirection = direction
+    }
 }
