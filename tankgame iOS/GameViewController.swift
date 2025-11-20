@@ -26,6 +26,10 @@ class GameViewController: UIViewController {
     private var gameScene: GameScene?
     private var gameState: GameState?
     private var skView: SKView?
+    
+    // AI tracking
+    private var aiPlayerCount: Int = 0
+    private var maxPlayers: Int = 4
 
     override func viewDidLoad() {
         super.viewDidLoad()
@@ -62,6 +66,10 @@ class GameViewController: UIViewController {
         
         lobbyUI.onStartGameTapped = { [weak self] in
             self?.handleStartGameTapped()
+        }
+        
+        lobbyUI.onAddAITapped = { [weak self] in
+            self?.handleAddAITapped()
         }
         
         // Setup table view
@@ -115,15 +123,16 @@ class GameViewController: UIViewController {
         lobbyUI.reset()
         lobbyUI.peerTableView.reloadData()
         multiplayerManager.isHost = false
+        aiPlayerCount = 0
     }
     
     private func handleStartGameTapped() {
-        let playerCount = multiplayerCoordinator.playerCount
+        let totalPlayers = multiplayerCoordinator.playerCount + aiPlayerCount
         
-        if playerCount < 2 {
+        if totalPlayers < 2 {
             let alert = UIAlertController(
                 title: "Not Enough Players",
-                message: "You need at least 2 players to start the game.",
+                message: "You need at least 2 players to start the game. Add an AI player or wait for other players to join.",
                 preferredStyle: .alert
             )
             alert.addAction(UIAlertAction(title: "OK", style: .default))
@@ -132,7 +141,25 @@ class GameViewController: UIViewController {
         }
         
         let playerAssignments = multiplayerCoordinator.assignPlayerIndices()
-        startGame(playerCount: playerCount, localPlayerIndex: 0, playerAssignments: playerAssignments)
+        startGame(playerCount: totalPlayers, localPlayerIndex: 0, playerAssignments: playerAssignments)
+    }
+    
+    private func handleAddAITapped() {
+        let totalPlayers = multiplayerCoordinator.playerCount + aiPlayerCount
+        
+        if totalPlayers >= maxPlayers {
+            let alert = UIAlertController(
+                title: "Maximum Players",
+                message: "The game already has \(maxPlayers) players (maximum).",
+                preferredStyle: .alert
+            )
+            alert.addAction(UIAlertAction(title: "OK", style: .default))
+            present(alert, animated: true)
+            return
+        }
+        
+        aiPlayerCount += 1
+        updateConnectedPlayersUI()
     }
     
     // MARK: - UI Updates
@@ -144,14 +171,29 @@ class GameViewController: UIViewController {
     }
     
     private func updateConnectedPlayersUI() {
-        let playerCount = multiplayerCoordinator.playerCount
+        let humanPlayerCount = multiplayerCoordinator.playerCount
+        let totalPlayers = humanPlayerCount + aiPlayerCount
         let playerNames = multiplayerCoordinator.getConnectedPlayerNames()
-        let namesText = playerNames.enumerated().map { "P\($0.offset + 1): \($0.element)" }.joined(separator: "\n")
-        lobbyUI.connectedPlayersLabel.text = "Connected Players (\(playerCount)/4):\n\n\(namesText)"
+        
+        var allPlayers: [String] = []
+        for (index, name) in playerNames.enumerated() {
+            allPlayers.append("P\(index + 1): \(name)")
+        }
+        
+        // Add AI players
+        for i in 0..<aiPlayerCount {
+            allPlayers.append("P\(humanPlayerCount + i + 1): 🤖 AI Bot")
+        }
+        
+        let namesText = allPlayers.joined(separator: "\n")
+        lobbyUI.connectedPlayersLabel.text = "Connected Players (\(totalPlayers)/\(maxPlayers)):\n\n\(namesText)"
         
         if multiplayerManager.isHost {
-            lobbyUI.startGameButton.isEnabled = playerCount >= 2
-            lobbyUI.startGameButton.alpha = playerCount >= 2 ? 1.0 : 0.5
+            lobbyUI.startGameButton.isEnabled = totalPlayers >= 2
+            lobbyUI.startGameButton.alpha = totalPlayers >= 2 ? 1.0 : 0.5
+            lobbyUI.addAIButton.isHidden = false
+            lobbyUI.addAIButton.isEnabled = totalPlayers < maxPlayers
+            lobbyUI.addAIButton.alpha = totalPlayers < maxPlayers ? 1.0 : 0.5
         }
     }
     
@@ -180,6 +222,13 @@ class GameViewController: UIViewController {
         
         let seed = UInt32.random(in: 0...UInt32.max)
         gameState = GameState(seed: seed, playerCount: playerCount, localPlayerIndex: localPlayerIndex)
+        
+        // Enable AI for AI players (they get the last player indices)
+        let humanPlayerCount = multiplayerCoordinator.playerCount
+        for i in 0..<aiPlayerCount {
+            let aiPlayerIndex = humanPlayerCount + i
+            gameState?.enableAI(forPlayerIndex: aiPlayerIndex)
+        }
         
         multiplayerManager.sendMessage(.roundStart(seed: seed, playerCount: playerCount, hostPlayerIndex: localPlayerIndex, playerAssignments: playerAssignments))
         

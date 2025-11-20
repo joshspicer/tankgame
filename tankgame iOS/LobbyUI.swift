@@ -16,6 +16,7 @@ class LobbyUI {
     private(set) var joinButton: UIButton!
     private(set) var cancelButton: UIButton!
     private(set) var startGameButton: UIButton!
+    private(set) var addAIButton: UIButton!
     private(set) var peerTableView: UITableView!
     private(set) var connectedPlayersView: UIView!
     private(set) var connectedPlayersLabel: UILabel!
@@ -29,6 +30,7 @@ class LobbyUI {
     var onJoinTapped: (() -> Void)?
     var onCancelTapped: (() -> Void)?
     var onStartGameTapped: (() -> Void)?
+    var onAddAITapped: (() -> Void)?
     
     func setup(in parentView: UIView) {
         // Create lobby view
@@ -89,6 +91,12 @@ class LobbyUI {
         startGameButton.isHidden = true
         startGameButton.addTarget(self, action: #selector(startGameButtonTapped), for: .touchUpInside)
         lobbyView.addSubview(startGameButton)
+        
+        // Add AI button (for host)
+        addAIButton = createButton(title: "🤖 Add AI Player", backgroundColor: .systemOrange)
+        addAIButton.isHidden = true
+        addAIButton.addTarget(self, action: #selector(addAIButtonTapped), for: .touchUpInside)
+        lobbyView.addSubview(addAIButton)
         
         // Connected players view
         connectedPlayersView = UIView()
@@ -193,6 +201,11 @@ class LobbyUI {
             startGameButton.widthAnchor.constraint(equalToConstant: 240),
             startGameButton.heightAnchor.constraint(equalToConstant: 56),
             
+            addAIButton.topAnchor.constraint(equalTo: startGameButton.bottomAnchor, constant: 12),
+            addAIButton.centerXAnchor.constraint(equalTo: lobbyView.centerXAnchor),
+            addAIButton.widthAnchor.constraint(equalToConstant: 240),
+            addAIButton.heightAnchor.constraint(equalToConstant: 48),
+            
             activityIndicator.centerXAnchor.constraint(equalTo: lobbyView.centerXAnchor),
             activityIndicator.topAnchor.constraint(equalTo: statusLabel.bottomAnchor, constant: 20),
             
@@ -223,6 +236,10 @@ class LobbyUI {
         onStartGameTapped?()
     }
     
+    @objc private func addAIButtonTapped() {
+        onAddAITapped?()
+    }
+    
     /// Reset lobby to initial state
     func reset() {
         hostButton.isHidden = false
@@ -230,6 +247,7 @@ class LobbyUI {
         instructionsLabel.isHidden = false
         cancelButton.isHidden = true
         startGameButton.isHidden = true
+        addAIButton.isHidden = true
         connectedPlayersView.isHidden = true
         peerTableView.isHidden = true
         emptyStateLabel.isHidden = true
