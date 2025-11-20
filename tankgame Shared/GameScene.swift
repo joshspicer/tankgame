@@ -102,6 +102,20 @@ class GameScene: SKScene {
         fireButton.onTap = { [weak self] in
             self?.handleShoot()
         }
+        
+        // Setup menu callbacks
+        ui.onMenuTapped = { [weak self] in
+            self?.handleMenuTapped()
+        }
+        ui.onResumeTapped = { [weak self] in
+            self?.handleResumeTapped()
+        }
+        ui.onRestartTapped = { [weak self] in
+            self?.handleRestartTapped()
+        }
+        ui.onQuitTapped = { [weak self] in
+            self?.handleQuitTapped()
+        }
     }
     
     func startGame(with state: GameState) {
@@ -140,6 +154,11 @@ class GameScene: SKScene {
     
     override func update(_ currentTime: TimeInterval) {
         guard let state = gameState else { return }
+        
+        // Don't update if paused
+        if ui.isPaused {
+            return
+        }
         
         // Handle continuous movement from joystick
         if let direction = joystickController.currentDirection, !state.isRoundOver() {
@@ -230,6 +249,16 @@ extension GameScene {
         for touch in touches {
             let location = touch.location(in: self)
             
+            // Check if touching menu UI (highest priority)
+            if ui.handleTouch(at: location, in: self) {
+                continue
+            }
+            
+            // Don't handle other touches if paused
+            if ui.isPaused {
+                continue
+            }
+            
             // Check if touching fire button
             if fireButton.handleTouch(at: location) {
                 continue
@@ -259,7 +288,7 @@ extension GameScene {
     }
     
     func handleShoot() {
-        guard let state = gameState, state.localTank.isAlive else { return }
+        guard let state = gameState, state.localTank.isAlive, !ui.isPaused else { return }
         
         let projectile = state.localTank.shoot()
         state.projectiles.append(projectile)
@@ -268,6 +297,24 @@ extension GameScene {
         
         // Send shoot message
         onGameMessage?(.playerShoot(playerIndex: state.localPlayerIndex, projectile: projectile))
+    }
+    
+    func handleMenuTapped() {
+        ui.showPauseMenu(in: self, sceneSize: size)
+    }
+    
+    func handleResumeTapped() {
+        ui.hidePauseMenu()
+    }
+    
+    func handleRestartTapped() {
+        ui.hidePauseMenu()
+        onGameMessage?(.restartMatch)
+    }
+    
+    func handleQuitTapped() {
+        ui.hidePauseMenu()
+        onGameMessage?(.quitToLobby)
     }
 }
 #endif

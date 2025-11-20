@@ -16,4 +16,6 @@ enum GameMessage: Codable {
     case playerHit(playerIndex: Int)
     case readyForNextRound(playerIndex: Int)
     case startGame // Host signals game start
+    case restartMatch // Request to restart match (reset scores)
+    case quitToLobby // Request to return to lobby
 }
