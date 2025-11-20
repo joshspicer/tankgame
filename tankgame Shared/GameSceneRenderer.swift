@@ -110,6 +110,83 @@ class GameSceneRenderer {
         }
     }
     
+    // MARK: - Power-up Rendering
+    
+    /// Render all power-ups
+    func renderPowerUps(_ powerUps: [PowerUp], in powerUpsNode: SKNode) {
+        powerUpsNode.removeAllChildren()
+        
+        for powerUp in powerUps where powerUp.isActive {
+            let sprite = createPowerUpSprite(type: powerUp.type)
+            sprite.position = gridPosition(row: powerUp.row, col: powerUp.col)
+            sprite.zPosition = 3
+            powerUpsNode.addChild(sprite)
+        }
+    }
+    
+    /// Create a power-up sprite based on type
+    private func createPowerUpSprite(type: PowerUpType) -> SKNode {
+        let node = SKNode()
+        let size = CGSize(width: tileSize * 0.6, height: tileSize * 0.6)
+        
+        // Base shape (star for all power-ups)
+        let star = createStarShape(size: size)
+        
+        // Color based on type
+        let color: SKColor
+        switch type {
+        case .health:
+            color = .green
+        case .speed:
+            color = .cyan
+        case .shield:
+            color = .purple
+        case .rapidFire:
+            color = .orange
+        }
+        star.fillColor = color
+        star.strokeColor = .white
+        star.lineWidth = 2
+        
+        node.addChild(star)
+        
+        // Add pulsing animation
+        let scaleUp = SKAction.scale(to: 1.2, duration: 0.5)
+        let scaleDown = SKAction.scale(to: 0.8, duration: 0.5)
+        let pulse = SKAction.sequence([scaleUp, scaleDown])
+        node.run(SKAction.repeatForever(pulse))
+        
+        // Add rotation animation
+        let rotate = SKAction.rotate(byAngle: .pi * 2, duration: 2.0)
+        node.run(SKAction.repeatForever(rotate))
+        
+        return node
+    }
+    
+    /// Create a star shape for power-ups
+    private func createStarShape(size: CGSize) -> SKShapeNode {
+        let path = CGMutablePath()
+        let points = 5
+        let outerRadius = size.width / 2
+        let innerRadius = outerRadius * 0.4
+        
+        for i in 0..<points * 2 {
+            let angle = CGFloat(i) * .pi / CGFloat(points) - .pi / 2
+            let radius = i % 2 == 0 ? outerRadius : innerRadius
+            let x = cos(angle) * radius
+            let y = sin(angle) * radius
+            
+            if i == 0 {
+                path.move(to: CGPoint(x: x, y: y))
+            } else {
+                path.addLine(to: CGPoint(x: x, y: y))
+            }
+        }
+        path.closeSubpath()
+        
+        return SKShapeNode(path: path)
+    }
+    
     // MARK: - Helper Methods
     
     /// Convert grid coordinates to scene position

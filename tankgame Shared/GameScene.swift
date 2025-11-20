@@ -22,6 +22,7 @@ class GameScene: SKScene {
     var gridNode: SKNode?
     var tankNodes: [SKNode?] = [nil, nil, nil, nil] // Support up to 4 tanks
     var projectilesNode: SKNode?
+    var powerUpsNode: SKNode?
     
     // Components
     private var renderer: GameSceneRenderer!
@@ -55,6 +56,7 @@ class GameScene: SKScene {
             renderGrid()
             renderTanks()
             renderProjectiles()
+            renderPowerUps()
             updateScore()
         }
     }
@@ -84,6 +86,12 @@ class GameScene: SKScene {
         newProjectilesNode.position = gridOffset
         addChild(newProjectilesNode)
         projectilesNode = newProjectilesNode
+        
+        // Create power-ups container
+        let newPowerUpsNode = SKNode()
+        newPowerUpsNode.position = gridOffset
+        addChild(newPowerUpsNode)
+        powerUpsNode = newPowerUpsNode
         
         // Create tank nodes for all possible players
         for i in 0..<4 {
@@ -128,6 +136,11 @@ class GameScene: SKScene {
         renderer.renderProjectiles(state.projectiles, in: projectiles)
     }
     
+    func renderPowerUps() {
+        guard let state = gameState, let powerUps = powerUpsNode else { return }
+        renderer.renderPowerUps(state.powerUps, in: powerUps)
+    }
+    
     func updateScore() {
         guard let state = gameState else { return }
         ui.updateScore(wins: state.wins)
@@ -141,9 +154,13 @@ class GameScene: SKScene {
     override func update(_ currentTime: TimeInterval) {
         guard let state = gameState else { return }
         
+        // Update current time in game state
+        state.currentTime = currentTime
+        
         // Handle continuous movement from joystick
         if let direction = joystickController.currentDirection, !state.isRoundOver() {
-            if currentTime - lastMoveTime > 0.12 { // Move ~8 times per second
+            let moveInterval = state.localTank.hasEffect(.speed) ? 0.08 : 0.12
+            if currentTime - lastMoveTime > moveInterval {
                 if state.localTank.move(in: direction, grid: state.grid) {
                     renderTanks()
                     soundManager.playSound("move.wav")
@@ -159,6 +176,28 @@ class GameScene: SKScene {
         // Don't update if round is over or any explosion in progress
         if state.isRoundOver() || tankExploding.contains(true) {
             return
+        }
+        
+        // Update power-ups
+        state.updatePowerUps()
+        renderPowerUps()
+        
+        // Update AI
+        let aiActions = state.updateAI()
+        for (playerIndex, action) in aiActions {
+            if let message = state.executeAIAction(playerIndex: playerIndex, action: action) {
+                // Apply AI action locally
+                renderTanks()
+                if case .playerShoot = message {
+                    soundManager.playSound("shoot.wav")
+                    renderProjectiles()
+                } else if case .playerMove = message {
+                    soundManager.playSound("move.wav")
+                }
+                
+                // Send message if in multiplayer mode (though AI is primarily for single-player)
+                onGameMessage?(message)
+            }
         }
         
         // Update projectiles
@@ -261,8 +300,12 @@ extension GameScene {
     func handleShoot() {
         guard let state = gameState, state.localTank.isAlive else { return }
         
+        // Check shooting cooldown
+        guard state.localTank.canShoot(currentTime: state.currentTime) else { return }
+        
         let projectile = state.localTank.shoot()
         state.projectiles.append(projectile)
+        state.tanks[state.localPlayerIndex].lastShootTime = state.currentTime
         renderProjectiles()
         soundManager.playSound("shoot.wav")
         
