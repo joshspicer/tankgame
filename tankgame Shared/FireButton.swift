@@ -25,7 +25,6 @@ class FireButton {
     init() {
         #if os(iOS)
         impactFeedback = UIImpactFeedbackGenerator(style: .medium)
-        impactFeedback?.prepare()
         #endif
     }
     

@@ -79,7 +79,6 @@ class GameScene: SKScene {
         #if os(iOS)
         // Setup haptic feedback generator
         movementFeedback = UISelectionFeedbackGenerator()
-        movementFeedback?.prepare()
         #endif
     }
     
