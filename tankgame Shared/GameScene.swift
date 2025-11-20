@@ -13,6 +13,7 @@ class GameScene: SKScene {
     // Game state
     var gameState: GameState?
     var onGameMessage: ((GameMessage) -> Void)?
+    var isCountdownActive = false
     
     // Constants
     let tileSize: CGFloat = 64
@@ -110,7 +111,13 @@ class GameScene: SKScene {
         renderGrid()
         renderTanks()
         updateScore()
-        ui.updateStatus("Fight!")
+        
+        // Show countdown before starting gameplay
+        isCountdownActive = true
+        ui.showCountdown(in: self) { [weak self] in
+            self?.isCountdownActive = false
+            self?.ui.updateStatus("Fight!")
+        }
     }
     
     func renderGrid() {
@@ -140,6 +147,11 @@ class GameScene: SKScene {
     
     override func update(_ currentTime: TimeInterval) {
         guard let state = gameState else { return }
+        
+        // Don't process game updates during countdown
+        if isCountdownActive {
+            return
+        }
         
         // Handle continuous movement from joystick
         if let direction = joystickController.currentDirection, !state.isRoundOver() {
@@ -260,6 +272,11 @@ extension GameScene {
     
     func handleShoot() {
         guard let state = gameState, state.localTank.isAlive else { return }
+        
+        // Don't allow shooting during countdown
+        if isCountdownActive {
+            return
+        }
         
         let projectile = state.localTank.shoot()
         state.projectiles.append(projectile)

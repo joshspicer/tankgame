@@ -11,6 +11,7 @@ import SpriteKit
 class GameSceneUI {
     private var statusLabel: SKLabelNode?
     private var scoreLabel: SKLabelNode?
+    private var countdownLabel: SKLabelNode?
     
     init() {}
     
@@ -64,5 +65,59 @@ class GameSceneUI {
         DispatchQueue.main.asyncAfter(deadline: .now() + 3) { [weak self] in
             self?.statusLabel?.text = "Next round starting..."
         }
+    }
+    
+    /// Show countdown animation (3... 2... 1... GO!)
+    func showCountdown(in scene: SKScene, completion: @escaping () -> Void) {
+        // Create a large countdown label
+        let countdown = SKLabelNode(fontNamed: "Arial-BoldMT")
+        countdown.fontSize = 120
+        countdown.position = CGPoint(x: scene.size.width / 2, y: scene.size.height / 2)
+        countdown.zPosition = 100
+        countdown.alpha = 0
+        scene.addChild(countdown)
+        countdownLabel = countdown
+        
+        // Hide status label during countdown
+        statusLabel?.text = ""
+        
+        // Countdown sequence: 3... 2... 1... GO!
+        let countdownTexts = ["3", "2", "1", "GO!"]
+        var currentIndex = 0
+        
+        func showNext() {
+            guard currentIndex < countdownTexts.count else {
+                // Countdown complete
+                countdown.removeFromParent()
+                countdownLabel = nil
+                completion()
+                return
+            }
+            
+            let text = countdownTexts[currentIndex]
+            countdown.text = text
+            countdown.alpha = 0
+            countdown.setScale(0.5)
+            
+            // Animate in
+            let fadeIn = SKAction.fadeIn(withDuration: 0.2)
+            let scaleUp = SKAction.scale(to: 1.0, duration: 0.2)
+            let wait = SKAction.wait(forDuration: 0.5)
+            let fadeOut = SKAction.fadeOut(withDuration: 0.3)
+            
+            let sequence = SKAction.sequence([
+                SKAction.group([fadeIn, scaleUp]),
+                wait,
+                fadeOut,
+                SKAction.run {
+                    currentIndex += 1
+                    showNext()
+                }
+            ])
+            
+            countdown.run(sequence)
+        }
+        
+        showNext()
     }
 }
