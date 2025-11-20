@@ -28,18 +28,18 @@ class JoystickController {
         scene.addChild(newJoystickNode)
         joystickNode = newJoystickNode
         
-        let newJoystickBase = SKShapeNode(circleOfRadius: 50)
+        let newJoystickBase = SKShapeNode(circleOfRadius: 60)
         newJoystickBase.fillColor = .gray
         newJoystickBase.strokeColor = .white
-        newJoystickBase.lineWidth = 2
-        newJoystickBase.alpha = 0.5
+        newJoystickBase.lineWidth = 3
+        newJoystickBase.alpha = 0.6
         newJoystickNode.addChild(newJoystickBase)
         joystickBase = newJoystickBase
         
-        let newJoystickHandle = SKShapeNode(circleOfRadius: 25)
+        let newJoystickHandle = SKShapeNode(circleOfRadius: 30)
         newJoystickHandle.fillColor = .white
         newJoystickHandle.strokeColor = .white
-        newJoystickHandle.alpha = 0.8
+        newJoystickHandle.alpha = 0.9
         newJoystickNode.addChild(newJoystickHandle)
         joystickHandle = newJoystickHandle
     }
@@ -61,8 +61,8 @@ class JoystickController {
         let dy = location.y - joystickCenter.y
         let distance = sqrt(dx * dx + dy * dy)
         
-        // Joystick area is 150 points radius
-        if distance < 150 {
+        // Joystick area is 180 points radius (larger for easier activation)
+        if distance < 180 {
             isActive = true
             touchID = touch
             // Process initial direction
@@ -89,6 +89,8 @@ class JoystickController {
         touchID = nil
         currentDirection = nil
         joystickHandle?.position = .zero
+        // Reset visual feedback
+        joystickHandle?.alpha = 0.9
     }
     
     /// Process touch location and update joystick state
@@ -99,7 +101,8 @@ class JoystickController {
         let dy = location.y
         let distance = sqrt(dx * dx + dy * dy)
         
-        if distance > 20 {
+        // Increased dead zone from 20 to 30 for better stability
+        if distance > 30 {
             let angle = atan2(dy, dx)
             
             // Snap to cardinal directions
@@ -116,16 +119,21 @@ class JoystickController {
             
             currentDirection = direction
             
-            // Update joystick handle position
-            let maxDistance: CGFloat = 30
+            // Update joystick handle position with better visual feedback
+            let maxDistance: CGFloat = 40
             let clampedDistance = min(distance, maxDistance)
             handle.position = CGPoint(
                 x: cos(angle) * clampedDistance,
                 y: sin(angle) * clampedDistance
             )
+            
+            // Enhance visual feedback when active
+            handle.alpha = 1.0
         } else {
             currentDirection = nil
             handle.position = .zero
+            // Reset visual feedback when in dead zone
+            handle.alpha = 0.9
         }
     }
     #endif

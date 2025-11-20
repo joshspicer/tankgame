@@ -7,6 +7,10 @@
 
 import SpriteKit
 
+#if os(iOS)
+import UIKit
+#endif
+
 /// Main game scene that coordinates all game elements
 class GameScene: SKScene {
     
@@ -34,6 +38,11 @@ class GameScene: SKScene {
     // Update timer
     var lastUpdateTime: TimeInterval = 0
     var lastMoveTime: TimeInterval = 0
+    
+    #if os(iOS)
+    // Haptic feedback generator
+    private var movementFeedback: UISelectionFeedbackGenerator?
+    #endif
     
     // Explosion state
     var tankExploding: [Bool] = [false, false, false, false]
@@ -66,6 +75,12 @@ class GameScene: SKScene {
         joystickController = JoystickController()
         fireButton = FireButton()
         ui = GameSceneUI()
+        
+        #if os(iOS)
+        // Setup haptic feedback generator
+        movementFeedback = UISelectionFeedbackGenerator()
+        movementFeedback?.prepare()
+        #endif
     }
     
     func setupScene() {
@@ -143,10 +158,18 @@ class GameScene: SKScene {
         
         // Handle continuous movement from joystick
         if let direction = joystickController.currentDirection, !state.isRoundOver() {
-            if currentTime - lastMoveTime > 0.12 { // Move ~8 times per second
+            // Faster movement: ~12 times per second (was ~8) for more responsive gameplay
+            if currentTime - lastMoveTime > 0.08 {
                 if state.localTank.move(in: direction, grid: state.grid) {
                     renderTanks()
                     soundManager.playSound("move.wav")
+                    
+                    // Light haptic feedback for movement
+                    #if os(iOS)
+                    movementFeedback?.selectionChanged()
+                    movementFeedback?.prepare()
+                    #endif
+                    
                     lastMoveTime = currentTime
                     
                     // Send position update
