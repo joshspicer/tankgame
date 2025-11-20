@@ -102,11 +102,17 @@ class GameScene: SKScene {
         fireButton.onTap = { [weak self] in
             self?.handleShoot()
         }
+        
+        // Setup "Go Again" button callback
+        ui.onGoAgainTapped = { [weak self] in
+            self?.handleGoAgain()
+        }
     }
     
     func startGame(with state: GameState) {
         self.gameState = state
         tankExploding = Array(repeating: false, count: state.tanks.count)
+        ui.hideGoAgainButton()
         renderGrid()
         renderTanks()
         updateScore()
@@ -135,7 +141,7 @@ class GameScene: SKScene {
     
     func showRoundEnd(winner: Int?) {
         guard let state = gameState else { return }
-        ui.showRoundEnd(winner: winner, localPlayerIndex: state.localPlayerIndex)
+        ui.showRoundEnd(winner: winner, localPlayerIndex: state.localPlayerIndex, sceneSize: size)
     }
     
     override func update(_ currentTime: TimeInterval) {
@@ -207,11 +213,8 @@ class GameScene: SKScene {
                     self.showRoundEnd(winner: winner)
                     self.updateScore()
                     
-                    // Notify that round ended after a longer delay
-                    DispatchQueue.main.asyncAfter(deadline: .now() + 2.0) { [weak self] in
-                        guard let state = self?.gameState else { return }
-                        self?.onGameMessage?(.readyForNextRound(playerIndex: state.localPlayerIndex))
-                    }
+                    // Don't automatically start next round - wait for "Go Again" button tap
+                }
                 }
             }
             
@@ -229,6 +232,11 @@ extension GameScene {
         
         for touch in touches {
             let location = touch.location(in: self)
+            
+            // Check if touching "Go Again" button
+            if ui.handleTouch(at: location) {
+                continue
+            }
             
             // Check if touching fire button
             if fireButton.handleTouch(at: location) {
@@ -268,6 +276,13 @@ extension GameScene {
         
         // Send shoot message
         onGameMessage?(.playerShoot(playerIndex: state.localPlayerIndex, projectile: projectile))
+    }
+    
+    func handleGoAgain() {
+        guard let state = gameState else { return }
+        
+        // Notify that player is ready for next round
+        onGameMessage?(.readyForNextRound(playerIndex: state.localPlayerIndex))
     }
 }
 #endif
