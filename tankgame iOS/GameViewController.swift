@@ -56,6 +56,10 @@ class GameViewController: UIViewController {
             self?.handleJoinTapped()
         }
         
+        lobbyUI.onSinglePlayerTapped = { [weak self] in
+            self?.handleSinglePlayerTapped()
+        }
+        
         lobbyUI.onCancelTapped = { [weak self] in
             self?.handleCancelTapped()
         }
@@ -84,6 +88,7 @@ class GameViewController: UIViewController {
         multiplayerManager.isHost = true
         lobbyUI.hostButton.isHidden = true
         lobbyUI.joinButton.isHidden = true
+        lobbyUI.singlePlayerButton.isHidden = true
         lobbyUI.instructionsLabel.isHidden = true
         lobbyUI.cancelButton.isHidden = false
         lobbyUI.connectedPlayersView.isHidden = false
@@ -98,6 +103,7 @@ class GameViewController: UIViewController {
     private func handleJoinTapped() {
         lobbyUI.hostButton.isHidden = true
         lobbyUI.joinButton.isHidden = true
+        lobbyUI.singlePlayerButton.isHidden = true
         lobbyUI.instructionsLabel.isHidden = true
         lobbyUI.cancelButton.isHidden = false
         lobbyUI.activityIndicator.startAnimating()
@@ -106,6 +112,39 @@ class GameViewController: UIViewController {
         updatePeerListUI()
         
         multiplayerManager.startBrowsing()
+    }
+    
+    private func handleSinglePlayerTapped() {
+        // Hide initial buttons
+        lobbyUI.hostButton.isHidden = true
+        lobbyUI.joinButton.isHidden = true
+        lobbyUI.singlePlayerButton.isHidden = true
+        lobbyUI.instructionsLabel.isHidden = true
+        
+        // Show difficulty selection
+        let alert = UIAlertController(
+            title: "Select Difficulty",
+            message: "Choose AI difficulty level",
+            preferredStyle: .actionSheet
+        )
+        
+        alert.addAction(UIAlertAction(title: "Easy", style: .default) { [weak self] _ in
+            self?.startSinglePlayerGame(difficulty: .easy)
+        })
+        
+        alert.addAction(UIAlertAction(title: "Medium", style: .default) { [weak self] _ in
+            self?.startSinglePlayerGame(difficulty: .medium)
+        })
+        
+        alert.addAction(UIAlertAction(title: "Hard", style: .default) { [weak self] _ in
+            self?.startSinglePlayerGame(difficulty: .hard)
+        })
+        
+        alert.addAction(UIAlertAction(title: "Cancel", style: .cancel) { [weak self] _ in
+            self?.lobbyUI.reset()
+        })
+        
+        present(alert, animated: true)
     }
     
     private func handleCancelTapped() {
@@ -133,6 +172,44 @@ class GameViewController: UIViewController {
         
         let playerAssignments = multiplayerCoordinator.assignPlayerIndices()
         startGame(playerCount: playerCount, localPlayerIndex: 0, playerAssignments: playerAssignments)
+    }
+    
+    private func startSinglePlayerGame(difficulty: AIDifficulty) {
+        // Start single player with 2 players (human + 1 AI)
+        lobbyUI.lobbyView.isHidden = true
+        
+        // Create SKView if needed
+        if skView == nil {
+            let newSKView = SKView(frame: view.bounds)
+            newSKView.autoresizingMask = [.flexibleWidth, .flexibleHeight]
+            view.insertSubview(newSKView, at: 0)
+            skView = newSKView
+        }
+        
+        let seed = UInt32.random(in: 0...UInt32.max)
+        let playerCount = 2 // Human vs AI
+        let localPlayerIndex = 0
+        
+        // Create game state with AI enabled
+        gameState = GameState(seed: seed, playerCount: playerCount, localPlayerIndex: localPlayerIndex, enableAI: true)
+        
+        // Set AI difficulty
+        if let aiController = gameState?.aiControllers[1] {
+            gameState?.aiControllers[1] = AIController(difficulty: difficulty)
+        }
+        
+        let scene = GameScene.newGameScene()
+        scene.startGame(with: gameState!)
+        scene.onGameMessage = { [weak self] message in
+            self?.handleGameMessage(message)
+        }
+        
+        gameScene = scene
+        
+        skView?.presentScene(scene)
+        skView?.ignoresSiblingOrder = true
+        skView?.showsFPS = true
+        skView?.showsNodeCount = true
     }
     
     // MARK: - UI Updates
@@ -200,6 +277,21 @@ class GameViewController: UIViewController {
     private func handleGameMessage(_ message: GameMessage) {
         guard let state = gameState else { return }
         
+        // In single-player mode, don't send network messages
+        if state.isAIEnabled {
+            switch message {
+            case .readyForNextRound:
+                // Auto-start next round in single player after delay
+                DispatchQueue.main.asyncAfter(deadline: .now() + 2.0) { [weak self] in
+                    self?.startNextRound()
+                }
+            default:
+                break
+            }
+            return
+        }
+        
+        // Multiplayer mode - send messages
         switch message {
         case .playerMove(let playerIndex, let row, let col, let direction):
             multiplayerManager.sendMessage(.playerMove(playerIndex: playerIndex, row: row, col: col, direction: direction))

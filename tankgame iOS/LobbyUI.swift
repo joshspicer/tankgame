@@ -14,6 +14,7 @@ class LobbyUI {
     private(set) var lobbyView: UIView!
     private(set) var hostButton: UIButton!
     private(set) var joinButton: UIButton!
+    private(set) var singlePlayerButton: UIButton!
     private(set) var cancelButton: UIButton!
     private(set) var startGameButton: UIButton!
     private(set) var peerTableView: UITableView!
@@ -27,6 +28,7 @@ class LobbyUI {
     // Callbacks
     var onHostTapped: (() -> Void)?
     var onJoinTapped: (() -> Void)?
+    var onSinglePlayerTapped: (() -> Void)?
     var onCancelTapped: (() -> Void)?
     var onStartGameTapped: (() -> Void)?
     
@@ -73,6 +75,11 @@ class LobbyUI {
         joinButton = createButton(title: "🔍 Join Game", backgroundColor: .systemGreen)
         joinButton.addTarget(self, action: #selector(joinButtonTapped), for: .touchUpInside)
         lobbyView.addSubview(joinButton)
+        
+        // Single Player button
+        singlePlayerButton = createButton(title: "🤖 Single Player", backgroundColor: .systemOrange)
+        singlePlayerButton.addTarget(self, action: #selector(singlePlayerButtonTapped), for: .touchUpInside)
+        lobbyView.addSubview(singlePlayerButton)
         
         // Cancel button
         cancelButton = UIButton(type: .system)
@@ -175,7 +182,12 @@ class LobbyUI {
             joinButton.widthAnchor.constraint(equalToConstant: 240),
             joinButton.heightAnchor.constraint(equalToConstant: 56),
             
-            cancelButton.topAnchor.constraint(equalTo: joinButton.bottomAnchor, constant: 20),
+            singlePlayerButton.topAnchor.constraint(equalTo: joinButton.bottomAnchor, constant: 20),
+            singlePlayerButton.centerXAnchor.constraint(equalTo: lobbyView.centerXAnchor),
+            singlePlayerButton.widthAnchor.constraint(equalToConstant: 240),
+            singlePlayerButton.heightAnchor.constraint(equalToConstant: 56),
+            
+            cancelButton.topAnchor.constraint(equalTo: singlePlayerButton.bottomAnchor, constant: 20),
             cancelButton.centerXAnchor.constraint(equalTo: lobbyView.centerXAnchor),
             
             connectedPlayersView.topAnchor.constraint(equalTo: cancelButton.bottomAnchor, constant: 20),
@@ -215,6 +227,10 @@ class LobbyUI {
         onJoinTapped?()
     }
     
+    @objc private func singlePlayerButtonTapped() {
+        onSinglePlayerTapped?()
+    }
+    
     @objc private func cancelButtonTapped() {
         onCancelTapped?()
     }
@@ -227,6 +243,7 @@ class LobbyUI {
     func reset() {
         hostButton.isHidden = false
         joinButton.isHidden = false
+        singlePlayerButton.isHidden = false
         instructionsLabel.isHidden = false
         cancelButton.isHidden = true
         startGameButton.isHidden = true
