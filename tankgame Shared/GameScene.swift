@@ -156,6 +156,14 @@ class GameScene: SKScene {
             }
         }
         
+        // Update AI agents
+        if !state.isRoundOver() {
+            let aiActions = state.updateAI(currentTime: currentTime)
+            for (playerIndex, action) in aiActions {
+                handleAIAction(playerIndex: playerIndex, action: action)
+            }
+        }
+        
         // Don't update if round is over or any explosion in progress
         if state.isRoundOver() || tankExploding.contains(true) {
             return
@@ -268,6 +276,33 @@ extension GameScene {
         
         // Send shoot message
         onGameMessage?(.playerShoot(playerIndex: state.localPlayerIndex, projectile: projectile))
+    }
+    
+    func handleAIAction(playerIndex: Int, action: AIAction) {
+        guard let state = gameState, playerIndex < state.tanks.count else { return }
+        
+        switch action {
+        case .move(let direction):
+            if state.tanks[playerIndex].move(in: direction, grid: state.grid) {
+                renderTanks()
+                soundManager.playSound("move.wav")
+                
+                // Send position update
+                let tank = state.tanks[playerIndex]
+                onGameMessage?(.playerMove(playerIndex: playerIndex, row: tank.row, col: tank.col, direction: tank.direction))
+            }
+            
+        case .shoot:
+            if state.tanks[playerIndex].isAlive {
+                let projectile = state.tanks[playerIndex].shoot()
+                state.projectiles.append(projectile)
+                renderProjectiles()
+                soundManager.playSound("shoot.wav")
+                
+                // Send shoot message
+                onGameMessage?(.playerShoot(playerIndex: playerIndex, projectile: projectile))
+            }
+        }
     }
 }
 #endif

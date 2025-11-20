@@ -14,6 +14,8 @@ final class GameState {
     var projectiles: [Projectile] = []
     var wins: [Int] // Wins for each player
     var localPlayerIndex: Int // Index of the local player in tanks array
+    var aiAgents: [Int: AIAgent] = [:] // Map player index to AI agent
+    var aiControlledPlayers: Set<Int> = [] // Set of player indices controlled by AI
     
     // Spawn positions for up to 4 players
     static let spawnPositions: [(row: Int, col: Int, direction: Direction)] = [
@@ -107,5 +109,35 @@ final class GameState {
             return aliveTanks.first?.offset
         }
         return nil
+    }
+    
+    // MARK: - AI Agent Management
+    
+    /// Enable AI control for a player
+    func enableAI(forPlayerIndex index: Int) {
+        guard index < tanks.count else { return }
+        aiAgents[index] = AIAgent(playerIndex: index)
+        aiControlledPlayers.insert(index)
+    }
+    
+    /// Disable AI control for a player
+    func disableAI(forPlayerIndex index: Int) {
+        aiAgents.removeValue(forKey: index)
+        aiControlledPlayers.remove(index)
+    }
+    
+    /// Update AI agents and return actions they want to take
+    func updateAI(currentTime: TimeInterval) -> [(playerIndex: Int, action: AIAction)] {
+        var actions: [(playerIndex: Int, action: AIAction)] = []
+        
+        for playerIndex in aiControlledPlayers {
+            guard let agent = aiAgents[playerIndex],
+                  let action = agent.update(gameState: self, currentTime: currentTime) else {
+                continue
+            }
+            actions.append((playerIndex, action))
+        }
+        
+        return actions
     }
 }
