@@ -8,6 +8,12 @@
 import Foundation
 import MultipeerConnectivity
 
+#if os(iOS) || os(tvOS)
+import UIKit
+#elseif os(macOS)
+import AppKit
+#endif
+
 protocol MultiplayerManagerDelegate: AnyObject {
     func multiplayerManager(_ manager: MultiplayerManager, didFindPeer peerID: MCPeerID)
     func multiplayerManager(_ manager: MultiplayerManager, didLosePeer peerID: MCPeerID)
@@ -37,7 +43,16 @@ class MultiplayerManager: NSObject {
            let decoded = try? NSKeyedUnarchiver.unarchivedObject(ofClass: MCPeerID.self, from: data) {
             peerID = decoded
         } else {
-            peerID = MCPeerID(displayName: UIDevice.current.name)
+            // Get device name in a cross-platform way
+            #if os(iOS) || os(tvOS)
+            let deviceName = UIDevice.current.name
+            #elseif os(macOS)
+            let deviceName = Host.current().localizedName ?? ProcessInfo.processInfo.hostName
+            #else
+            let deviceName = "Unknown Device"
+            #endif
+            
+            peerID = MCPeerID(displayName: deviceName)
             if let data = try? NSKeyedArchiver.archivedData(withRootObject: peerID, requiringSecureCoding: true) {
                 UserDefaults.standard.set(data, forKey: "tankgame.peerID")
             }
