@@ -29,6 +29,7 @@ class GameScene: SKScene {
     private var explosionEffects: ExplosionEffects!
     private var joystickController: JoystickController!
     private var fireButton: FireButton!
+    private var runButton: RunButton!
     private var ui: GameSceneUI!
     
     // Update timer
@@ -65,6 +66,7 @@ class GameScene: SKScene {
         explosionEffects = ExplosionEffects(tileSize: tileSize)
         joystickController = JoystickController()
         fireButton = FireButton()
+        runButton = RunButton()
         ui = GameSceneUI()
     }
     
@@ -96,6 +98,7 @@ class GameScene: SKScene {
         // Setup components
         joystickController.setup(in: self, at: CGPoint(x: 80, y: 100))
         fireButton.setup(in: self, at: CGPoint(x: size.width - 80, y: 100))
+        runButton.setup(in: self, at: CGPoint(x: size.width - 80, y: 200))
         ui.setup(in: self, sceneSize: size)
         
         // Setup fire button callback
@@ -143,7 +146,9 @@ class GameScene: SKScene {
         
         // Handle continuous movement from joystick
         if let direction = joystickController.currentDirection, !state.isRoundOver() {
-            if currentTime - lastMoveTime > 0.12 { // Move ~8 times per second
+            // Move faster when run button is pressed
+            let moveInterval = runButton.isPressed ? 0.06 : 0.12 // Double speed when running
+            if currentTime - lastMoveTime > moveInterval {
                 if state.localTank.move(in: direction, grid: state.grid) {
                     renderTanks()
                     soundManager.playSound("move.wav")
@@ -230,6 +235,11 @@ extension GameScene {
         for touch in touches {
             let location = touch.location(in: self)
             
+            // Check if touching run button
+            if runButton.handleTouchBegan(at: location) {
+                continue
+            }
+            
             // Check if touching fire button
             if fireButton.handleTouch(at: location) {
                 continue
@@ -250,6 +260,8 @@ extension GameScene {
     
     override func touchesEnded(_ touches: Set<UITouch>, with event: UIEvent?) {
         for touch in touches {
+            let location = touch.location(in: self)
+            runButton.handleTouchEnded(at: location)
             joystickController.handleTouchEnded(touch)
         }
     }
