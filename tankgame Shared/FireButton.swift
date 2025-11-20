@@ -9,6 +9,11 @@ import SpriteKit
 
 /// Manages the fire button UI and interactions
 class FireButton {
+    private static let buttonRadius: CGFloat = 40
+    private static let touchRadius: CGFloat = 50
+    private static let strokeWidth: CGFloat = 3
+    private static let buttonAlpha: CGFloat = 0.7
+    
     private var buttonNode: SKShapeNode?
     var onTap: (() -> Void)?
     
@@ -16,12 +21,12 @@ class FireButton {
     
     /// Setup the fire button
     func setup(in scene: SKScene, at position: CGPoint) {
-        let newFireButton = SKShapeNode(circleOfRadius: 40)
+        let newFireButton = SKShapeNode(circleOfRadius: Self.buttonRadius)
         newFireButton.position = position
         newFireButton.fillColor = .red
         newFireButton.strokeColor = .white
-        newFireButton.lineWidth = 3
-        newFireButton.alpha = 0.7
+        newFireButton.lineWidth = Self.strokeWidth
+        newFireButton.alpha = Self.buttonAlpha
         scene.addChild(newFireButton)
         buttonNode = newFireButton
         
@@ -49,7 +54,7 @@ class FireButton {
         let dy = location.y - button.position.y
         let distance = sqrt(dx * dx + dy * dy)
         
-        if distance < 50 {
+        if distance < Self.touchRadius {
             onTap?()
             return true
         }
