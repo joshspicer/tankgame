@@ -272,12 +272,22 @@ extension GameScene {
     }
     
     override func touchesMoved(_ touches: Set<UITouch>, with event: UIEvent?) {
+        // Don't handle movement if paused
+        if ui.isPaused {
+            return
+        }
+        
         for touch in touches {
             joystickController.handleTouchMoved(touch, in: self)
         }
     }
     
     override func touchesEnded(_ touches: Set<UITouch>, with event: UIEvent?) {
+        // Don't handle touch end if paused
+        if ui.isPaused {
+            return
+        }
+        
         for touch in touches {
             joystickController.handleTouchEnded(touch)
         }
