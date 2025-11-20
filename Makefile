@@ -1,4 +1,4 @@
-.PHONY: run build run-multiplayer clean help
+.PHONY: run build run-multiplayer clean help launch
 
 # Default target
 .DEFAULT_GOAL := help
@@ -10,6 +10,9 @@ help: ## Show this help message
 	@echo ""
 	@echo "Targets:"
 	@grep -E '^[a-zA-Z_-]+:.*?## .*$$' $(MAKEFILE_LIST) | awk 'BEGIN {FS = ":.*?## "}; {printf "  %-20s %s\n", $$1, $$2}'
+
+launch: ## Launch interactive menu
+	./launch.sh
 
 run: ## Run the game on iOS simulator (single player)
 	./run.sh

@@ -12,6 +12,15 @@ See how copilot and I built it on the VS Code livestream. ([1](https://www.youtu
 
 ### Running the Game
 
+#### Interactive Menu (Easiest)
+For the simplest experience, use the interactive launcher:
+```bash
+./launch.sh
+```
+This will present a menu with all available options.
+
+#### Direct Commands
+
 The easiest way to build and run Tank Game is using the provided scripts:
 
 #### Run on iOS Simulator (Single Player)
@@ -43,6 +52,20 @@ If you want to build without running:
 ./build.sh                  # Build iOS Debug
 ./build.sh -p macOS         # Build macOS Debug
 ./build.sh -p iOS -c Release # Build iOS Release
+```
+
+### Using Make
+
+You can also use the Makefile for convenient shortcuts:
+
+```bash
+make launch           # Interactive menu
+make run             # Run iOS single player
+make run-multiplayer # Run 2 instances for multiplayer
+make run-macos       # Run on macOS
+make build           # Build iOS Debug
+make clean           # Clean build artifacts
+make help            # Show all available targets
 ```
 
 ### Script Options
