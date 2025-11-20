@@ -4,7 +4,7 @@ This document describes the refactored codebase structure after reorganization f
 
 ## Overview
 
-The codebase has been reorganized from 2 large monolithic files into 19 focused, single-purpose files. This improves:
+The codebase has been reorganized from 2 large monolithic files into 20 focused, single-purpose files. This improves:
 - **Readability**: Smaller files are easier to understand
 - **Maintainability**: Changes are localized to specific files
 - **Testability**: Components can be tested in isolation
@@ -21,9 +21,10 @@ Simple data structures representing game objects:
 
 ### 2. Game Logic Layer
 Business logic and state management:
-- `GameState.swift` - Game state management (tanks, projectiles, scoring)
+- `GameState.swift` - Game state management (tanks, projectiles, scoring, AI agents)
 - `GridGenerator.swift` - Procedural grid generation with seeding
 - `GameMessages.swift` - Network message protocol definitions
+- `AIAgent.swift` - AI bot logic for autonomous tank control
 
 ### 3. Rendering & Visual Layer
 All rendering and visual effects:
@@ -69,8 +70,8 @@ Top-level coordination:
 - `GameViewController.swift`: 710 lines (lobby UI, multiplayer, permissions)
 - **Total**: 1,281 lines in 2 files
 
-### After Refactoring
-**Shared Components** (15 files):
+### After Refactoring (With AI Agent)
+**Shared Components** (16 files):
 - GameMessages.swift: 21 lines
 - SoundManager.swift: 24 lines
 - ExplosionEffects.swift: 75 lines
@@ -78,24 +79,25 @@ Top-level coordination:
 - JoystickController.swift: 133 lines
 - FireButton.swift: 63 lines
 - GameSceneUI.swift: 66 lines
-- GameScene.swift: 283 lines
-- GameState.swift: 122 lines
+- GameScene.swift: 318 lines
+- GameState.swift: 154 lines
 - Tank.swift: 50 lines
 - Projectile.swift: 37 lines
 - Direction.swift: 34 lines
 - GridCell.swift: 14 lines
 - GridGenerator.swift: 72 lines
 - MultiplayerManager.swift: 212 lines
+- AIAgent.swift: 184 lines
 
 **iOS-Specific** (4 files):
 - PermissionManager.swift: 74 lines
-- LobbyUI.swift: 253 lines
+- LobbyUI.swift: 271 lines
 - MultiplayerCoordinator.swift: 97 lines
-- GameViewController.swift: 423 lines
+- GameViewController.swift: 490 lines
 
-**Total**: ~1,707 lines across 19 files
-- Average file size: ~90 lines
-- Main coordinators (GameScene, GameViewController): 283 and 423 lines
+**Total**: ~2,043 lines across 20 files
+- Average file size: ~102 lines
+- Main coordinators (GameScene, GameViewController): 318 and 490 lines
 
 ## Component Dependencies
 
@@ -111,7 +113,8 @@ GameViewController
       │   ├── Projectile (entity)
       │   ├── Direction (enum)
       │   ├── GridCell (enum)
-      │   └── GridGenerator (procedural generation)
+      │   ├── GridGenerator (procedural generation)
+      │   └── AIAgent (bot logic)
       ├── GameSceneRenderer (all rendering)
       ├── GameSceneUI (UI labels)
       ├── JoystickController (input)
@@ -147,6 +150,33 @@ GameViewController
 - Mock dependencies can be easily injected
 - Integration tests can focus on specific interactions
 
+## AI Agent Feature
+
+The game now includes an AI agent system that allows bot-controlled tank players:
+
+### AIAgent.swift
+- Autonomous decision-making for tank movement
+- Strategic targeting of nearest enemies
+- Line-of-sight shooting mechanics
+- Action throttling to create realistic gameplay
+
+### AI Behavior
+1. **Movement**: AI bots navigate toward the nearest enemy, avoiding walls
+2. **Shooting**: Bots shoot when they have a clear line of sight to an enemy
+3. **Decision Rate**: Actions are throttled (0.5s between moves, 1s cooldown for shooting)
+
+### Integration
+- `GameState` manages AI agents for specified player indices
+- `GameScene` updates AI agents each frame and executes their actions
+- `GameViewController` provides UI controls to add AI players
+- AI players can be mixed with human players in multiplayer games
+
+### Usage
+When hosting a game:
+1. Tap "Add AI Player" button to add bot opponents
+2. AI players appear in the player list as "🤖 AI Bot"
+3. Start the game with any combination of human and AI players (2-4 total)
+
 ## Migration Notes
 
 All functionality remains the same - this is a pure refactoring with no behavioral changes. The game should work identically to before the reorganization.
@@ -160,6 +190,8 @@ None - this is a pure refactoring that maintains all existing functionality.
 3. Check sound effects play correctly
 4. Confirm explosions animate properly
 5. Validate permissions are requested correctly
+6. **NEW**: Test AI bot gameplay and decision-making
+7. **NEW**: Verify mixed human/AI player games work correctly
 
 ## Future Improvements
 
