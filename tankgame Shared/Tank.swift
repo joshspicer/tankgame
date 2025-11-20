@@ -12,12 +12,14 @@ struct Tank: Codable {
     var col: Int
     var direction: Direction
     var isAlive: Bool
+    var hasShield: Bool
     
     init(row: Int, col: Int, direction: Direction = .down) {
         self.row = row
         self.col = col
         self.direction = direction
         self.isAlive = true
+        self.hasShield = false
     }
     
     mutating func move(in direction: Direction, grid: [[GridCell]]) -> Bool {

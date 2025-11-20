@@ -12,6 +12,8 @@ final class GameState {
     var grid: [[GridCell]]
     var tanks: [Tank] // Array of all tanks (index = player index)
     var projectiles: [Projectile] = []
+    var powerUps: [PowerUp] = []
+    var activePowerUps: [Int: [ActivePowerUp]] = [:] // playerIndex -> active power-ups
     var wins: [Int] // Wins for each player
     var localPlayerIndex: Int // Index of the local player in tanks array
     
@@ -42,6 +44,8 @@ final class GameState {
     func reset(seed: UInt32) {
         self.grid = GridGenerator.generate(seed: seed)
         self.projectiles = []
+        self.powerUps = []
+        self.activePowerUps = [:]
         
         // Reset all tanks to their spawn positions
         for i in 0..<tanks.count {
@@ -70,7 +74,14 @@ final class GameState {
             var hitTank = false
             for i in 0..<tanks.count {
                 if projectile.hits(tank: tanks[i]) {
-                    tanks[i].isAlive = false
+                    // Check if tank has shield
+                    if tanks[i].hasShield {
+                        tanks[i].hasShield = false // Remove shield
+                        // Remove the shield power-up from active list
+                        activePowerUps[i]?.removeAll { $0.type == .shield }
+                    } else {
+                        tanks[i].isAlive = false
+                    }
                     hitTank = true
                     break
                 }
@@ -107,5 +118,86 @@ final class GameState {
             return aliveTanks.first?.offset
         }
         return nil
+    }
+    
+    func spawnPowerUp() {
+        // Find empty cells for power-up spawn
+        var emptyCells: [(row: Int, col: Int)] = []
+        for row in 0..<8 {
+            for col in 0..<8 {
+                if grid[row][col] == .empty {
+                    // Check if no tank is on this cell
+                    let tankOnCell = tanks.contains { $0.row == row && $0.col == col && $0.isAlive }
+                    // Check if no power-up is on this cell
+                    let powerUpOnCell = powerUps.contains { $0.row == row && $0.col == col && $0.isActive }
+                    if !tankOnCell && !powerUpOnCell {
+                        emptyCells.append((row, col))
+                    }
+                }
+            }
+        }
+        
+        // Spawn power-up at random empty cell
+        if let cell = emptyCells.randomElement() {
+            let powerUp = PowerUp(row: cell.row, col: cell.col, type: PowerUp.randomType())
+            powerUps.append(powerUp)
+        }
+    }
+    
+    func checkPowerUpCollisions(currentTime: TimeInterval) {
+        for i in 0..<tanks.count {
+            guard tanks[i].isAlive else { continue }
+            
+            let tank = tanks[i]
+            for j in 0..<powerUps.count {
+                guard powerUps[j].isActive else { continue }
+                
+                if tank.row == powerUps[j].row && tank.col == powerUps[j].col {
+                    // Tank collected power-up
+                    let powerUpType = powerUps[j].type
+                    powerUps[j].isActive = false
+                    
+                    // Add active power-up for this player
+                    let activePowerUp = ActivePowerUp(type: powerUpType, expiresAt: currentTime + powerUpType.duration)
+                    if activePowerUps[i] == nil {
+                        activePowerUps[i] = []
+                    }
+                    activePowerUps[i]?.append(activePowerUp)
+                    
+                    // Apply shield immediately if it's a shield power-up
+                    if powerUpType == .shield {
+                        tanks[i].hasShield = true
+                    }
+                }
+            }
+        }
+        
+        // Remove inactive power-ups
+        powerUps.removeAll { !$0.isActive }
+    }
+    
+    func updateActivePowerUps(currentTime: TimeInterval) {
+        // Remove expired power-ups and update shields
+        for playerIndex in activePowerUps.keys {
+            activePowerUps[playerIndex]?.removeAll { powerUp in
+                if currentTime >= powerUp.expiresAt {
+                    // Remove shield when it expires
+                    if powerUp.type == .shield {
+                        tanks[playerIndex].hasShield = false
+                    }
+                    return true
+                }
+                return false
+            }
+            
+            // Remove empty arrays
+            if activePowerUps[playerIndex]?.isEmpty == true {
+                activePowerUps.removeValue(forKey: playerIndex)
+            }
+        }
+    }
+    
+    func hasPowerUp(playerIndex: Int, type: PowerUpType) -> Bool {
+        return activePowerUps[playerIndex]?.contains { $0.type == type } ?? false
     }
 }

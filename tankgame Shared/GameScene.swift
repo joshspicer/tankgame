@@ -22,6 +22,7 @@ class GameScene: SKScene {
     var gridNode: SKNode?
     var tankNodes: [SKNode?] = [nil, nil, nil, nil] // Support up to 4 tanks
     var projectilesNode: SKNode?
+    var powerUpsNode: SKNode?
     
     // Components
     private var renderer: GameSceneRenderer!
@@ -34,6 +35,8 @@ class GameScene: SKScene {
     // Update timer
     var lastUpdateTime: TimeInterval = 0
     var lastMoveTime: TimeInterval = 0
+    var lastPowerUpSpawnTime: TimeInterval = 0
+    let powerUpSpawnInterval: TimeInterval = 10.0 // Spawn power-up every 10 seconds
     
     // Explosion state
     var tankExploding: [Bool] = [false, false, false, false]
@@ -55,6 +58,7 @@ class GameScene: SKScene {
             renderGrid()
             renderTanks()
             renderProjectiles()
+            renderPowerUps()
             updateScore()
         }
     }
@@ -85,6 +89,12 @@ class GameScene: SKScene {
         addChild(newProjectilesNode)
         projectilesNode = newProjectilesNode
         
+        // Create power-ups container
+        let newPowerUpsNode = SKNode()
+        newPowerUpsNode.position = gridOffset
+        addChild(newPowerUpsNode)
+        powerUpsNode = newPowerUpsNode
+        
         // Create tank nodes for all possible players
         for i in 0..<4 {
             let tankNode = SKNode()
@@ -107,8 +117,10 @@ class GameScene: SKScene {
     func startGame(with state: GameState) {
         self.gameState = state
         tankExploding = Array(repeating: false, count: state.tanks.count)
+        lastPowerUpSpawnTime = 0 // Reset power-up spawn timer
         renderGrid()
         renderTanks()
+        renderPowerUps()
         updateScore()
         ui.updateStatus("Fight!")
     }
@@ -128,6 +140,11 @@ class GameScene: SKScene {
         renderer.renderProjectiles(state.projectiles, in: projectiles)
     }
     
+    func renderPowerUps() {
+        guard let state = gameState, let powerUps = powerUpsNode else { return }
+        renderer.renderPowerUps(state.powerUps, in: powerUps)
+    }
+    
     func updateScore() {
         guard let state = gameState else { return }
         ui.updateScore(wins: state.wins)
@@ -143,7 +160,10 @@ class GameScene: SKScene {
         
         // Handle continuous movement from joystick
         if let direction = joystickController.currentDirection, !state.isRoundOver() {
-            if currentTime - lastMoveTime > 0.12 { // Move ~8 times per second
+            // Apply speed boost if active
+            let moveInterval = state.hasPowerUp(playerIndex: state.localPlayerIndex, type: .speedBoost) ? 0.06 : 0.12
+            
+            if currentTime - lastMoveTime > moveInterval {
                 if state.localTank.move(in: direction, grid: state.grid) {
                     renderTanks()
                     soundManager.playSound("move.wav")
@@ -160,6 +180,22 @@ class GameScene: SKScene {
         if state.isRoundOver() || tankExploding.contains(true) {
             return
         }
+        
+        // Spawn power-ups periodically (only host)
+        if currentTime - lastPowerUpSpawnTime > powerUpSpawnInterval {
+            state.spawnPowerUp()
+            renderPowerUps()
+            lastPowerUpSpawnTime = currentTime
+            
+            // TODO: Sync power-up spawns in multiplayer
+        }
+        
+        // Check for power-up collisions
+        state.checkPowerUpCollisions(currentTime: currentTime)
+        renderPowerUps()
+        
+        // Update active power-ups (remove expired ones)
+        state.updateActivePowerUps(currentTime: currentTime)
         
         // Update projectiles
         if currentTime - lastUpdateTime > 0.05 { // ~20 FPS for projectile updates
