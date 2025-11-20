@@ -69,7 +69,6 @@ class FireButton {
             // Trigger haptic feedback
             #if os(iOS)
             impactFeedback?.impactOccurred()
-            impactFeedback?.prepare()
             #endif
             
             // Visual feedback animation
@@ -93,9 +92,9 @@ class FireButton {
         let brighten = SKAction.run {
             button.alpha = 1.0
         }
-        let dim = SKAction.run { [unowned self] in
+        let dim = SKAction.run { [weak self] in
             button.alpha = 0.8
-            self.isPressed = false
+            self?.isPressed = false
         }
         
         let sequence = SKAction.sequence([scaleDown, brighten, scaleUp, dim])
