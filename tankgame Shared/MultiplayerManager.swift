@@ -8,6 +8,7 @@
 import Foundation
 import MultipeerConnectivity
 
+/// Delegate protocol for receiving multiplayer events
 protocol MultiplayerManagerDelegate: AnyObject {
     func multiplayerManager(_ manager: MultiplayerManager, didFindPeer peerID: MCPeerID)
     func multiplayerManager(_ manager: MultiplayerManager, didLosePeer peerID: MCPeerID)
@@ -17,7 +18,22 @@ protocol MultiplayerManagerDelegate: AnyObject {
     func multiplayerManager(_ manager: MultiplayerManager, didEncounterError error: Error)
 }
 
+/// Low-level wrapper for MultipeerConnectivity framework
+///
+/// Manages the Bluetooth/WiFi session for multiplayer gameplay.
+/// This class handles:
+/// - Creating and managing the MCSession
+/// - Advertising as a host (MCNearbyServiceAdvertiser)
+/// - Browsing for hosts (MCNearbyServiceBrowser)
+/// - Sending and receiving game messages
+/// - Managing peer connections
+///
+/// Usage:
+/// - Host: Call startHosting() to advertise your game
+/// - Client: Call startBrowsing() to find games, then invitePeer() to join
+/// - Both: Use sendMessage() to communicate game state
 class MultiplayerManager: NSObject {
+    /// Service type identifier for MultipeerConnectivity
     static let serviceType = "tankgame"
     
     weak var delegate: MultiplayerManagerDelegate?
@@ -27,11 +43,15 @@ class MultiplayerManager: NSObject {
     private var advertiser: MCNearbyServiceAdvertiser?
     private var browser: MCNearbyServiceBrowser?
     
+    /// True if this device is hosting the game session
     var isHost: Bool = false
-    var maxPlayers: Int = 4 // Can be 2, 3, or 4
+    
+    /// Maximum number of players allowed (2-4)
+    var maxPlayers: Int = 4
     
     override init() {
         // Generate or retrieve persistent peer ID
+        // This ensures the same device has a consistent identity across sessions
         let peerID: MCPeerID
         if let data = UserDefaults.standard.data(forKey: "tankgame.peerID"),
            let decoded = try? NSKeyedUnarchiver.unarchivedObject(ofClass: MCPeerID.self, from: data) {
@@ -46,18 +66,24 @@ class MultiplayerManager: NSObject {
         
         super.init()
         
+        // Create session with encryption required for security
         self.session = MCSession(peer: myPeerID, securityIdentity: nil, encryptionPreference: .required)
         self.session.delegate = self
     }
     
     // MARK: - Hosting
     
+    /// Start hosting a game session
+    /// Call this when the user taps "Host Game"
+    /// The device will advertise its presence to nearby devices
     func startHosting() {
         advertiser = MCNearbyServiceAdvertiser(peer: myPeerID, discoveryInfo: nil, serviceType: Self.serviceType)
         advertiser?.delegate = self
         advertiser?.startAdvertisingPeer()
     }
     
+    /// Stop hosting the game session
+    /// Call this when canceling or ending the session
     func stopHosting() {
         advertiser?.stopAdvertisingPeer()
         advertiser = nil
@@ -65,17 +91,25 @@ class MultiplayerManager: NSObject {
     
     // MARK: - Browsing
     
+    /// Start browsing for nearby game sessions
+    /// Call this when the user taps "Join Game"
+    /// Discovered peers will be reported via delegate callbacks
     func startBrowsing() {
         browser = MCNearbyServiceBrowser(peer: myPeerID, serviceType: Self.serviceType)
         browser?.delegate = self
         browser?.startBrowsingForPeers()
     }
     
+    /// Stop browsing for game sessions
+    /// Call this when canceling or when connected
     func stopBrowsing() {
         browser?.stopBrowsingForPeers()
         browser = nil
     }
     
+    /// Invite a discovered peer to join the session
+    /// Call this when the user selects a game to join
+    /// - Parameter peerID: The peer to invite (from didFindPeer callback)
     func invitePeer(_ peerID: MCPeerID) {
         browser?.invitePeer(peerID, to: session, withContext: nil, timeout: 30)
     }

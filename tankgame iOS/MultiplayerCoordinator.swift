@@ -9,17 +9,40 @@ import Foundation
 import MultipeerConnectivity
 
 /// Coordinates multiplayer game session and player management
+///
+/// This class manages the lifecycle of a multiplayer session including:
+/// - Tracking discovered and connected peers
+/// - Assigning player indices for gameplay
+/// - Coordinating round transitions
+/// - Managing player ready states
+///
+/// Session Flow:
+/// 1. Host starts advertising, clients start browsing
+/// 2. Clients discover host and connect
+/// 3. Host assigns player indices when starting game
+/// 4. During gameplay, tracks which players are ready for next round
+/// 5. When all players ready, coordinator signals to start next round
 class MultiplayerCoordinator {
     private let multiplayerManager: MultiplayerManager
     
     // State
+    /// Peers that have successfully connected to the session
     private(set) var connectedPeers: [MCPeerID] = []
+    
+    /// Peers that have been discovered but not yet connected
     private(set) var discoveredPeers: [MCPeerID] = []
+    
+    /// Maps each connected peer to their assigned player index (0-3)
     private(set) var peerToPlayerIndex: [MCPeerID: Int] = [:]
+    
+    /// Set of player indices that are ready for the next round
     private(set) var readyPlayers: Set<Int> = []
     
     // Callbacks
+    /// Called whenever peer lists change (discovery, connection, or disconnection)
     var onPeersUpdated: (() -> Void)?
+    
+    /// Called when all players are ready to start the next round
     var onReadyForNextRound: (() -> Void)?
     
     init(multiplayerManager: MultiplayerManager) {
