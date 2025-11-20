@@ -13,8 +13,13 @@ class GameSceneRenderer {
     let tileSize: CGFloat
     let gridSize: Int
     
-    // Tank colors for up to 4 players
-    let tankColors: [SKColor] = [.purple, .purple, .purple, .purple]
+    // Tank colors for up to 4 players - all purple with different shades
+    let tankColors: [SKColor] = [
+        SKColor(red: 0.5, green: 0.0, blue: 0.5, alpha: 1.0),   // Standard purple
+        SKColor(red: 0.6, green: 0.2, blue: 0.8, alpha: 1.0),   // Light purple
+        SKColor(red: 0.4, green: 0.0, blue: 0.6, alpha: 1.0),   // Dark purple
+        SKColor(red: 0.7, green: 0.3, blue: 0.9, alpha: 1.0)    // Bright purple
+    ]
     
     init(tileSize: CGFloat, gridSize: Int) {
         self.tileSize = tileSize
