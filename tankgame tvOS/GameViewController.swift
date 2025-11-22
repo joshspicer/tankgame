@@ -101,7 +101,6 @@ class GameViewController: UIViewController {
         lobbyUI.cancelButton.isHidden = false
         lobbyUI.activityIndicator.startAnimating()
         lobbyUI.statusLabel.text = "Searching for nearby games..."
-        lobbyUI.peerTableView.isHidden = false
         updatePeerListUI()
         
         multiplayerManager.startBrowsing()

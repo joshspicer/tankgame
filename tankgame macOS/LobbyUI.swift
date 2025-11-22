@@ -23,7 +23,7 @@ class LobbyUI {
     private(set) var instructionsLabel: NSTextField!
     private(set) var emptyStateLabel: NSTextField!
     private(set) var activityIndicator: NSProgressIndicator!
-    private var scrollView: NSScrollView!
+    private(set) var scrollView: NSScrollView!
     
     // Callbacks
     var onHostTapped: (() -> Void)?

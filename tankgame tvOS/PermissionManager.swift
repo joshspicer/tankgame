@@ -1,6 +1,6 @@
 //
 //  PermissionManager.swift
-//  tankgame iOS
+//  tankgame tvOS
 //
 //  Created by jospicer on 10/28/25.
 //
@@ -27,7 +27,7 @@ class PermissionManager {
             isRequestingPermissions = true
             
             // Trigger permission prompts by briefly starting and stopping browsing/advertising
-            // This will cause iOS to show the Local Network and Bluetooth permission dialogs
+            // This will cause tvOS to show the Local Network and Bluetooth permission dialogs
             DispatchQueue.main.asyncAfter(deadline: .now() + 0.5) { [weak self] in
                 guard let self = self, let manager = self.multiplayerManager else { return }
                 

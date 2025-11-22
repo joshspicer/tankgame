@@ -101,7 +101,6 @@ class GameViewController: NSViewController {
         lobbyUI.cancelButton.isHidden = false
         lobbyUI.activityIndicator.startAnimation(nil)
         lobbyUI.statusLabel.stringValue = "Searching for nearby games..."
-        lobbyUI.peerTableView.isHidden = false
         updatePeerListUI()
         
         multiplayerManager.startBrowsing()
@@ -155,10 +154,10 @@ class GameViewController: NSViewController {
     
     private func updatePeerListUI() {
         if multiplayerCoordinator.discoveredPeers.isEmpty {
-            lobbyUI.peerTableView.isHidden = true
+            lobbyUI.scrollView.isHidden = true
             lobbyUI.emptyStateLabel.isHidden = false
         } else {
-            lobbyUI.peerTableView.isHidden = false
+            lobbyUI.scrollView.isHidden = false
             lobbyUI.emptyStateLabel.isHidden = true
         }
     }

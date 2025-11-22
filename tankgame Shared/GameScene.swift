@@ -6,6 +6,7 @@
 //
 
 import SpriteKit
+import ObjectiveC // Required for objc_getAssociatedObject/objc_setAssociatedObject used in macOS key tracking
 
 /// Main game scene that coordinates all game elements
 class GameScene: SKScene {
