@@ -218,6 +218,18 @@ class GameScene: SKScene {
             lastUpdateTime = currentTime
         }
     }
+    
+    func handleShoot() {
+        guard let state = gameState, state.localTank.isAlive else { return }
+        
+        let projectile = state.localTank.shoot()
+        state.projectiles.append(projectile)
+        renderProjectiles()
+        soundManager.playSound("shoot.wav")
+        
+        // Send shoot message
+        onGameMessage?(.playerShoot(playerIndex: state.localPlayerIndex, projectile: projectile))
+    }
 }
 
 #if os(iOS) || os(tvOS)
@@ -257,26 +269,72 @@ extension GameScene {
     override func touchesCancelled(_ touches: Set<UITouch>, with event: UIEvent?) {
         touchesEnded(touches, with: event)
     }
-    
-    func handleShoot() {
-        guard let state = gameState, state.localTank.isAlive else { return }
-        
-        let projectile = state.localTank.shoot()
-        state.projectiles.append(projectile)
-        renderProjectiles()
-        soundManager.playSound("shoot.wav")
-        
-        // Send shoot message
-        onGameMessage?(.playerShoot(playerIndex: state.localPlayerIndex, projectile: projectile))
-    }
 }
 #endif
 
 #if os(OSX)
-// Mouse-based event handling
+// Keyboard and mouse-based event handling for macOS
 extension GameScene {
+    
+    // Track which keys are currently pressed
+    var pressedKeys: Set<UInt16> {
+        get {
+            return objc_getAssociatedObject(self, &AssociatedKeys.pressedKeys) as? Set<UInt16> ?? []
+        }
+        set {
+            objc_setAssociatedObject(self, &AssociatedKeys.pressedKeys, newValue, .OBJC_ASSOCIATION_RETAIN_NONATOMIC)
+        }
+    }
+    
+    private struct AssociatedKeys {
+        static var pressedKeys = "pressedKeys"
+    }
+    
+    override func keyDown(with event: NSEvent) {
+        guard let state = gameState, state.localTank.isAlive, !state.isRoundOver() else { return }
+        
+        pressedKeys.insert(event.keyCode)
+        
+        // Handle SPACE for shooting
+        if event.keyCode == 49 { // SPACE
+            handleShoot()
+            return
+        }
+        
+        // Movement keys (WASD and arrow keys)
+        var direction: Direction?
+        
+        switch event.keyCode {
+        case 13, 126: // W or Up arrow
+            direction = .up
+        case 0, 123: // A or Left arrow
+            direction = .left
+        case 1, 125: // S or Down arrow
+            direction = .down
+        case 2, 124: // D or Right arrow
+            direction = .right
+        default:
+            break
+        }
+        
+        if let dir = direction {
+            if state.localTank.move(in: dir, grid: state.grid) {
+                renderTanks()
+                soundManager.playSound("move.wav")
+                
+                // Send position update
+                let localIndex = state.localPlayerIndex
+                onGameMessage?(.playerMove(playerIndex: localIndex, row: state.localTank.row, col: state.localTank.col, direction: state.localTank.direction))
+            }
+        }
+    }
+    
+    override func keyUp(with event: NSEvent) {
+        pressedKeys.remove(event.keyCode)
+    }
+    
     override func mouseDown(with event: NSEvent) {
-        // macOS support can be added later
+        // Mouse click support can be added if needed
     }
 }
 #endif
