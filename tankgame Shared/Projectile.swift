@@ -22,12 +22,16 @@ struct Projectile: Codable {
         return row < 0 || row >= gridSize || col < 0 || col >= gridSize
     }
     
-    func hits(grid: [[GridCell]]) -> Bool {
+    func hits(grid: [[GridCell]]) -> GridCell? {
         guard row >= 0, row < grid.count,
               col >= 0, col < grid[0].count else {
-            return false
+            return nil
         }
-        return grid[row][col] == .wall
+        let cell = grid[row][col]
+        if cell == .wall || cell == .destructibleWall {
+            return cell
+        }
+        return nil
     }
     
     func hits(tank: Tank) -> Bool {

@@ -55,15 +55,26 @@ final class GameState {
         set { tanks[localPlayerIndex] = newValue }
     }
     
-    func updateProjectiles() {
+    func updateProjectiles() -> [(row: Int, col: Int)] {
         var activeProjectiles: [Projectile] = []
+        var destroyedWalls: [(row: Int, col: Int)] = []
         
         for var projectile in projectiles {
             projectile.advance()
             
-            // Check if out of bounds or hit wall
-            if projectile.isOutOfBounds(gridSize: 8) || projectile.hits(grid: grid) {
+            // Check if out of bounds
+            if projectile.isOutOfBounds(gridSize: 8) {
                 continue // Remove this projectile
+            }
+            
+            // Check if hit wall
+            if let hitCell = projectile.hits(grid: grid) {
+                if hitCell == .destructibleWall {
+                    // Destroy the wall
+                    grid[projectile.row][projectile.col] = .empty
+                    destroyedWalls.append((projectile.row, projectile.col))
+                }
+                continue // Remove this projectile (destroyed by any wall type)
             }
             
             // Check if hit any tank
@@ -84,6 +95,15 @@ final class GameState {
         }
         
         projectiles = activeProjectiles
+        return destroyedWalls
+    }
+    
+    func destroyWall(at row: Int, col: Int) {
+        guard row >= 0, row < grid.count,
+              col >= 0, col < grid[0].count else {
+            return
+        }
+        grid[row][col] = .empty
     }
     
     func isRoundOver() -> Bool {

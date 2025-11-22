@@ -167,8 +167,19 @@ class GameScene: SKScene {
             let wasAlive = state.tanks.map { $0.isAlive }
             let tankPositions = state.tanks.map { renderer.gridPosition(row: $0.row, col: $0.col) }
             
-            state.updateProjectiles()
+            let destroyedWalls = state.updateProjectiles()
             renderProjectiles()
+            
+            // Handle wall destruction
+            if !destroyedWalls.isEmpty {
+                soundManager.playSound("hit.wav")
+                renderGrid()
+                
+                // Send wall destruction messages
+                for wall in destroyedWalls {
+                    onGameMessage?(.wallDestroyed(row: wall.row, col: wall.col))
+                }
+            }
             
             // Check which tanks were hit and trigger explosions
             for i in 0..<state.tanks.count {

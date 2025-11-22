@@ -14,6 +14,7 @@ enum GameMessage: Codable {
     case playerMove(playerIndex: Int, row: Int, col: Int, direction: Direction)
     case playerShoot(playerIndex: Int, projectile: Projectile)
     case playerHit(playerIndex: Int)
+    case wallDestroyed(row: Int, col: Int)  // Wall destruction event
     case readyForNextRound(playerIndex: Int)
     case startGame // Host signals game start
 }

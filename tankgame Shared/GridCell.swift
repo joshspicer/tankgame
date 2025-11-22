@@ -9,5 +9,6 @@ import Foundation
 
 enum GridCell: Int, Codable {
     case empty = 0
-    case wall = 1
+    case wall = 1  // Indestructible wall (steel/concrete)
+    case destructibleWall = 2  // Destructible wall (brick)
 }

@@ -30,7 +30,16 @@ class GameSceneRenderer {
         for row in 0..<gridSize {
             for col in 0..<gridSize {
                 let cell = grid[row][col]
-                let tile = SKSpriteNode(color: cell == .wall ? .black : .white, size: CGSize(width: tileSize - 2, height: tileSize - 2))
+                let color: SKColor
+                switch cell {
+                case .empty:
+                    color = .white
+                case .wall:
+                    color = .black  // Indestructible walls (steel/concrete)
+                case .destructibleWall:
+                    color = .brown  // Destructible walls (brick)
+                }
+                let tile = SKSpriteNode(color: color, size: CGSize(width: tileSize - 2, height: tileSize - 2))
                 tile.position = gridPosition(row: row, col: col)
                 gridNode.addChild(tile)
             }

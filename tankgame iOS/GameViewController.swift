@@ -357,6 +357,10 @@ extension GameViewController: MultiplayerManagerDelegate {
             gameState?.projectiles.append(projectile)
             gameScene?.renderProjectiles()
             
+        case .wallDestroyed(let row, let col):
+            gameState?.destroyWall(at: row, col: col)
+            gameScene?.renderGrid()
+            
         case .readyForNextRound(let playerIndex):
             multiplayerCoordinator.markPlayerReady(playerIndex)
             checkAndStartNextRound()
