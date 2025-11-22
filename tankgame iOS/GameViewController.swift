@@ -427,7 +427,7 @@ extension GameViewController: MultiplayerManagerDelegate {
             
         case .playerSettings(let playerIndex, let settings):
             // Update the player settings for the specified player
-            if let state = gameState, playerIndex < state.playerSettings.count {
+            if let state = gameState, playerIndex >= 0, playerIndex < state.playerSettings.count {
                 state.playerSettings[playerIndex] = settings
                 gameScene?.renderTanks()
             }

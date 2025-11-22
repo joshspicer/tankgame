@@ -15,7 +15,7 @@ struct PlayerSettings: Codable, Equatable {
     
     init(speed: Double = 1.0, colorHue: Double = 0.6) {
         self.speed = max(0.5, min(2.0, speed))
-        self.colorHue = colorHue
+        self.colorHue = max(0.0, min(1.0, colorHue))
     }
     
     /// Get the SKColor representation of the player's color
