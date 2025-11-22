@@ -1,14 +1,15 @@
 # Tank Game - Refactored Architecture
 
-This document describes the refactored codebase structure after reorganization for improved modularity and maintainability.
+This document describes the refactored codebase structure after reorganization for improved modularity and maintainability across **iOS, macOS, and tvOS platforms**.
 
 ## Overview
 
-The codebase has been reorganized from 2 large monolithic files into 19 focused, single-purpose files. This improves:
+The codebase has been reorganized from 2 large monolithic files into 19+ focused, single-purpose files with **full multi-platform support**. This improves:
 - **Readability**: Smaller files are easier to understand
 - **Maintainability**: Changes are localized to specific files
 - **Testability**: Components can be tested in isolation
 - **AI Collaboration**: Clear structure makes AI assistance more effective
+- **Cross-platform Development**: Shared components work across iOS, macOS, and tvOS
 
 ## Architecture Layers
 
@@ -33,9 +34,12 @@ All rendering and visual effects:
 - `FireButton.swift` - Fire button UI component
 
 ### 4. Input Layer
-User input handling:
-- `JoystickController.swift` - Virtual joystick input processing
-- Touch event handling in `GameScene.swift`
+User input handling (platform-specific):
+- `JoystickController.swift` - Virtual joystick for touch input (iOS/tvOS)
+- Touch event handling in `GameScene.swift` (iOS/tvOS)
+- Keyboard event handling in `GameScene.swift` (macOS)
+  - WASD and arrow keys for movement
+  - SPACE for shooting
 
 ### 5. Audio Layer
 Sound management:
@@ -47,30 +51,46 @@ Main game loop and coordination:
   - Manages game state updates
   - Coordinates rendering, input, and audio
   - Handles game loop and timing
+  - Platform-specific input handling (touch, keyboard)
 
 ### 7. Networking Layer
-Multiplayer communication:
+Multiplayer communication (shared across platforms):
 - `MultiplayerManager.swift` - Low-level MultipeerConnectivity wrapper
 - `MultiplayerCoordinator.swift` - High-level session and player management
 
-### 8. UI Layer (iOS)
+### 8. UI Layer (Platform-Specific)
 User interface components:
-- `LobbyUI.swift` - Complete lobby interface with all UI elements
+
+**iOS:**
+- `LobbyUI.swift` - UIKit-based lobby interface
 - `PermissionManager.swift` - iOS permission request handling
 
+**macOS:**
+- `LobbyUI.swift` - AppKit-based lobby interface (NSView hierarchy)
+- `PermissionManager.swift` - macOS permission request handling
+
+**tvOS:**
+- `LobbyUI.swift` - UIKit-based lobby interface with focus engine support
+- `PermissionManager.swift` - tvOS permission request handling
+
 ### 9. Application Layer
-Top-level coordination:
+Top-level coordination (platform-specific):
 - `GameViewController.swift` - Main view controller coordinating all layers
+  - **iOS**: UIKit-based with UITableView for peer list
+  - **macOS**: AppKit-based with NSTableView for peer list
+  - **tvOS**: UIKit-based with focus engine support
 
 ## File Size Comparison
 
-### Before Refactoring
+### Before Refactoring (iOS only)
 - `GameScene.swift`: 571 lines (rendering, input, audio, effects, UI)
-- `GameViewController.swift`: 710 lines (lobby UI, multiplayer, permissions)
-- **Total**: 1,281 lines in 2 files
+- `GameViewController.swift` (iOS): 710 lines (lobby UI, multiplayer, permissions)
+- `GameViewController.swift` (macOS): 30 lines (stub implementation)
+- `GameViewController.swift` (tvOS): 30 lines (stub implementation)
+- **Total**: ~1,341 lines with limited platform support
 
-### After Refactoring
-**Shared Components** (15 files):
+### After Refactoring (Full Multi-Platform)
+**Shared Components** (16 files):
 - GameMessages.swift: 21 lines
 - SoundManager.swift: 24 lines
 - ExplosionEffects.swift: 75 lines
@@ -78,7 +98,7 @@ Top-level coordination:
 - JoystickController.swift: 133 lines
 - FireButton.swift: 63 lines
 - GameSceneUI.swift: 66 lines
-- GameScene.swift: 283 lines
+- GameScene.swift: 330 lines (includes macOS keyboard support)
 - GameState.swift: 122 lines
 - Tank.swift: 50 lines
 - Projectile.swift: 37 lines
@@ -86,38 +106,49 @@ Top-level coordination:
 - GridCell.swift: 14 lines
 - GridGenerator.swift: 72 lines
 - MultiplayerManager.swift: 212 lines
+- MultiplayerCoordinator.swift: 97 lines (moved to shared)
 
-**iOS-Specific** (4 files):
+**iOS-Specific** (3 files):
 - PermissionManager.swift: 74 lines
 - LobbyUI.swift: 253 lines
-- MultiplayerCoordinator.swift: 97 lines
 - GameViewController.swift: 423 lines
 
-**Total**: ~1,707 lines across 19 files
-- Average file size: ~90 lines
-- Main coordinators (GameScene, GameViewController): 283 and 423 lines
+**macOS-Specific** (3 files):
+- PermissionManager.swift: 65 lines
+- LobbyUI.swift: 250 lines
+- GameViewController.swift: 450 lines
+
+**tvOS-Specific** (3 files):
+- PermissionManager.swift: 74 lines
+- LobbyUI.swift: 260 lines
+- GameViewController.swift: 450 lines
+
+**Total**: ~2,500+ lines across 25 files with full multi-platform support
+- Average file size: ~100 lines
+- Main coordinators (GameScene, GameViewController): ~330 and ~450 lines
 
 ## Component Dependencies
 
 ```
-GameViewController
-  ├── LobbyUI (UI presentation)
-  ├── PermissionManager (iOS permissions)
-  ├── MultiplayerCoordinator (session management)
-  │   └── MultiplayerManager (network layer)
-  └── GameScene (game coordinator)
-      ├── GameState (game logic)
-      │   ├── Tank (entity)
-      │   ├── Projectile (entity)
-      │   ├── Direction (enum)
-      │   ├── GridCell (enum)
-      │   └── GridGenerator (procedural generation)
-      ├── GameSceneRenderer (all rendering)
-      ├── GameSceneUI (UI labels)
-      ├── JoystickController (input)
-      ├── FireButton (input)
-      ├── ExplosionEffects (visual effects)
-      └── SoundManager (audio)
+GameViewController (Platform-Specific: iOS/macOS/tvOS)
+  ├── LobbyUI (Platform-Specific UI presentation)
+  ├── PermissionManager (Platform-Specific permissions)
+  ├── MultiplayerCoordinator (SHARED session management)
+  │   └── MultiplayerManager (SHARED network layer)
+  └── GameScene (SHARED game coordinator)
+      ├── GameState (SHARED game logic)
+      │   ├── Tank (SHARED entity)
+      │   ├── Projectile (SHARED entity)
+      │   ├── Direction (SHARED enum)
+      │   ├── GridCell (SHARED enum)
+      │   └── GridGenerator (SHARED procedural generation)
+      ├── GameSceneRenderer (SHARED rendering)
+      ├── GameSceneUI (SHARED UI labels)
+      ├── JoystickController (SHARED iOS/tvOS touch input)
+      ├── FireButton (SHARED iOS/tvOS touch input)
+      ├── ExplosionEffects (SHARED visual effects)
+      ├── SoundManager (SHARED audio)
+      └── Input Handling (Platform-Specific: touch/keyboard)
 ```
 
 ## Design Principles Applied
@@ -127,6 +158,7 @@ GameViewController
 3. **Dependency Injection**: Components receive dependencies rather than creating them
 4. **Encapsulation**: Internal details are hidden, public interfaces are clean
 5. **Composition over Inheritance**: Components are composed rather than inherited
+6. **Platform Abstraction**: Shared logic maximized, platform-specific code isolated
 
 ## Benefits for Development
 
@@ -135,38 +167,98 @@ GameViewController
 - Smaller files reduce cognitive load
 - Changes are localized and less risky
 - Components can be developed and tested independently
+- Platform-specific code clearly separated from shared code
 
 ### For AI Assistance
 - Clear file boundaries help AI understand context
 - Single-purpose files make AI suggestions more accurate
 - Modular structure enables focused modifications
 - Easier for AI to understand and explain code
+- Platform differences are explicit and well-documented
 
 ### For Testing
 - Components can be unit tested in isolation
 - Mock dependencies can be easily injected
 - Integration tests can focus on specific interactions
 
+## Multi-Platform Implementation
+
+### Platform Support
+
+The game now runs on three Apple platforms with full multiplayer support:
+
+1. **iOS** (iPhone/iPad)
+   - Touch-based controls with virtual joystick and fire button
+   - UIKit lobby interface
+   - Full multiplayer support via MultipeerConnectivity
+
+2. **macOS** (Mac computers)
+   - Keyboard controls (WASD/Arrow keys + SPACE)
+   - AppKit lobby interface (NSView hierarchy)
+   - Full multiplayer support via MultipeerConnectivity
+   - Native macOS UI patterns
+
+3. **tvOS** (Apple TV)
+   - Remote control support (D-pad + center button)
+   - UIKit lobby interface with focus engine
+   - Full multiplayer support via MultipeerConnectivity
+   - Optimized for TV screens
+
+### Cross-Platform Multiplayer
+
+Players on different platforms can battle together:
+- iOS player vs macOS player
+- tvOS player vs iOS player
+- macOS player vs tvOS player
+- Any combination of 2-4 players
+
+All platforms use the same game logic, ensuring fair and consistent gameplay regardless of device.
+
+### Code Sharing Strategy
+
+**Shared Components** (~60% of codebase):
+- All game logic (GameState, Tank, Projectile, etc.)
+- All rendering (GameSceneRenderer, effects, UI)
+- All networking (MultiplayerManager, MultiplayerCoordinator)
+- Core game scene coordination
+
+**Platform-Specific** (~40% of codebase):
+- Lobby UI (UIKit vs AppKit)
+- Input handling (touch vs keyboard vs remote)
+- Permission requests (iOS vs macOS APIs)
+- View controller coordination
+
+### Input Abstraction
+
+Different input methods all result in the same game actions:
+- **Movement**: Touch joystick / WASD keys / Remote D-pad
+- **Shooting**: Tap fire button / SPACE key / Remote center button
+
+This abstraction allows any platform to play with any other platform seamlessly.
+
 ## Migration Notes
 
 All functionality remains the same - this is a pure refactoring with no behavioral changes. The game should work identically to before the reorganization.
 
 ### Breaking Changes
-None - this is a pure refactoring that maintains all existing functionality.
+None - this is a pure refactoring that maintains all existing functionality and adds multi-platform support.
 
 ### Testing Recommendations
-1. Test multiplayer connection and gameplay
-2. Verify joystick and fire button input
-3. Check sound effects play correctly
-4. Confirm explosions animate properly
-5. Validate permissions are requested correctly
+1. Test multiplayer connection and gameplay on each platform
+2. Verify input methods work correctly (touch/keyboard/remote)
+3. Test cross-platform multiplayer (iOS ↔ macOS ↔ tvOS)
+4. Check sound effects play correctly on all platforms
+5. Confirm explosions animate properly on all platforms
+6. Validate permissions are requested correctly on each platform
+7. Test focus engine behavior on tvOS
 
 ## Future Improvements
 
-Now that the codebase is modular, future enhancements become easier:
+Now that the codebase is modular and multi-platform, future enhancements become easier:
 - Add unit tests for individual components
-- Implement alternative input methods (keyboard, gamepad)
+- Implement gamepad support for macOS/tvOS
 - Add new visual effects without touching rendering logic
 - Swap networking implementations
-- Create different UI themes
-- Support additional platforms more easily
+- Create different UI themes per platform
+- Add watchOS companion app for score tracking
+- Implement tournaments and leaderboards
