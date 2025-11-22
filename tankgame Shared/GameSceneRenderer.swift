@@ -39,7 +39,7 @@ class GameSceneRenderer {
     /// Render all tanks
     func renderTanks(_ tanks: [Tank], tankExploding: [Bool], playerSettings: [PlayerSettings], in tankNodes: [SKNode?]) {
         for i in 0..<tanks.count {
-            guard let tankNode = tankNodes[i] else { continue }
+            guard let tankNode = tankNodes[i], i < playerSettings.count else { continue }
             tankNode.removeAllChildren()
             
             let tank = tanks[i]

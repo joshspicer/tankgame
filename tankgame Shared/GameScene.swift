@@ -144,6 +144,7 @@ class GameScene: SKScene {
         // Handle continuous movement from joystick
         if let direction = joystickController.currentDirection, !state.isRoundOver() {
             // Use player's speed setting to adjust move interval
+            guard state.localPlayerIndex >= 0, state.localPlayerIndex < state.playerSettings.count else { return }
             let playerSpeed = state.playerSettings[state.localPlayerIndex].speed
             let baseMoveInterval = 0.12 // Base: ~8 times per second
             let moveInterval = baseMoveInterval / playerSpeed
@@ -179,7 +180,7 @@ class GameScene: SKScene {
             for i in 0..<state.tanks.count {
                 if wasAlive[i] && !state.tanks[i].isAlive {
                     soundManager.playSound("hit.wav")
-                    if let tankNode = tankNodes[i] {
+                    if let tankNode = tankNodes[i], i < state.playerSettings.count {
                         let color = state.playerSettings[i].color
                         explosionEffects.createExplosion(at: tankPositions[i], color: color, in: tankNode) { [weak self] in
                             self?.tankExploding[i] = false
