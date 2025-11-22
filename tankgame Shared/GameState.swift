@@ -103,7 +103,10 @@ final class GameState {
               col >= 0, col < grid[0].count else {
             return
         }
-        grid[row][col] = .empty
+        // Only destroy if it's actually a destructible wall
+        if grid[row][col] == .destructibleWall {
+            grid[row][col] = .empty
+        }
     }
     
     func isRoundOver() -> Bool {
