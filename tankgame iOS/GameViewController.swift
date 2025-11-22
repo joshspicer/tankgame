@@ -26,9 +26,15 @@ class GameViewController: UIViewController {
     private var gameScene: GameScene?
     private var gameState: GameState?
     private var skView: SKView?
+    
+    // Player settings
+    private var localPlayerSettings: PlayerSettings = PlayerSettings()
 
     override func viewDidLoad() {
         super.viewDidLoad()
+        
+        // Load saved settings
+        loadPlayerSettings()
         
         // Initialize managers
         multiplayerManager = MultiplayerManager()
@@ -63,6 +69,13 @@ class GameViewController: UIViewController {
         lobbyUI.onStartGameTapped = { [weak self] in
             self?.handleStartGameTapped()
         }
+        
+        // Setup settings sliders
+        lobbyUI.speedSlider.addTarget(self, action: #selector(speedSliderChanged), for: .valueChanged)
+        lobbyUI.colorSlider.addTarget(self, action: #selector(colorSliderChanged), for: .valueChanged)
+        
+        // Initialize settings display
+        lobbyUI.updateSettingsDisplay(localPlayerSettings)
         
         // Setup table view
         lobbyUI.peerTableView.delegate = self
@@ -181,7 +194,13 @@ class GameViewController: UIViewController {
         let seed = UInt32.random(in: 0...UInt32.max)
         gameState = GameState(seed: seed, playerCount: playerCount, localPlayerIndex: localPlayerIndex)
         
+        // Set local player settings
+        gameState?.playerSettings[localPlayerIndex] = localPlayerSettings
+        
         multiplayerManager.sendMessage(.roundStart(seed: seed, playerCount: playerCount, hostPlayerIndex: localPlayerIndex, playerAssignments: playerAssignments))
+        
+        // Send local player settings to all connected peers
+        multiplayerManager.sendMessage(.playerSettings(playerIndex: localPlayerIndex, settings: localPlayerSettings))
         
         let scene = GameScene.newGameScene()
         scene.startGame(with: gameState!)
@@ -244,6 +263,45 @@ class GameViewController: UIViewController {
         }
         
         multiplayerManager.sendMessage(.roundStart(seed: seed, playerCount: currentState.tanks.count, hostPlayerIndex: currentState.localPlayerIndex, playerAssignments: playerAssignments))
+    }
+    
+    // MARK: - Player Settings
+    
+    private func loadPlayerSettings() {
+        if let data = UserDefaults.standard.data(forKey: "tankgame.playerSettings"),
+           let settings = try? JSONDecoder().decode(PlayerSettings.self, from: data) {
+            localPlayerSettings = settings
+        }
+    }
+    
+    private func savePlayerSettings() {
+        if let data = try? JSONEncoder().encode(localPlayerSettings) {
+            UserDefaults.standard.set(data, forKey: "tankgame.playerSettings")
+        }
+    }
+    
+    @objc private func speedSliderChanged(_ slider: UISlider) {
+        localPlayerSettings.speed = Double(slider.value)
+        savePlayerSettings()
+        lobbyUI.updateSettingsDisplay(localPlayerSettings)
+        
+        // Sync settings to other players if connected
+        if let state = gameState {
+            state.playerSettings[state.localPlayerIndex] = localPlayerSettings
+            multiplayerManager.sendMessage(.playerSettings(playerIndex: state.localPlayerIndex, settings: localPlayerSettings))
+        }
+    }
+    
+    @objc private func colorSliderChanged(_ slider: UISlider) {
+        localPlayerSettings.colorHue = Double(slider.value)
+        savePlayerSettings()
+        lobbyUI.updateSettingsDisplay(localPlayerSettings)
+        
+        // Sync settings to other players if connected
+        if let state = gameState {
+            state.playerSettings[state.localPlayerIndex] = localPlayerSettings
+            multiplayerManager.sendMessage(.playerSettings(playerIndex: state.localPlayerIndex, settings: localPlayerSettings))
+        }
     }
 
     override var supportedInterfaceOrientations: UIInterfaceOrientationMask {
@@ -316,6 +374,12 @@ extension GameViewController: MultiplayerManagerDelegate {
                 
                 gameState = GameState(seed: seed, playerCount: playerCount, localPlayerIndex: localPlayerIndex)
                 
+                // Set local player settings
+                gameState?.playerSettings[localPlayerIndex] = localPlayerSettings
+                
+                // Send local player settings to all connected peers
+                multiplayerManager.sendMessage(.playerSettings(playerIndex: localPlayerIndex, settings: localPlayerSettings))
+                
                 DispatchQueue.main.async { [weak self] in
                     guard let self = self, let state = self.gameState else { return }
                     
@@ -360,6 +424,13 @@ extension GameViewController: MultiplayerManagerDelegate {
         case .readyForNextRound(let playerIndex):
             multiplayerCoordinator.markPlayerReady(playerIndex)
             checkAndStartNextRound()
+            
+        case .playerSettings(let playerIndex, let settings):
+            // Update the player settings for the specified player
+            if let state = gameState, playerIndex < state.playerSettings.count {
+                state.playerSettings[playerIndex] = settings
+                gameScene?.renderTanks()
+            }
             
         case .playerHit, .startGame, .playerJoined:
             break

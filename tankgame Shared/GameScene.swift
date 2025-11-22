@@ -120,7 +120,7 @@ class GameScene: SKScene {
     
     func renderTanks() {
         guard let state = gameState else { return }
-        renderer.renderTanks(state.tanks, tankExploding: tankExploding, in: tankNodes)
+        renderer.renderTanks(state.tanks, tankExploding: tankExploding, playerSettings: state.playerSettings, in: tankNodes)
     }
     
     func renderProjectiles() {
@@ -143,7 +143,12 @@ class GameScene: SKScene {
         
         // Handle continuous movement from joystick
         if let direction = joystickController.currentDirection, !state.isRoundOver() {
-            if currentTime - lastMoveTime > 0.12 { // Move ~8 times per second
+            // Use player's speed setting to adjust move interval
+            let playerSpeed = state.playerSettings[state.localPlayerIndex].speed
+            let baseMoveInterval = 0.12 // Base: ~8 times per second
+            let moveInterval = baseMoveInterval / playerSpeed
+            
+            if currentTime - lastMoveTime > moveInterval {
                 if state.localTank.move(in: direction, grid: state.grid) {
                     renderTanks()
                     soundManager.playSound("move.wav")
@@ -175,7 +180,7 @@ class GameScene: SKScene {
                 if wasAlive[i] && !state.tanks[i].isAlive {
                     soundManager.playSound("hit.wav")
                     if let tankNode = tankNodes[i] {
-                        let color = renderer.tankColors[i]
+                        let color = state.playerSettings[i].color
                         explosionEffects.createExplosion(at: tankPositions[i], color: color, in: tankNode) { [weak self] in
                             self?.tankExploding[i] = false
                         }

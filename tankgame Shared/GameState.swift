@@ -14,6 +14,7 @@ final class GameState {
     var projectiles: [Projectile] = []
     var wins: [Int] // Wins for each player
     var localPlayerIndex: Int // Index of the local player in tanks array
+    var playerSettings: [PlayerSettings] // Settings for each player
     
     // Spawn positions for up to 4 players
     static let spawnPositions: [(row: Int, col: Int, direction: Direction)] = [
@@ -37,6 +38,9 @@ final class GameState {
         
         // Initialize wins array
         self.wins = Array(repeating: 0, count: playerCount)
+        
+        // Initialize player settings with defaults
+        self.playerSettings = Array(repeating: PlayerSettings(), count: playerCount)
     }
     
     func reset(seed: UInt32) {

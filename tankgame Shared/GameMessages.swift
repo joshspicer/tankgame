@@ -16,4 +16,5 @@ enum GameMessage: Codable {
     case playerHit(playerIndex: Int)
     case readyForNextRound(playerIndex: Int)
     case startGame // Host signals game start
+    case playerSettings(playerIndex: Int, settings: PlayerSettings) // Player settings sync
 }

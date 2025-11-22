@@ -13,9 +13,6 @@ class GameSceneRenderer {
     let tileSize: CGFloat
     let gridSize: Int
     
-    // Tank colors for up to 4 players
-    let tankColors: [SKColor] = [.blue, .red, .green, .orange]
-    
     init(tileSize: CGFloat, gridSize: Int) {
         self.tileSize = tileSize
         self.gridSize = gridSize
@@ -40,14 +37,14 @@ class GameSceneRenderer {
     // MARK: - Tank Rendering
     
     /// Render all tanks
-    func renderTanks(_ tanks: [Tank], tankExploding: [Bool], in tankNodes: [SKNode?]) {
+    func renderTanks(_ tanks: [Tank], tankExploding: [Bool], playerSettings: [PlayerSettings], in tankNodes: [SKNode?]) {
         for i in 0..<tanks.count {
             guard let tankNode = tankNodes[i] else { continue }
             tankNode.removeAllChildren()
             
             let tank = tanks[i]
             if tank.isAlive || tankExploding[i] {
-                let color = tankColors[i]
+                let color = playerSettings[i].color
                 let tankSprite = createTankNode(color: color, direction: tank.direction)
                 tankSprite.position = gridPosition(row: tank.row, col: tank.col)
                 tankNode.addChild(tankSprite)
