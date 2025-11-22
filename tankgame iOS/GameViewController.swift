@@ -89,7 +89,7 @@ class GameViewController: UIViewController {
         lobbyUI.connectedPlayersView.isHidden = false
         lobbyUI.startGameButton.isHidden = false
         lobbyUI.activityIndicator.startAnimating()
-        lobbyUI.statusLabel.text = "Hosting game...\nWaiting for players to join (2-4 players)"
+        lobbyUI.statusLabel.text = "Hosting game...\nPlay solo or invite friends! (1-4 players)\nEmpty slots filled with AI bunnies 🐰"
         updateConnectedPlayersUI()
         
         multiplayerManager.startHosting()
@@ -120,19 +120,11 @@ class GameViewController: UIViewController {
     private func handleStartGameTapped() {
         let playerCount = multiplayerCoordinator.playerCount
         
-        if playerCount < 2 {
-            let alert = UIAlertController(
-                title: "Not Enough Players",
-                message: "You need at least 2 players to start the game.",
-                preferredStyle: .alert
-            )
-            alert.addAction(UIAlertAction(title: "OK", style: .default))
-            present(alert, animated: true)
-            return
-        }
+        // With AI opponents, we can now play solo! Always play with 4 players (humans + AI)
+        let totalPlayers = 4
         
         let playerAssignments = multiplayerCoordinator.assignPlayerIndices()
-        startGame(playerCount: playerCount, localPlayerIndex: 0, playerAssignments: playerAssignments)
+        startGame(playerCount: totalPlayers, localPlayerIndex: 0, playerAssignments: playerAssignments)
     }
     
     // MARK: - UI Updates
@@ -150,8 +142,9 @@ class GameViewController: UIViewController {
         lobbyUI.connectedPlayersLabel.text = "Connected Players (\(playerCount)/4):\n\n\(namesText)"
         
         if multiplayerManager.isHost {
-            lobbyUI.startGameButton.isEnabled = playerCount >= 2
-            lobbyUI.startGameButton.alpha = playerCount >= 2 ? 1.0 : 0.5
+            // With AI opponents, single player is now allowed!
+            lobbyUI.startGameButton.isEnabled = playerCount >= 1
+            lobbyUI.startGameButton.alpha = playerCount >= 1 ? 1.0 : 0.5
         }
     }
     
@@ -187,9 +180,10 @@ class GameViewController: UIViewController {
         scene.startGame(with: gameState!)
         
         // Add bunny rabbit AI opponents for remaining slots
+        let humanPlayerIndices = Set(playerAssignments.values)
         for i in 0..<playerCount {
-            // Enable AI for all players except the local player
-            if i != localPlayerIndex {
+            // Enable AI for players that are not assigned to any human
+            if !humanPlayerIndices.contains(i) {
                 scene.enableAI(for: i)
             }
         }
@@ -246,17 +240,18 @@ class GameViewController: UIViewController {
         gameState?.reset(seed: seed)
         gameScene?.startGame(with: gameState!)
         
-        // Re-enable AI for non-local players
-        for i in 0..<currentState.tanks.count {
-            if i != currentState.localPlayerIndex {
-                gameScene?.enableAI(for: i)
-            }
-        }
-        
+        // Re-enable AI for non-human players
         var playerAssignments: [String: Int] = [:]
         playerAssignments[multiplayerManager.session.myPeerID.displayName] = currentState.localPlayerIndex
         for (peer, index) in multiplayerCoordinator.peerToPlayerIndex {
             playerAssignments[peer.displayName] = index
+        }
+        
+        let humanPlayerIndices = Set(playerAssignments.values)
+        for i in 0..<currentState.tanks.count {
+            if !humanPlayerIndices.contains(i) {
+                gameScene?.enableAI(for: i)
+            }
         }
         
         multiplayerManager.sendMessage(.roundStart(seed: seed, playerCount: currentState.tanks.count, hostPlayerIndex: currentState.localPlayerIndex, playerAssignments: playerAssignments))
@@ -348,9 +343,10 @@ extension GameViewController: MultiplayerManagerDelegate {
                     scene.startGame(with: state)
                     
                     // Add bunny rabbit AI opponents for remaining slots
+                    let humanPlayerIndices = Set(playerAssignments.values)
                     for i in 0..<playerCount {
-                        // Enable AI for all players except the local player
-                        if i != state.localPlayerIndex {
+                        // Enable AI for players that are not assigned to any human
+                        if !humanPlayerIndices.contains(i) {
                             scene.enableAI(for: i)
                         }
                     }
@@ -369,10 +365,11 @@ extension GameViewController: MultiplayerManagerDelegate {
                 gameState?.reset(seed: seed)
                 gameScene?.startGame(with: gameState!)
                 
-                // Re-enable AI for non-local players
+                // Re-enable AI for non-human players
+                let humanPlayerIndices = Set(playerAssignments.values)
                 if let state = gameState {
                     for i in 0..<state.tanks.count {
-                        if i != state.localPlayerIndex {
+                        if !humanPlayerIndices.contains(i) {
                             gameScene?.enableAI(for: i)
                         }
                     }
