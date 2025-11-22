@@ -273,10 +273,66 @@ extension GameScene {
 #endif
 
 #if os(OSX)
-// Mouse-based event handling
+// Keyboard and mouse event handling for macOS
 extension GameScene {
+    // Track currently pressed keys
+    private static var pressedKeys = Set<UInt16>()
+    
+    override func keyDown(with event: NSEvent) {
+        guard let state = gameState, state.localTank.isAlive, !state.isRoundOver() else { return }
+        
+        let keyCode = event.keyCode
+        GameScene.pressedKeys.insert(keyCode)
+        
+        // Handle movement keys (WASD or Arrow keys)
+        var direction: Direction?
+        switch keyCode {
+        case 13, 126: // W or Up Arrow
+            direction = .up
+        case 0, 123: // A or Left Arrow
+            direction = .left
+        case 1, 125: // S or Down Arrow
+            direction = .down
+        case 2, 124: // D or Right Arrow
+            direction = .right
+        case 49: // Space bar - shoot
+            handleShoot()
+            return
+        default:
+            return
+        }
+        
+        // Move tank
+        if let dir = direction {
+            if state.localTank.move(in: dir, grid: state.grid) {
+                renderTanks()
+                soundManager.playSound("move.wav")
+                
+                // Send position update
+                let localIndex = state.localPlayerIndex
+                onGameMessage?(.playerMove(playerIndex: localIndex, row: state.localTank.row, col: state.localTank.col, direction: state.localTank.direction))
+            }
+        }
+    }
+    
+    override func keyUp(with event: NSEvent) {
+        GameScene.pressedKeys.remove(event.keyCode)
+    }
+    
+    func handleShoot() {
+        guard let state = gameState, state.localTank.isAlive else { return }
+        
+        let projectile = state.localTank.shoot()
+        state.projectiles.append(projectile)
+        renderProjectiles()
+        soundManager.playSound("shoot.wav")
+        
+        // Send shoot message
+        onGameMessage?(.playerShoot(playerIndex: state.localPlayerIndex, projectile: projectile))
+    }
+    
     override func mouseDown(with event: NSEvent) {
-        // macOS support can be added later
+        // Mouse support can be added if needed
     }
 }
 #endif
