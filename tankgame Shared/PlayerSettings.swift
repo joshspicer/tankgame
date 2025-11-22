@@ -6,13 +6,7 @@
 //
 
 import Foundation
-#if os(iOS)
-import UIKit
-typealias PlatformColor = UIColor
-#elseif os(macOS)
-import AppKit
-typealias PlatformColor = NSColor
-#endif
+import SpriteKit
 
 /// Player-specific settings that sync across devices
 struct PlayerSettings: Codable, Equatable {
@@ -26,10 +20,6 @@ struct PlayerSettings: Codable, Equatable {
     
     /// Get the SKColor representation of the player's color
     var color: SKColor {
-        #if os(iOS)
-        return UIColor(hue: CGFloat(colorHue), saturation: 0.9, brightness: 0.9, alpha: 1.0)
-        #elseif os(macOS)
-        return NSColor(hue: CGFloat(colorHue), saturation: 0.9, brightness: 0.9, alpha: 1.0)
-        #endif
+        return SKColor(hue: CGFloat(colorHue), saturation: 0.9, brightness: 0.9, alpha: 1.0)
     }
 }

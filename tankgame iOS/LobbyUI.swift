@@ -338,7 +338,8 @@ class LobbyUI {
         speedLabel.text = String(format: "%.1fx", settings.speed)
         
         colorSlider.value = Float(settings.colorHue)
-        colorPreview.backgroundColor = settings.color
+        // Convert SKColor to UIColor for iOS
+        colorPreview.backgroundColor = UIColor(hue: CGFloat(settings.colorHue), saturation: 0.9, brightness: 0.9, alpha: 1.0)
         
         // Update color name
         let hue = settings.colorHue
