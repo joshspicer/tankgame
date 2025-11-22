@@ -195,7 +195,9 @@ class GameViewController: UIViewController {
         gameState = GameState(seed: seed, playerCount: playerCount, localPlayerIndex: localPlayerIndex)
         
         // Set local player settings
-        gameState?.playerSettings[localPlayerIndex] = localPlayerSettings
+        if let state = gameState, localPlayerIndex >= 0, localPlayerIndex < state.playerSettings.count {
+            state.playerSettings[localPlayerIndex] = localPlayerSettings
+        }
         
         multiplayerManager.sendMessage(.roundStart(seed: seed, playerCount: playerCount, hostPlayerIndex: localPlayerIndex, playerAssignments: playerAssignments))
         
@@ -286,7 +288,7 @@ class GameViewController: UIViewController {
         lobbyUI.updateSettingsDisplay(localPlayerSettings)
         
         // Sync settings to other players if connected
-        if let state = gameState {
+        if let state = gameState, state.localPlayerIndex >= 0, state.localPlayerIndex < state.playerSettings.count {
             state.playerSettings[state.localPlayerIndex] = localPlayerSettings
             multiplayerManager.sendMessage(.playerSettings(playerIndex: state.localPlayerIndex, settings: localPlayerSettings))
         }
@@ -298,7 +300,7 @@ class GameViewController: UIViewController {
         lobbyUI.updateSettingsDisplay(localPlayerSettings)
         
         // Sync settings to other players if connected
-        if let state = gameState {
+        if let state = gameState, state.localPlayerIndex >= 0, state.localPlayerIndex < state.playerSettings.count {
             state.playerSettings[state.localPlayerIndex] = localPlayerSettings
             multiplayerManager.sendMessage(.playerSettings(playerIndex: state.localPlayerIndex, settings: localPlayerSettings))
         }
@@ -375,7 +377,9 @@ extension GameViewController: MultiplayerManagerDelegate {
                 gameState = GameState(seed: seed, playerCount: playerCount, localPlayerIndex: localPlayerIndex)
                 
                 // Set local player settings
-                gameState?.playerSettings[localPlayerIndex] = localPlayerSettings
+                if let state = gameState, localPlayerIndex >= 0, localPlayerIndex < state.playerSettings.count {
+                    state.playerSettings[localPlayerIndex] = localPlayerSettings
+                }
                 
                 // Send local player settings to all connected peers
                 multiplayerManager.sendMessage(.playerSettings(playerIndex: localPlayerIndex, settings: localPlayerSettings))
