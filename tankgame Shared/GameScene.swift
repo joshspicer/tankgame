@@ -38,6 +38,11 @@ class GameScene: SKScene {
     // Explosion state
     var tankExploding: [Bool] = [false, false, false, false]
     
+    #if os(OSX)
+    // macOS keyboard state (instance variable to avoid shared state)
+    private var pressedKeys = Set<UInt16>()
+    #endif
+    
     class func newGameScene() -> GameScene {
         let scene = GameScene(size: CGSize(width: 600, height: 800))
         scene.scaleMode = .aspectFit
@@ -276,14 +281,11 @@ extension GameScene {
 #if os(OSX)
 // Keyboard and mouse event handling for macOS
 extension GameScene {
-    // Track currently pressed keys
-    private static var pressedKeys = Set<UInt16>()
-    
     override func keyDown(with event: NSEvent) {
         guard let state = gameState, state.localTank.isAlive, !state.isRoundOver() else { return }
         
         let keyCode = event.keyCode
-        GameScene.pressedKeys.insert(keyCode)
+        pressedKeys.insert(keyCode)
         
         // Handle movement keys (WASD or Arrow keys)
         var direction: Direction?
@@ -317,7 +319,7 @@ extension GameScene {
     }
     
     override func keyUp(with event: NSEvent) {
-        GameScene.pressedKeys.remove(event.keyCode)
+        pressedKeys.remove(event.keyCode)
     }
     
     override func mouseDown(with event: NSEvent) {

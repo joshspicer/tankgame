@@ -27,7 +27,10 @@ class GameViewController: NSViewController {
 
     override func viewDidLoad() {
         super.viewDidLoad()
-        
+        initializeGame()
+    }
+    
+    private func initializeGame() {
         // Initialize managers
         multiplayerManager = MultiplayerManager()
         multiplayerManager.delegate = self
@@ -278,7 +281,10 @@ extension GameViewController: MultiplayerManagerDelegate {
             DispatchQueue.main.async { [weak self] in
                 guard let self = self else { return }
                 self.view.subviews.forEach { $0.removeFromSuperview() }
-                self.viewDidLoad()
+                self.gameState = nil
+                self.gameScene = nil
+                self.skView = nil
+                self.initializeGame()
                 
                 let alert = NSAlert()
                 alert.messageText = "Disconnected"
