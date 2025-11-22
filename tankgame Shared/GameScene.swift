@@ -218,6 +218,19 @@ class GameScene: SKScene {
             lastUpdateTime = currentTime
         }
     }
+    
+    // Shared shoot handler for all platforms
+    func handleShoot() {
+        guard let state = gameState, state.localTank.isAlive else { return }
+        
+        let projectile = state.localTank.shoot()
+        state.projectiles.append(projectile)
+        renderProjectiles()
+        soundManager.playSound("shoot.wav")
+        
+        // Send shoot message
+        onGameMessage?(.playerShoot(playerIndex: state.localPlayerIndex, projectile: projectile))
+    }
 }
 
 #if os(iOS) || os(tvOS)
@@ -256,18 +269,6 @@ extension GameScene {
     
     override func touchesCancelled(_ touches: Set<UITouch>, with event: UIEvent?) {
         touchesEnded(touches, with: event)
-    }
-    
-    func handleShoot() {
-        guard let state = gameState, state.localTank.isAlive else { return }
-        
-        let projectile = state.localTank.shoot()
-        state.projectiles.append(projectile)
-        renderProjectiles()
-        soundManager.playSound("shoot.wav")
-        
-        // Send shoot message
-        onGameMessage?(.playerShoot(playerIndex: state.localPlayerIndex, projectile: projectile))
     }
 }
 #endif
@@ -317,18 +318,6 @@ extension GameScene {
     
     override func keyUp(with event: NSEvent) {
         GameScene.pressedKeys.remove(event.keyCode)
-    }
-    
-    func handleShoot() {
-        guard let state = gameState, state.localTank.isAlive else { return }
-        
-        let projectile = state.localTank.shoot()
-        state.projectiles.append(projectile)
-        renderProjectiles()
-        soundManager.playSound("shoot.wav")
-        
-        // Send shoot message
-        onGameMessage?(.playerShoot(playerIndex: state.localPlayerIndex, projectile: projectile))
     }
     
     override func mouseDown(with event: NSEvent) {
