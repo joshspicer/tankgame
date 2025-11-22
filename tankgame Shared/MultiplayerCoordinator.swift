@@ -1,6 +1,6 @@
 //
 //  MultiplayerCoordinator.swift
-//  tankgame iOS
+//  tankgame Shared
 //
 //  Created by jospicer on 10/28/25.
 //
