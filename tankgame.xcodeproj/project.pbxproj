@@ -17,7 +17,9 @@
 			isa = PBXFileSystemSynchronizedBuildFileExceptionSet;
 			membershipExceptions = (
 				Actions.sks,
+				AIController.swift,
 				Assets.xcassets,
+				BunnyAI.swift,
 				Direction.swift,
 				ExplosionEffects.swift,
 				FireButton.swift,
@@ -41,7 +43,9 @@
 			isa = PBXFileSystemSynchronizedBuildFileExceptionSet;
 			membershipExceptions = (
 				Actions.sks,
+				AIController.swift,
 				Assets.xcassets,
+				BunnyAI.swift,
 				Direction.swift,
 				ExplosionEffects.swift,
 				FireButton.swift,
@@ -65,7 +69,9 @@
 			isa = PBXFileSystemSynchronizedBuildFileExceptionSet;
 			membershipExceptions = (
 				Actions.sks,
+				AIController.swift,
 				Assets.xcassets,
+				BunnyAI.swift,
 				Direction.swift,
 				ExplosionEffects.swift,
 				FireButton.swift,

@@ -185,6 +185,15 @@ class GameViewController: UIViewController {
         
         let scene = GameScene.newGameScene()
         scene.startGame(with: gameState!)
+        
+        // Add bunny rabbit AI opponents for remaining slots
+        for i in 0..<playerCount {
+            // Enable AI for all players except the local player
+            if i != localPlayerIndex {
+                scene.enableAI(for: i)
+            }
+        }
+        
         scene.onGameMessage = { [weak self] message in
             self?.handleGameMessage(message)
         }
@@ -236,6 +245,13 @@ class GameViewController: UIViewController {
         let seed = UInt32.random(in: 0...UInt32.max)
         gameState?.reset(seed: seed)
         gameScene?.startGame(with: gameState!)
+        
+        // Re-enable AI for non-local players
+        for i in 0..<currentState.tanks.count {
+            if i != currentState.localPlayerIndex {
+                gameScene?.enableAI(for: i)
+            }
+        }
         
         var playerAssignments: [String: Int] = [:]
         playerAssignments[multiplayerManager.session.myPeerID.displayName] = currentState.localPlayerIndex
@@ -330,6 +346,15 @@ extension GameViewController: MultiplayerManagerDelegate {
                     
                     let scene = GameScene.newGameScene()
                     scene.startGame(with: state)
+                    
+                    // Add bunny rabbit AI opponents for remaining slots
+                    for i in 0..<playerCount {
+                        // Enable AI for all players except the local player
+                        if i != state.localPlayerIndex {
+                            scene.enableAI(for: i)
+                        }
+                    }
+                    
                     scene.onGameMessage = { [weak self] msg in
                         self?.handleGameMessage(msg)
                     }
@@ -343,6 +368,15 @@ extension GameViewController: MultiplayerManagerDelegate {
             } else {
                 gameState?.reset(seed: seed)
                 gameScene?.startGame(with: gameState!)
+                
+                // Re-enable AI for non-local players
+                if let state = gameState {
+                    for i in 0..<state.tanks.count {
+                        if i != state.localPlayerIndex {
+                            gameScene?.enableAI(for: i)
+                        }
+                    }
+                }
             }
             
         case .playerMove(let playerIndex, let row, let col, let direction):

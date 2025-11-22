@@ -30,6 +30,7 @@ class GameScene: SKScene {
     private var joystickController: JoystickController!
     private var fireButton: FireButton!
     private var ui: GameSceneUI!
+    private var aiController: AIController!
     
     // Update timer
     var lastUpdateTime: TimeInterval = 0
@@ -66,6 +67,7 @@ class GameScene: SKScene {
         joystickController = JoystickController()
         fireButton = FireButton()
         ui = GameSceneUI()
+        aiController = AIController()
     }
     
     func setupScene() {
@@ -111,6 +113,11 @@ class GameScene: SKScene {
         renderTanks()
         updateScore()
         ui.updateStatus("Fight!")
+    }
+    
+    /// Enable AI control for a specific tank
+    func enableAI(for tankIndex: Int) {
+        aiController.registerAI(for: tankIndex)
     }
     
     func renderGrid() {
@@ -159,6 +166,29 @@ class GameScene: SKScene {
         // Don't update if round is over or any explosion in progress
         if state.isRoundOver() || tankExploding.contains(true) {
             return
+        }
+        
+        // Update AI-controlled tanks
+        let aiActions = aiController.update(currentTime: currentTime, gameState: state)
+        for (tankIndex, action) in aiActions {
+            switch action {
+            case .move(let direction):
+                if state.tanks[tankIndex].move(in: direction, grid: state.grid) {
+                    renderTanks()
+                    soundManager.playSound("move.wav")
+                    
+                    // Send AI move update
+                    onGameMessage?(.playerMove(playerIndex: tankIndex, row: state.tanks[tankIndex].row, col: state.tanks[tankIndex].col, direction: state.tanks[tankIndex].direction))
+                }
+            case .shoot:
+                let projectile = state.tanks[tankIndex].shoot()
+                state.projectiles.append(projectile)
+                renderProjectiles()
+                soundManager.playSound("shoot.wav")
+                
+                // Send AI shoot update
+                onGameMessage?(.playerShoot(playerIndex: tankIndex, projectile: projectile))
+            }
         }
         
         // Update projectiles
