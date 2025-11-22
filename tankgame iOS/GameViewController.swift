@@ -89,7 +89,7 @@ class GameViewController: UIViewController {
         lobbyUI.connectedPlayersView.isHidden = false
         lobbyUI.startGameButton.isHidden = false
         lobbyUI.activityIndicator.startAnimating()
-        lobbyUI.statusLabel.text = "Hosting game...\nPlay solo or invite friends! (1-4 players)\nEmpty slots filled with AI bunnies 🐰"
+        lobbyUI.statusLabel.text = "Hosting game...\nPlay solo or invite friends! (1-4 players)\nEmpty slots filled with AI bunnies"
         updateConnectedPlayersUI()
         
         multiplayerManager.startHosting()

@@ -32,9 +32,9 @@ class BunnyAI {
         
         // Check if it's time to shoot
         if currentTime - lastShootTime >= shootInterval {
+            lastShootTime = currentTime  // Update time regardless of outcome
             // 50% chance to shoot when interval elapses
             if Bool.random() {
-                lastShootTime = currentTime
                 return .shoot
             }
         }

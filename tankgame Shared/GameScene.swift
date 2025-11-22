@@ -170,11 +170,12 @@ class GameScene: SKScene {
         
         // Update AI-controlled tanks
         let aiActions = aiController.update(currentTime: currentTime, gameState: state)
+        var needsRender = false
         for (tankIndex, action) in aiActions {
             switch action {
             case .move(let direction):
                 if state.tanks[tankIndex].move(in: direction, grid: state.grid) {
-                    renderTanks()
+                    needsRender = true
                     soundManager.playSound("move.wav")
                     
                     // Send AI move update
@@ -183,12 +184,18 @@ class GameScene: SKScene {
             case .shoot:
                 let projectile = state.tanks[tankIndex].shoot()
                 state.projectiles.append(projectile)
-                renderProjectiles()
+                needsRender = true
                 soundManager.playSound("shoot.wav")
                 
                 // Send AI shoot update
                 onGameMessage?(.playerShoot(playerIndex: tankIndex, projectile: projectile))
             }
+        }
+        
+        // Render once after all AI actions
+        if needsRender {
+            renderTanks()
+            renderProjectiles()
         }
         
         // Update projectiles
