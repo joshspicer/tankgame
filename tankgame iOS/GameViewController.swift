@@ -211,6 +211,12 @@ class GameViewController: UIViewController {
             multiplayerCoordinator.markPlayerReady(playerIndex)
             checkAndStartNextRound()
             
+        case .restartMatch:
+            handleRestartMatch()
+            
+        case .quitToLobby:
+            handleQuitToLobby()
+            
         default:
             break
         }
@@ -244,6 +250,68 @@ class GameViewController: UIViewController {
         }
         
         multiplayerManager.sendMessage(.roundStart(seed: seed, playerCount: currentState.tanks.count, hostPlayerIndex: currentState.localPlayerIndex, playerAssignments: playerAssignments))
+    }
+    
+    private func handleRestartMatch() {
+        // Only host can restart the match
+        guard multiplayerManager.isHost else {
+            showAlert(title: "Cannot Restart", message: "Only the host can restart the match.")
+            return
+        }
+        
+        // Reset all scores to 0
+        gameState?.wins = Array(repeating: 0, count: gameState?.tanks.count ?? 2)
+        
+        // Send restart message to all players
+        multiplayerManager.sendMessage(.restartMatch)
+        
+        // Start a new round with fresh scores
+        startNextRound()
+    }
+    
+    private func handleQuitToLobby() {
+        // Send quit message to all players
+        multiplayerManager.sendMessage(.quitToLobby)
+        
+        // Return to lobby
+        returnToLobby()
+    }
+    
+    private func returnToLobby() {
+        DispatchQueue.main.async { [weak self] in
+            guard let self = self else { return }
+            
+            // Clean up game state
+            self.gameScene = nil
+            self.gameState = nil
+            self.skView?.removeFromSuperview()
+            self.skView = nil
+            
+            // Show lobby UI
+            self.lobbyUI.lobbyView.isHidden = false
+            self.lobbyUI.reset()
+            
+            // Keep connections but allow new game
+            if self.multiplayerManager.isHost {
+                self.lobbyUI.hostButton.isHidden = true
+                self.lobbyUI.joinButton.isHidden = true
+                self.lobbyUI.instructionsLabel.isHidden = true
+                self.lobbyUI.cancelButton.isHidden = false
+                self.lobbyUI.connectedPlayersView.isHidden = false
+                self.lobbyUI.startGameButton.isHidden = false
+                self.lobbyUI.statusLabel.text = "Ready to start a new game"
+                self.updateConnectedPlayersUI()
+            } else {
+                self.lobbyUI.statusLabel.text = "Waiting for host to start new game..."
+                self.lobbyUI.cancelButton.isHidden = false
+            }
+        }
+    }
+    
+    private func showAlert(title: String, message: String) {
+        let alert = UIAlertController(title: title, message: message, preferredStyle: .alert)
+        alert.addAction(UIAlertAction(title: "OK", style: .default))
+        present(alert, animated: true)
     }
 
     override var supportedInterfaceOrientations: UIInterfaceOrientationMask {
@@ -360,6 +428,14 @@ extension GameViewController: MultiplayerManagerDelegate {
         case .readyForNextRound(let playerIndex):
             multiplayerCoordinator.markPlayerReady(playerIndex)
             checkAndStartNextRound()
+            
+        case .restartMatch:
+            // Reset scores to 0
+            gameState?.wins = Array(repeating: 0, count: gameState?.tanks.count ?? 2)
+            // Host will send a new roundStart message, so we just wait
+            
+        case .quitToLobby:
+            returnToLobby()
             
         case .playerHit, .startGame, .playerJoined:
             break
