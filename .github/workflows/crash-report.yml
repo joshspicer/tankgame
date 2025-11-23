@@ -85,16 +85,29 @@ jobs:
         with:
           github-token: ${{ secrets.GITHUB_TOKEN }}
           script: |
+            // Create the issue without assignees first
             const issue = await github.rest.issues.create({
               owner: context.repo.owner,
               repo: context.repo.repo,
               title: '${{ steps.parse_crash.outputs.title }}',
               body: `${{ steps.issue_body.outputs.body }}`,
-              labels: ['bug', 'crash-report'],
-              assignees: ['copilot']
+              labels: ['bug', 'crash-report']
             });
             
             console.log(`Created issue #${issue.data.number}`);
+            
+            // Try to assign to copilot if the user exists
+            try {
+              await github.rest.issues.addAssignees({
+                owner: context.repo.owner,
+                repo: context.repo.repo,
+                issue_number: issue.data.number,
+                assignees: ['copilot']
+              });
+              console.log('Assigned issue to @copilot');
+            } catch (error) {
+              console.log('Could not assign to @copilot, user may not exist:', error.message);
+            }
             
             // Add a comment with more details
             await github.rest.issues.createComment({

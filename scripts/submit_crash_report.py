@@ -101,8 +101,9 @@ def main():
         sys.exit(1)
     
     repo = os.environ.get('GITHUB_REPO', 'joshspicer/tankgame')
+    github_token = os.environ.get('GITHUB_TOKEN')
     
-    success = submit_crash_report(crash_report_path, user_email, repo=repo)
+    success = submit_crash_report(crash_report_path, user_email, github_token, repo)
     sys.exit(0 if success else 1)
 
 
