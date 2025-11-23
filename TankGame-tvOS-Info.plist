@@ -47,5 +47,7 @@
 	<string>Main</string>
 	<key>UIUserInterfaceStyle</key>
 	<string>Automatic</string>
+	<key>CrashReportingServerURL</key>
+	<string>https://tankgame.spicer.dev/crash</string>
 </dict>
 </plist>

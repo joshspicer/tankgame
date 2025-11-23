@@ -18,6 +18,8 @@
 			membershipExceptions = (
 				Actions.sks,
 				Assets.xcassets,
+				CrashReporter.swift,
+				CrashReporterTests.swift,
 				Direction.swift,
 				ExplosionEffects.swift,
 				FireButton.swift,
@@ -50,6 +52,8 @@
 			membershipExceptions = (
 				Actions.sks,
 				Assets.xcassets,
+				CrashReporter.swift,
+				CrashReporterTests.swift,
 				Direction.swift,
 				ExplosionEffects.swift,
 				FireButton.swift,
@@ -82,6 +86,8 @@
 			membershipExceptions = (
 				Actions.sks,
 				Assets.xcassets,
+				CrashReporter.swift,
+				CrashReporterTests.swift,
 				Direction.swift,
 				ExplosionEffects.swift,
 				FireButton.swift,
