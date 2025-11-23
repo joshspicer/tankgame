@@ -19,12 +19,14 @@ class CrashReporter {
     
     private init() {
         // Read server URL from Info.plist, fallback to default if not configured
-        if let configuredURL = Bundle.main.infoDictionary?["CrashReportingServerURL"] as? String {
+        if let configuredURL = Bundle.main.infoDictionary?["CrashReportingServerURL"] as? String,
+           !configuredURL.isEmpty,
+           URL(string: configuredURL) != nil {
             self.serverURL = configuredURL
         } else {
-            // Fallback URL if not configured in Info.plist
+            // Fallback URL if not configured or invalid in Info.plist
             self.serverURL = "https://tankgame.spicer.dev/crash"
-            print("Warning: CrashReportingServerURL not found in Info.plist, using default")
+            NSLog("Warning: CrashReportingServerURL not found or invalid in Info.plist, using default")
         }
         
         // Create crashes directory in app support
