@@ -49,6 +49,63 @@ The crash reporter is automatically initialized in `AppDelegate.swift` when the 
 CrashReporter.shared.install()
 ```
 
+### Accessing Crash Reports
+
+The CrashReporter class provides methods to access stored crash reports:
+
+```swift
+// Get all crash reports
+let reports = CrashReporter.shared.getAllCrashReports()
+
+// Export all crash reports as JSON string
+if let jsonString = CrashReporter.shared.exportCrashReports() {
+    print(jsonString)
+}
+
+// Clear all crash reports
+CrashReporter.shared.clearAllCrashReports()
+```
+
+### Testing the Crash Reporter
+
+#### Creating a Test Crash Report
+
+To test the crash reporting system in development, you can create a sample crash report:
+
+1. In `AppDelegate.swift`, uncomment the test utility line:
+```swift
+#if DEBUG
+CrashReporterTests.createSampleCrashReport()
+#endif
+```
+
+2. Run the app - it will create a sample crash report
+
+3. Check the console output for the crash report file path
+
+4. Submit the report using the Python script:
+```bash
+export GITHUB_TOKEN="your_github_token_here"
+python3 scripts/submit_crash_report.py '/path/to/crash_report.json'
+```
+
+#### Other Test Utilities
+
+```swift
+#if DEBUG
+// Print crash reporter info and list all crash reports
+CrashReporterTests.printInfo()
+
+// Export all crash reports to console
+CrashReporterTests.testExportCrashReports()
+
+// Clear all crash reports
+CrashReporterTests.clearAllReports()
+#endif
+```
+
+**Note**: Only test this in a development environment, not in production!
+
 ### Submitting Crash Reports
 
 #### Option 1: Using the Python Script
@@ -72,38 +129,6 @@ python3 scripts/submit_crash_report.py path/to/crash_report.json user@example.co
 4. Paste the crash report JSON data
 5. Optionally add a user email
 6. Click "Run workflow"
-
-### Accessing Crash Reports
-
-The CrashReporter class provides methods to access stored crash reports:
-
-```swift
-// Get all crash reports
-let reports = CrashReporter.shared.getAllCrashReports()
-
-// Export all crash reports as JSON string
-if let jsonString = CrashReporter.shared.exportCrashReports() {
-    print(jsonString)
-}
-
-// Clear all crash reports
-CrashReporter.shared.clearAllCrashReports()
-```
-
-### Testing the Crash Reporter
-
-To test the crash reporting system, you can trigger a test crash:
-
-```swift
-// In development/testing only
-func testCrash() {
-    NSException(name: .genericException, 
-                reason: "Test crash for crash reporting", 
-                userInfo: nil).raise()
-}
-```
-
-**Note**: Only test this in a development environment, not in production!
 
 ## Crash Report Format
 
