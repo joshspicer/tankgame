@@ -60,8 +60,8 @@ extension GameViewController {
         guard let currentState = gameState else { return }
         
         let seed = UInt32.random(in: 0...UInt32.max)
-        gameState?.reset(seed: seed)
-        gameScene?.startGame(with: gameState!)
+        currentState.reset(seed: seed)
+        gameScene?.startGame(with: currentState)
         
         var playerAssignments: [String: Int] = [:]
         playerAssignments[multiplayerManager.session.myPeerID.displayName] = currentState.localPlayerIndex
