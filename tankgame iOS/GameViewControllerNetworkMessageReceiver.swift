@@ -64,8 +64,9 @@ extension GameViewController {
                 self.skView?.showsNodeCount = true
             }
         } else {
-            gameState?.reset(seed: seed)
-            gameScene?.startGame(with: gameState!)
+            guard let state = gameState else { return }
+            state.reset(seed: seed)
+            gameScene?.startGame(with: state)
         }
     }
     
