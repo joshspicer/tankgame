@@ -7,6 +7,7 @@
 
 import UIKit
 import SpriteKit
+import MultipeerConnectivity
 
 /// Handles game lifecycle management for GameViewController
 extension GameViewController {
