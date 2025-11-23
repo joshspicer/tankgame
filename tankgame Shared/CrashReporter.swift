@@ -14,10 +14,19 @@ class CrashReporter {
     private let crashReportsDirectory: URL
     private let maxReportsToKeep = 10
     
-    // Crash reporting server URL
-    private let serverURL = "https://tankgame.spicer.dev/crash"
+    // Crash reporting server URL - configurable via Info.plist
+    private let serverURL: String
     
     private init() {
+        // Read server URL from Info.plist, fallback to default if not configured
+        if let configuredURL = Bundle.main.infoDictionary?["CrashReportingServerURL"] as? String {
+            self.serverURL = configuredURL
+        } else {
+            // Fallback URL if not configured in Info.plist
+            self.serverURL = "https://tankgame.spicer.dev/crash"
+            print("Warning: CrashReportingServerURL not found in Info.plist, using default")
+        }
+        
         // Create crashes directory in app support
         let appSupport = FileManager.default.urls(for: .applicationSupportDirectory, in: .userDomainMask).first!
         crashReportsDirectory = appSupport.appendingPathComponent("CrashReports")

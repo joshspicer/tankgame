@@ -33,6 +33,7 @@ Located in `tankgame Shared/CrashReporter.swift`, this class:
   - Timestamp
 - Saves crashes to JSON files locally
 - **Automatically uploads crash reports to the server**
+- Server URL is configurable via `CrashReportingServerURL` in Info.plist
 - Uploads pending crash reports on next app launch
 - Manages old crash reports (keeps the 10 most recent)
 
@@ -62,6 +63,18 @@ CrashReporter.shared.install()
 - Saved locally for reliability
 - Uploaded to the server
 - Converted into GitHub issues
+
+### Configuration
+
+The crash reporting server URL is configured in the Info.plist files:
+
+**TankGame-iOS-Info.plist**, **TankGame-macOS-Info.plist**, **TankGame-tvOS-Info.plist**:
+```xml
+<key>CrashReportingServerURL</key>
+<string>https://tankgame.spicer.dev/crash</string>
+```
+
+To change the server URL (e.g., for development/staging), update this value in the appropriate Info.plist file. The app will read this configuration at runtime.
 
 ### Accessing Crash Reports
 
