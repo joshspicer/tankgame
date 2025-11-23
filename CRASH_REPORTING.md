@@ -1,6 +1,6 @@
 # Crash Reporting System
 
-This repository includes an automated crash reporting system that captures crashes and automatically creates GitHub issues assigned to @copilot.
+This repository includes a **fully automated** crash reporting system that captures crashes and automatically creates GitHub issues assigned to @copilot.
 
 ## How It Works
 
@@ -8,7 +8,11 @@ This repository includes an automated crash reporting system that captures crash
 
 2. **Local Storage**: Crash reports are saved locally on the device in JSON format in the Application Support directory.
 
-3. **Automatic Issue Creation**: Crash reports can be submitted to GitHub Actions, which automatically creates an issue with:
+3. **Automatic Upload**: Crash reports are automatically uploaded to `https://tankgame.spicer.dev/crash` when they occur or on next app launch.
+
+4. **Server Processing**: The Flask server receives crash reports and triggers the GitHub Actions workflow.
+
+5. **Automatic Issue Creation**: GitHub Actions creates an issue with:
    - Crash details (exception name, reason, stack trace)
    - App version and OS version
    - Automatic assignment to @copilot
@@ -28,12 +32,23 @@ Located in `tankgame Shared/CrashReporter.swift`, this class:
   - Device model
   - Timestamp
 - Saves crashes to JSON files locally
+- **Automatically uploads crash reports to the server**
+- Uploads pending crash reports on next app launch
 - Manages old crash reports (keeps the 10 most recent)
+
+### Crash Reporter Server
+
+Located in `server/`, this Flask application:
+- Receives crash reports via HTTP POST at `/crash` endpoint
+- Validates and processes crash data
+- Triggers GitHub Actions workflow to create issues
+- Runs as a containerized service with Docker Compose
+- Deployed at `https://tankgame.spicer.dev`
 
 ### GitHub Actions Workflow
 
 The workflow file `.github/workflows/crash-report.yml` handles:
-- Receiving crash report data
+- Receiving crash report data from the server
 - Parsing the JSON crash data
 - Creating a formatted GitHub issue
 - Automatically assigning to @copilot
@@ -48,6 +63,12 @@ The crash reporter is automatically initialized in `AppDelegate.swift` when the 
 ```swift
 CrashReporter.shared.install()
 ```
+
+**That's it!** Crash reports are now automatically:
+- Captured when they occur
+- Saved locally for reliability
+- Uploaded to the server
+- Converted into GitHub issues
 
 ### Accessing Crash Reports
 
@@ -83,11 +104,9 @@ CrashReporterTests.createSampleCrashReport()
 
 3. Check the console output for the crash report file path
 
-4. Submit the report using the Python script:
-```bash
-export GITHUB_TOKEN="your_github_token_here"
-python3 scripts/submit_crash_report.py '/path/to/crash_report.json'
-```
+4. The crash report will be automatically uploaded to the server and converted to a GitHub issue
+
+**Note**: Test crash reports are uploaded just like real ones, so use with caution!
 
 #### Other Test Utilities
 
@@ -106,7 +125,30 @@ CrashReporterTests.clearAllReports()
 
 **Note**: Only test this in a development environment, not in production!
 
-### Submitting Crash Reports
+## Server Deployment
+
+The crash reporting server is deployed at `https://tankgame.spicer.dev`. See `server/README.md` for deployment instructions.
+
+### Running the Server Locally
+
+For development or self-hosting:
+
+```bash
+cd server
+
+# Using Docker Compose (recommended)
+echo "GITHUB_TOKEN=your_token" > .env
+docker-compose up -d
+
+# Or run directly with Python
+pip install -r requirements.txt
+export GITHUB_TOKEN="your_token"
+python app.py
+```
+
+### Manual Submission (Optional)
+
+While crash reports are automatically uploaded, you can still submit them manually:
 
 #### Option 1: Using the Python Script
 
@@ -152,22 +194,43 @@ Crash reports are saved in JSON format with the following structure:
 
 ## GitHub Token Requirements
 
-To use the submission script, you need a GitHub Personal Access Token with the following permissions:
+For the server deployment, a GitHub Personal Access Token is required with:
 - `repo` scope (for private repos) or `public_repo` (for public repos)
 - `workflow` scope (to trigger workflow dispatches)
 
+The token should be set as an environment variable on the server.
+
 ## Security Considerations
 
-- Crash reports are stored locally on the device and never transmitted automatically
-- Manual submission requires explicit action
-- No personal data is collected beyond what's in the crash stack trace
-- The GitHub token must be kept secure and should not be committed to the repository
+- **Automatic Transmission**: Crash reports are automatically uploaded to the server when they occur
+- **HTTPS**: The server endpoint (`https://tankgame.spicer.dev`) uses HTTPS for encrypted transmission
+- **Local Backup**: Crash reports are stored locally first, ensuring no data loss if upload fails
+- **Privacy**: Only crash-related data is collected (no user identifiers, location, or personal information)
+- **Token Security**: GitHub token is stored securely on the server (not in the app)
+- **Rate Limiting**: Consider implementing rate limiting on the server to prevent abuse
+- **Retry Logic**: Failed uploads are retried on next app launch
+
+## Architecture
+
+```
+[App] → Crash Occurs
+  ↓
+[CrashReporter.swift] → Captures & Saves Locally
+  ↓
+[Automatic Upload] → HTTPS POST to https://tankgame.spicer.dev/crash
+  ↓
+[Flask Server] → Validates & Processes
+  ↓
+[GitHub API] → Triggers crash-report.yml workflow
+  ↓
+[GitHub Actions] → Creates Issue & Assigns to @copilot
+```
 
 ## Future Enhancements
 
 Possible improvements:
-- Automatic crash report submission (with user consent)
-- Crash report deduplication
-- Symbolication of stack traces
+- ~~Automatic crash report submission~~ ✅ **Implemented**
+- Crash report deduplication on the server
+- Symbolication of stack traces for better readability
 - Crash analytics dashboard
-- Integration with external crash reporting services
+- User consent dialog before uploading (for privacy compliance)

@@ -14,6 +14,9 @@ class CrashReporter {
     private let crashReportsDirectory: URL
     private let maxReportsToKeep = 10
     
+    // Crash reporting server URL
+    private let serverURL = "https://tankgame.spicer.dev/crash"
+    
     private init() {
         // Create crashes directory in app support
         let appSupport = FileManager.default.urls(for: .applicationSupportDirectory, in: .userDomainMask).first!
@@ -38,6 +41,9 @@ class CrashReporter {
     private func handleException(_ exception: NSException) {
         let crashReport = generateCrashReport(exception: exception)
         saveCrashReport(crashReport)
+        
+        // Automatically upload the crash report
+        uploadCrashReport(crashReport)
     }
     
     /// Generate a crash report from an exception
@@ -82,8 +88,18 @@ class CrashReporter {
             
             if !crashFiles.isEmpty {
                 print("Found \(crashFiles.count) pending crash report(s)")
-                // In a real implementation, this would upload to a server
-                // For now, we just log their existence
+                
+                // Automatically upload all pending crash reports
+                for file in crashFiles {
+                    do {
+                        let data = try Data(contentsOf: file)
+                        if let report = try JSONSerialization.jsonObject(with: data) as? [String: Any] {
+                            uploadCrashReport(report)
+                        }
+                    } catch {
+                        print("Failed to process crash report: \(error)")
+                    }
+                }
             }
         } catch {
             print("Failed to check for pending crash reports: \(error)")
@@ -167,6 +183,49 @@ class CrashReporter {
         } catch {
             print("Failed to export crash reports: \(error)")
             return nil
+        }
+    }
+    
+    /// Upload a crash report to the server
+    private func uploadCrashReport(_ report: [String: Any]) {
+        guard let url = URL(string: serverURL) else {
+            print("Invalid server URL")
+            return
+        }
+        
+        do {
+            // Prepare JSON data
+            let jsonData = try JSONSerialization.data(withJSONObject: report)
+            
+            // Create request
+            var request = URLRequest(url: url)
+            request.httpMethod = "POST"
+            request.setValue("application/json", forHTTPHeaderField: "Content-Type")
+            request.httpBody = jsonData
+            request.timeoutInterval = 30
+            
+            // Send request
+            let task = URLSession.shared.dataTask(with: request) { data, response, error in
+                if let error = error {
+                    print("Failed to upload crash report: \(error.localizedDescription)")
+                    return
+                }
+                
+                if let httpResponse = response as? HTTPURLResponse {
+                    if httpResponse.statusCode == 200 {
+                        print("✓ Crash report uploaded successfully")
+                    } else {
+                        print("Failed to upload crash report: HTTP \(httpResponse.statusCode)")
+                        if let data = data, let responseBody = String(data: data, encoding: .utf8) {
+                            print("Response: \(responseBody)")
+                        }
+                    }
+                }
+            }
+            task.resume()
+            
+        } catch {
+            print("Failed to prepare crash report for upload: \(error)")
         }
     }
     
