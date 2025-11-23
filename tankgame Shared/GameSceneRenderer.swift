@@ -16,9 +16,13 @@ class GameSceneRenderer {
     // Tank colors for up to 4 players
     let tankColors: [SKColor] = [.blue, .red, .green, .orange]
     
+    // Tank sprite renderer
+    private let tankSpriteRenderer: TankSpriteRenderer
+    
     init(tileSize: CGFloat, gridSize: Int) {
         self.tileSize = tileSize
         self.gridSize = gridSize
+        self.tankSpriteRenderer = TankSpriteRenderer(tileSize: tileSize)
     }
     
     // MARK: - Grid Rendering
@@ -48,13 +52,13 @@ class GameSceneRenderer {
             let tank = tanks[i]
             if tank.isAlive || tankExploding[i] {
                 let color = tankColors[i]
-                let tankSprite = createTankNode(color: color, direction: tank.direction)
+                let tankSprite = tankSpriteRenderer.createTankNode(color: color, direction: tank.direction)
                 tankSprite.position = gridPosition(row: tank.row, col: tank.col)
                 tankNode.addChild(tankSprite)
             }
         }
     }
-    
+
     /// Render all tanks with smooth animation
     func renderTanksWithSmoothing(_ tanks: [Tank], tankExploding: [Bool], in tankNodes: [SKNode?], duration: TimeInterval) {
         for i in 0..<tanks.count {
@@ -124,7 +128,6 @@ class GameSceneRenderer {
         
         return tankNode
     }
-    
     // MARK: - Projectile Rendering
     
     /// Render all projectiles
