@@ -37,7 +37,15 @@ def trigger_crash_workflow(crash_data, user_email=None):
     if not GITHUB_TOKEN:
         return False, "GITHUB_TOKEN not configured"
     
-    owner, repo_name = GITHUB_REPO.split('/')
+    # Validate GITHUB_REPO format
+    if not GITHUB_REPO or '/' not in GITHUB_REPO:
+        return False, "GITHUB_REPO must be in format 'owner/repo'"
+    
+    parts = GITHUB_REPO.split('/')
+    if len(parts) != 2 or not parts[0] or not parts[1]:
+        return False, "GITHUB_REPO must be in format 'owner/repo'"
+    
+    owner, repo_name = parts
     url = f"https://api.github.com/repos/{owner}/{repo_name}/actions/workflows/crash-report.yml/dispatches"
     
     headers = {

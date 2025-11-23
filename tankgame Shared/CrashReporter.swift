@@ -94,7 +94,8 @@ class CrashReporter {
                     do {
                         let data = try Data(contentsOf: file)
                         if let report = try JSONSerialization.jsonObject(with: data) as? [String: Any] {
-                            uploadCrashReport(report)
+                            // Upload and delete the file on success
+                            uploadCrashReport(report, deleteOnSuccess: file)
                         }
                     } catch {
                         print("Failed to process crash report: \(error)")
@@ -187,7 +188,10 @@ class CrashReporter {
     }
     
     /// Upload a crash report to the server
-    private func uploadCrashReport(_ report: [String: Any]) {
+    /// - Parameters:
+    ///   - report: The crash report to upload
+    ///   - fileURL: Optional file URL to delete after successful upload
+    private func uploadCrashReport(_ report: [String: Any], deleteOnSuccess fileURL: URL? = nil) {
         guard let url = URL(string: serverURL) else {
             print("Invalid server URL")
             return
@@ -214,6 +218,12 @@ class CrashReporter {
                 if let httpResponse = response as? HTTPURLResponse {
                     if httpResponse.statusCode == 200 {
                         print("✓ Crash report uploaded successfully")
+                        
+                        // Delete the file if specified and upload was successful
+                        if let fileURL = fileURL {
+                            try? FileManager.default.removeItem(at: fileURL)
+                            print("✓ Deleted uploaded crash report: \(fileURL.lastPathComponent)")
+                        }
                     } else {
                         print("Failed to upload crash report: HTTP \(httpResponse.statusCode)")
                         if let data = data, let responseBody = String(data: data, encoding: .utf8) {
