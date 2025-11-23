@@ -1,0 +1,105 @@
+name: Process Crash Reports
+
+on:
+  workflow_dispatch:
+    inputs:
+      crash_data:
+        description: 'Crash report data (JSON)'
+        required: true
+        type: string
+      user_email:
+        description: 'User email (optional)'
+        required: false
+        type: string
+
+permissions:
+  issues: write
+  contents: read
+
+jobs:
+  create-crash-issue:
+    runs-on: ubuntu-latest
+    
+    steps:
+      - name: Parse crash data
+        id: parse_crash
+        run: |
+          echo "${{ github.event.inputs.crash_data }}" > crash_report.json
+          
+          # Extract key information from the crash report
+          EXCEPTION_NAME=$(jq -r '.exception_name // "Unknown Exception"' crash_report.json)
+          EXCEPTION_REASON=$(jq -r '.exception_reason // "No reason provided"' crash_report.json)
+          APP_VERSION=$(jq -r '.app_version // "Unknown"' crash_report.json)
+          OS_VERSION=$(jq -r '.os_version // "Unknown"' crash_report.json)
+          TIMESTAMP=$(jq -r '.timestamp // "Unknown"' crash_report.json)
+          
+          # Create a sanitized title
+          TITLE="🐛 Crash: $EXCEPTION_NAME"
+          
+          echo "title=$TITLE" >> $GITHUB_OUTPUT
+          echo "exception_name=$EXCEPTION_NAME" >> $GITHUB_OUTPUT
+          echo "exception_reason=$EXCEPTION_REASON" >> $GITHUB_OUTPUT
+          echo "app_version=$APP_VERSION" >> $GITHUB_OUTPUT
+          echo "os_version=$OS_VERSION" >> $GITHUB_OUTPUT
+          echo "timestamp=$TIMESTAMP" >> $GITHUB_OUTPUT
+      
+      - name: Create issue body
+        id: issue_body
+        run: |
+          cat > issue_body.md << 'EOF'
+          ## Crash Report
+          
+          **Exception:** ${{ steps.parse_crash.outputs.exception_name }}
+          
+          **Reason:** ${{ steps.parse_crash.outputs.exception_reason }}
+          
+          **App Version:** ${{ steps.parse_crash.outputs.app_version }}
+          
+          **OS Version:** ${{ steps.parse_crash.outputs.os_version }}
+          
+          **Timestamp:** ${{ steps.parse_crash.outputs.timestamp }}
+          
+          ### Stack Trace
+          
+          ```json
+          ${{ github.event.inputs.crash_data }}
+          ```
+          
+          ### Additional Information
+          
+          ${{ github.event.inputs.user_email != '' && format('**Reported by:** {0}', github.event.inputs.user_email) || 'Reported automatically' }}
+          
+          ---
+          
+          This issue was created automatically by the crash reporting system.
+          EOF
+          
+          # Read the file and set it as output
+          BODY=$(cat issue_body.md)
+          echo "body<<EOF" >> $GITHUB_OUTPUT
+          echo "$BODY" >> $GITHUB_OUTPUT
+          echo "EOF" >> $GITHUB_OUTPUT
+      
+      - name: Create GitHub Issue
+        uses: actions/github-script@v7
+        with:
+          github-token: ${{ secrets.GITHUB_TOKEN }}
+          script: |
+            const issue = await github.rest.issues.create({
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              title: '${{ steps.parse_crash.outputs.title }}',
+              body: `${{ steps.issue_body.outputs.body }}`,
+              labels: ['bug', 'crash-report'],
+              assignees: ['copilot']
+            });
+            
+            console.log(`Created issue #${issue.data.number}`);
+            
+            // Add a comment with more details
+            await github.rest.issues.createComment({
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              issue_number: issue.data.number,
+              body: '🤖 @copilot please investigate this crash and provide a fix.'
+            });
