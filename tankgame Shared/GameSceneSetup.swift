@@ -43,7 +43,9 @@ class GameSceneSetup {
         
         // Setup fire button callback
         scene.fireButton.onTap = { [weak scene] in
+            #if os(iOS) || os(tvOS)
             scene?.inputHandler.handleShoot()
+            #endif
         }
     }
 }
