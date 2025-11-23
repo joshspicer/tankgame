@@ -16,9 +16,21 @@ class GameSceneRenderer {
     // Tank colors for up to 4 players
     let tankColors: [SKColor] = [.blue, .red, .green, .orange]
     
+    // Tank sprite renderer
+    private let tankSpriteRenderer: TankSpriteRenderer
+    
+    // Power-up renderer
+    private let powerUpRenderer: PowerUpRenderer
+    
+    // Shield effect renderer
+    private let shieldEffectRenderer: ShieldEffectRenderer
+    
     init(tileSize: CGFloat, gridSize: Int) {
         self.tileSize = tileSize
         self.gridSize = gridSize
+        self.tankSpriteRenderer = TankSpriteRenderer(tileSize: tileSize)
+        self.powerUpRenderer = PowerUpRenderer(tileSize: tileSize, gridSize: gridSize)
+        self.shieldEffectRenderer = ShieldEffectRenderer(tileSize: tileSize)
     }
     
     // MARK: - Grid Rendering
@@ -48,52 +60,75 @@ class GameSceneRenderer {
             let tank = tanks[i]
             if tank.isAlive || tankExploding[i] {
                 let color = tankColors[i]
-                let tankSprite = createTankNode(color: color, direction: tank.direction, hasShield: tank.hasShield)
+                let tankSprite = tankSpriteRenderer.createTankNode(color: color, direction: tank.direction)
                 tankSprite.position = gridPosition(row: tank.row, col: tank.col)
                 tankNode.addChild(tankSprite)
+                
+                // Add shield effect if tank has shield
+                if tank.hasShield {
+                    shieldEffectRenderer.addShieldToTank(tankSprite)
+                }
+            }
+        }
+    }
+
+    /// Render all tanks with smooth animation
+    func renderTanksWithSmoothing(_ tanks: [Tank], tankExploding: [Bool], in tankNodes: [SKNode?], duration: TimeInterval) {
+        for i in 0..<tanks.count {
+            guard let tankNode = tankNodes[i] else { continue }
+            
+            let tank = tanks[i]
+            if tank.isAlive || tankExploding[i] {
+                let targetPosition = gridPosition(row: tank.row, col: tank.col)
+                
+                // If tank sprite exists, animate to new position
+                if let tankSprite = tankNode.children.first {
+                    // Animate position
+                    let moveAction = SKAction.move(to: targetPosition, duration: duration)
+                    moveAction.timingMode = .easeOut
+                    tankSprite.run(moveAction)
+                    
+                    // Animate rotation smoothly
+                    let currentRotation = tankSprite.zRotation
+                    let targetRotation = CGFloat(tank.direction.angle)
+                    let rotationDiff = shortestRotationDifference(from: currentRotation, to: targetRotation)
+                    
+                    if abs(rotationDiff) > 0.01 {
+                        let rotateAction = SKAction.rotate(byAngle: rotationDiff, duration: duration)
+                        rotateAction.timingMode = .easeOut
+                        tankSprite.run(rotateAction)
+                    }
+                    
+                    // Update shield effect based on tank state
+                    if tank.hasShield && !shieldEffectRenderer.tankHasShield(tankSprite) {
+                        shieldEffectRenderer.addShieldToTank(tankSprite)
+                    } else if !tank.hasShield && shieldEffectRenderer.tankHasShield(tankSprite) {
+                        shieldEffectRenderer.removeShieldFromTank(tankSprite)
+                    }
+                } else {
+                    // Create new sprite if doesn't exist
+                    let color = tankColors[i]
+                    let tankSprite = tankSpriteRenderer.createTankNode(color: color, direction: tank.direction)
+                    tankSprite.position = targetPosition
+                    tankNode.addChild(tankSprite)
+                    
+                    // Add shield if needed
+                    if tank.hasShield {
+                        shieldEffectRenderer.addShieldToTank(tankSprite)
+                    }
+                }
+            } else {
+                tankNode.removeAllChildren()
             }
         }
     }
     
-    /// Create a tank sprite node
-    private func createTankNode(color: SKColor, direction: Direction, hasShield: Bool = false) -> SKNode {
-        let tankNode = SKNode()
-        
-        // Tank body (square)
-        let body = SKSpriteNode(color: color, size: CGSize(width: tileSize * 0.7, height: tileSize * 0.7))
-        tankNode.addChild(body)
-        
-        // Tank barrel (rectangle)
-        let barrel = SKSpriteNode(color: color.withAlphaComponent(0.8), size: CGSize(width: tileSize * 0.2, height: tileSize * 0.5))
-        barrel.position = CGPoint(x: 0, y: tileSize * 0.35)
-        tankNode.addChild(barrel)
-        
-        // Add rainbow animation to body and barrel
-        addRainbowAnimation(to: body, phaseOffset: 0)
-        addRainbowAnimation(to: barrel, phaseOffset: 0.15)
-        
-        // Add shield effect if active
-        if hasShield {
-            let shieldSize = CGSize(width: tileSize * 0.9, height: tileSize * 0.9)
-            let shield = SKShapeNode(circleOfRadius: tileSize * 0.45)
-            shield.strokeColor = SKColor(red: 0.0, green: 1.0, blue: 0.5, alpha: 0.8)
-            shield.fillColor = SKColor(red: 0.0, green: 1.0, blue: 0.5, alpha: 0.2)
-            shield.lineWidth = 3
-            shield.zPosition = 10
-            
-            // Add pulsing animation to shield
-            let fadeIn = SKAction.fadeAlpha(to: 0.8, duration: 0.5)
-            let fadeOut = SKAction.fadeAlpha(to: 0.3, duration: 0.5)
-            let pulse = SKAction.sequence([fadeIn, fadeOut])
-            shield.run(SKAction.repeatForever(pulse))
-            
-            tankNode.addChild(shield)
-        }
-        
-        // Rotate based on direction
-        tankNode.zRotation = CGFloat(direction.angle)
-        
-        return tankNode
+    /// Calculate the shortest rotation difference between two angles
+    private func shortestRotationDifference(from: CGFloat, to: CGFloat) -> CGFloat {
+        var diff = to - from
+        while diff > .pi { diff -= 2 * .pi }
+        while diff < -.pi { diff += 2 * .pi }
+        return diff
     }
     
     // MARK: - Projectile Rendering
@@ -128,40 +163,6 @@ class GameSceneRenderer {
         }
     }
     
-    // MARK: - Power-Up Rendering
-    
-    /// Render all power-ups
-    func renderPowerUps(_ powerUps: [PowerUp], in powerUpsNode: SKNode) {
-        powerUpsNode.removeAllChildren()
-        
-        for powerUp in powerUps {
-            guard powerUp.isActive else { continue }
-            
-            // Create power-up sprite
-            let size = CGSize(width: tileSize * 0.6, height: tileSize * 0.6)
-            let powerUpSprite = SKSpriteNode(color: .white, size: size)
-            powerUpSprite.position = gridPosition(row: powerUp.row, col: powerUp.col)
-            powerUpSprite.zPosition = 3
-            
-            // Set color based on type
-            let colorValues = powerUp.type.color
-            let color = SKColor(red: colorValues.r, green: colorValues.g, blue: colorValues.b, alpha: 1.0)
-            powerUpSprite.color = color
-            
-            // Add pulsing animation
-            let scaleUp = SKAction.scale(to: 1.2, duration: 0.5)
-            let scaleDown = SKAction.scale(to: 0.9, duration: 0.5)
-            let pulse = SKAction.sequence([scaleUp, scaleDown])
-            powerUpSprite.run(SKAction.repeatForever(pulse))
-            
-            // Add rotation animation
-            let rotate = SKAction.rotate(byAngle: .pi * 2, duration: 2.0)
-            powerUpSprite.run(SKAction.repeatForever(rotate))
-            
-            powerUpsNode.addChild(powerUpSprite)
-        }
-    }
-    
     // MARK: - Helper Methods
     
     /// Convert grid coordinates to scene position
@@ -191,5 +192,12 @@ class GameSceneRenderer {
         let repeatForever = SKAction.repeatForever(rainbowSequence)
         
         sprite.run(repeatForever)
+    }
+    
+    // MARK: - Power-Up Rendering
+    
+    /// Render all power-ups
+    func renderPowerUps(_ powerUps: [PowerUp], in powerUpsNode: SKNode) {
+        powerUpRenderer.renderPowerUps(powerUps, in: powerUpsNode)
     }
 }

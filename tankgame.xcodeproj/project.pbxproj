@@ -32,9 +32,12 @@
 				JoystickController.swift,
 				MultiplayerManager.swift,
 				PowerUp.swift,
+				PowerUpRenderer.swift,
 				Projectile.swift,
+				ShieldEffectRenderer.swift,
 				SoundManager.swift,
 				Tank.swift,
+				TankSpriteRenderer.swift,
 			);
 			target = 0AEBC8152EB14C4300890CC1 /* tankgame iOS */;
 		};
@@ -57,9 +60,12 @@
 				JoystickController.swift,
 				MultiplayerManager.swift,
 				PowerUp.swift,
+				PowerUpRenderer.swift,
 				Projectile.swift,
+				ShieldEffectRenderer.swift,
 				SoundManager.swift,
 				Tank.swift,
+				TankSpriteRenderer.swift,
 			);
 			target = 0AEBC8262EB14C4300890CC1 /* tankgame tvOS */;
 		};
@@ -82,9 +88,12 @@
 				JoystickController.swift,
 				MultiplayerManager.swift,
 				PowerUp.swift,
+				PowerUpRenderer.swift,
 				Projectile.swift,
+				ShieldEffectRenderer.swift,
 				SoundManager.swift,
 				Tank.swift,
+				TankSpriteRenderer.swift,
 			);
 			target = 0AEBC8362EB14C4300890CC1 /* tankgame macOS */;
 		};
