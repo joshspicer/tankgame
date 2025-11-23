@@ -99,19 +99,30 @@ class JoystickController {
         let dy = location.y
         let distance = sqrt(dx * dx + dy * dy)
         
-        if distance > 20 {
+        // Improved dead zone - requires 15 points minimum movement
+        if distance > 15 {
             let angle = atan2(dy, dx)
             
-            // Snap to cardinal directions
+            // Snap to 8 directions (cardinal + diagonal)
             let direction: Direction
-            if angle > -.pi/4 && angle <= .pi/4 {
+            let angleDeg = angle * 180 / .pi
+            
+            if angleDeg > -22.5 && angleDeg <= 22.5 {
                 direction = .right
-            } else if angle > .pi/4 && angle <= 3 * .pi/4 {
+            } else if angleDeg > 22.5 && angleDeg <= 67.5 {
+                direction = .upRight
+            } else if angleDeg > 67.5 && angleDeg <= 112.5 {
                 direction = .up
-            } else if angle > 3 * .pi/4 || angle <= -3 * .pi/4 {
+            } else if angleDeg > 112.5 && angleDeg <= 157.5 {
+                direction = .upLeft
+            } else if angleDeg > 157.5 || angleDeg <= -157.5 {
                 direction = .left
-            } else {
+            } else if angleDeg > -157.5 && angleDeg <= -112.5 {
+                direction = .downLeft
+            } else if angleDeg > -112.5 && angleDeg <= -67.5 {
                 direction = .down
+            } else {
+                direction = .downRight
             }
             
             currentDirection = direction
