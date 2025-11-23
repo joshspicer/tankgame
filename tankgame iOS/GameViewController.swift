@@ -179,12 +179,13 @@ class GameViewController: UIViewController {
         }
         
         let seed = UInt32.random(in: 0...UInt32.max)
-        gameState = GameState(seed: seed, playerCount: playerCount, localPlayerIndex: localPlayerIndex)
+        let state = GameState(seed: seed, playerCount: playerCount, localPlayerIndex: localPlayerIndex)
+        gameState = state
         
         multiplayerManager.sendMessage(.roundStart(seed: seed, playerCount: playerCount, hostPlayerIndex: localPlayerIndex, playerAssignments: playerAssignments))
         
         let scene = GameScene.newGameScene()
-        scene.startGame(with: gameState!)
+        scene.startGame(with: state)
         scene.onGameMessage = { [weak self] message in
             self?.handleGameMessage(message)
         }
@@ -235,7 +236,9 @@ class GameViewController: UIViewController {
         
         let seed = UInt32.random(in: 0...UInt32.max)
         gameState?.reset(seed: seed)
-        gameScene?.startGame(with: gameState!)
+        if let state = gameState {
+            gameScene?.startGame(with: state)
+        }
         
         var playerAssignments: [String: Int] = [:]
         playerAssignments[multiplayerManager.session.myPeerID.displayName] = currentState.localPlayerIndex
@@ -342,7 +345,9 @@ extension GameViewController: MultiplayerManagerDelegate {
                 }
             } else {
                 gameState?.reset(seed: seed)
-                gameScene?.startGame(with: gameState!)
+                if let state = gameState {
+                    gameScene?.startGame(with: state)
+                }
             }
             
         case .playerMove(let playerIndex, let row, let col, let direction):
