@@ -110,37 +110,37 @@ class GameScene: SKScene {
         renderGrid()
         renderTanks()
         updateScore()
-        ui.updateStatus("Fight!")
+        ui?.updateStatus("Fight!")
     }
     
     func renderGrid() {
-        guard let state = gameState, let grid = gridNode else { return }
+        guard let state = gameState, let grid = gridNode, renderer != nil else { return }
         renderer.renderGrid(state.grid, in: grid)
     }
     
     func renderTanks() {
-        guard let state = gameState else { return }
+        guard let state = gameState, renderer != nil else { return }
         renderer.renderTanks(state.tanks, tankExploding: tankExploding, in: tankNodes)
     }
     
     func renderTanksWithSmoothing() {
-        guard let state = gameState else { return }
+        guard let state = gameState, renderer != nil else { return }
         renderer.renderTanksWithSmoothing(state.tanks, tankExploding: tankExploding, in: tankNodes, duration: 0.08)
     }
     
     func renderProjectiles() {
-        guard let state = gameState, let projectiles = projectilesNode else { return }
+        guard let state = gameState, let projectiles = projectilesNode, renderer != nil else { return }
         renderer.renderProjectiles(state.projectiles, in: projectiles)
     }
     
     func updateScore() {
         guard let state = gameState else { return }
-        ui.updateScore(wins: state.wins)
+        ui?.updateScore(wins: state.wins)
     }
     
     func showRoundEnd(winner: Int?) {
         guard let state = gameState else { return }
-        ui.showRoundEnd(winner: winner, localPlayerIndex: state.localPlayerIndex)
+        ui?.showRoundEnd(winner: winner, localPlayerIndex: state.localPlayerIndex)
     }
     
     override func update(_ currentTime: TimeInterval) {
