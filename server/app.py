@@ -53,7 +53,6 @@ def create_github_issue(crash_data, user_email=None):
     app_version = crash_data.get('app_version', 'Unknown')
     os_version = crash_data.get('os_version', 'Unknown')
     timestamp = crash_data.get('timestamp', 'Unknown')
-    call_stack = crash_data.get('call_stack', [])
     
     # Create issue title
     title = f"🐛 Crash: {exception_name}"
