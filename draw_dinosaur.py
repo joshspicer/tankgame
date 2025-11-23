@@ -2,6 +2,7 @@
 """
 A simple script that draws a dinosaur and exits.
 """
+import sys
 
 def draw_dinosaur():
     """Draw a dinosaur in ASCII art."""
@@ -18,3 +19,4 @@ def draw_dinosaur():
 if __name__ == "__main__":
     draw_dinosaur()
     print("Roar! 🦖")
+    sys.exit(0)
