@@ -20,3 +20,13 @@ When hosting a game, you can now add AI-controlled bot players:
 AI bots will automatically move towards enemies and shoot when they have a clear line of sight!
 
 ![pewpew.gif](images/pewpew.gif)
+
+## Testing
+
+Basic unit tests for the core game logic are available. Run them with:
+
+```bash
+./run_tests.sh
+```
+
+See [tankgame Tests/README.md](tankgame%20Tests/README.md) for more details.
