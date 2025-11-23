@@ -10,9 +10,9 @@ This repository includes a **fully automated** crash reporting system that captu
 
 3. **Automatic Upload**: Crash reports are automatically uploaded to `https://tankgame.spicer.dev/crash` when they occur or on next app launch.
 
-4. **Server Processing**: The Flask server receives crash reports and triggers the GitHub Actions workflow.
+4. **Direct Issue Creation**: The Flask server receives crash reports and **directly creates GitHub issues** using the GitHub API.
 
-5. **Automatic Issue Creation**: GitHub Actions creates an issue with:
+5. **Automatic Assignment**: Issues are created with:
    - Crash details (exception name, reason, stack trace)
    - App version and OS version
    - Automatic assignment to @copilot
@@ -41,18 +41,11 @@ Located in `tankgame Shared/CrashReporter.swift`, this class:
 Located in `server/`, this Flask application:
 - Receives crash reports via HTTP POST at `/crash` endpoint
 - Validates and processes crash data
-- Triggers GitHub Actions workflow to create issues
+- **Directly creates GitHub issues using the GitHub API**
+- Assigns issues to @copilot
+- Adds appropriate labels (bug, crash-report)
 - Runs as a containerized service with Docker Compose
 - Deployed at `https://tankgame.spicer.dev`
-
-### GitHub Actions Workflow
-
-The workflow file `.github/workflows/crash-report.yml` handles:
-- Receiving crash report data from the server
-- Parsing the JSON crash data
-- Creating a formatted GitHub issue
-- Automatically assigning to @copilot
-- Adding appropriate labels
 
 ## Usage
 
@@ -146,32 +139,6 @@ export GITHUB_TOKEN="your_token"
 python app.py
 ```
 
-### Manual Submission (Optional)
-
-While crash reports are automatically uploaded, you can still submit them manually:
-
-#### Option 1: Using the Python Script
-
-```bash
-# Set your GitHub token
-export GITHUB_TOKEN="your_github_token_here"
-
-# Submit a crash report
-python3 scripts/submit_crash_report.py path/to/crash_report.json
-
-# Optionally include user email
-python3 scripts/submit_crash_report.py path/to/crash_report.json user@example.com
-```
-
-#### Option 2: Manual Workflow Dispatch
-
-1. Go to the Actions tab in GitHub
-2. Select "Process Crash Reports" workflow
-3. Click "Run workflow"
-4. Paste the crash report JSON data
-5. Optionally add a user email
-6. Click "Run workflow"
-
 ## Crash Report Format
 
 Crash reports are saved in JSON format with the following structure:
@@ -221,9 +188,7 @@ The token should be set as an environment variable on the server.
   ↓
 [Flask Server] → Validates & Processes
   ↓
-[GitHub API] → Triggers crash-report.yml workflow
-  ↓
-[GitHub Actions] → Creates Issue & Assigns to @copilot
+[GitHub API] → Directly Creates Issue & Assigns to @copilot
 ```
 
 ## Future Enhancements

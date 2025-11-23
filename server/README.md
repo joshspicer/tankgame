@@ -5,7 +5,9 @@ Flask-based web service for receiving crash reports from the tankgame app and au
 ## Features
 
 - Receives crash reports via HTTP POST endpoint
-- Automatically triggers GitHub Actions workflow to create issues
+- **Directly creates GitHub issues using the GitHub API**
+- Automatically assigns issues to @copilot
+- Adds appropriate labels (bug, crash-report)
 - Containerized with Docker for easy deployment
 - Health check endpoint for monitoring
 - Production-ready with Gunicorn
@@ -15,7 +17,7 @@ Flask-based web service for receiving crash reports from the tankgame app and au
 ### Environment Variables
 
 Required:
-- `GITHUB_TOKEN` - GitHub personal access token with `workflow` and `repo` permissions
+- `GITHUB_TOKEN` - GitHub personal access token with `repo` permissions
 
 Optional:
 - `GITHUB_REPO` - Repository in format `owner/repo` (default: `joshspicer/tankgame`)
