@@ -24,16 +24,17 @@ class GameScene: SKScene {
     var projectilesNode: SKNode?
     
     // Components
-    private var renderer: GameSceneRenderer!
-    private var soundManager: SoundManager!
-    private var explosionEffects: ExplosionEffects!
-    private var joystickController: JoystickController!
-    private var fireButton: FireButton!
-    private var ui: GameSceneUI!
+    var renderer: GameSceneRenderer!
+    var soundManager: SoundManager!
+    var explosionEffects: ExplosionEffects!
+    var joystickController: JoystickController!
+    var fireButton: FireButton!
+    var ui: GameSceneUI!
     
-    // Update timer
-    var lastUpdateTime: TimeInterval = 0
-    var lastMoveTime: TimeInterval = 0
+    #if os(iOS) || os(tvOS)
+    var inputHandler: GameSceneInputHandler!
+    #endif
+    private var updateLoop: GameSceneUpdateLoop!
     
     // Explosion state
     var tankExploding: [Bool] = [false, false, false, false]
@@ -66,42 +67,14 @@ class GameScene: SKScene {
         joystickController = JoystickController()
         fireButton = FireButton()
         ui = GameSceneUI()
+        #if os(iOS) || os(tvOS)
+        inputHandler = GameSceneInputHandler(scene: self)
+        #endif
+        updateLoop = GameSceneUpdateLoop(scene: self)
     }
     
     func setupScene() {
-        // Create grid container (centered)
-        let newGridNode = SKNode()
-        let gridOffset = CGPoint(
-            x: (size.width - CGFloat(gridSize) * tileSize) / 2,
-            y: (size.height - CGFloat(gridSize) * tileSize) / 2 + 50
-        )
-        newGridNode.position = gridOffset
-        addChild(newGridNode)
-        gridNode = newGridNode
-        
-        // Create projectiles container
-        let newProjectilesNode = SKNode()
-        newProjectilesNode.position = gridOffset
-        addChild(newProjectilesNode)
-        projectilesNode = newProjectilesNode
-        
-        // Create tank nodes for all possible players
-        for i in 0..<4 {
-            let tankNode = SKNode()
-            tankNode.position = gridOffset
-            addChild(tankNode)
-            tankNodes[i] = tankNode
-        }
-        
-        // Setup components
-        joystickController.setup(in: self, at: CGPoint(x: 80, y: 100))
-        fireButton.setup(in: self, at: CGPoint(x: size.width - 80, y: 100))
-        ui.setup(in: self, sceneSize: size)
-        
-        // Setup fire button callback
-        fireButton.onTap = { [weak self] in
-            self?.handleShoot()
-        }
+        GameSceneSetup.setupScene(in: self)
     }
     
     func startGame(with state: GameState) {
@@ -144,87 +117,7 @@ class GameScene: SKScene {
     }
     
     override func update(_ currentTime: TimeInterval) {
-        guard let state = gameState else { return }
-        
-        // Handle continuous movement from joystick
-        if let direction = joystickController.currentDirection, !state.isRoundOver() {
-            // Diagonal movement is slightly slower to maintain game balance
-            let moveInterval = direction.isDiagonal ? 0.15 : 0.10
-            
-            if currentTime - lastMoveTime > moveInterval {
-                if state.localTank.move(in: direction, grid: state.grid) {
-                    renderTanksWithSmoothing()
-                    soundManager.playSound("move.wav")
-                    lastMoveTime = currentTime
-                    
-                    // Send position update
-                    let localIndex = state.localPlayerIndex
-                    onGameMessage?(.playerMove(playerIndex: localIndex, row: state.localTank.row, col: state.localTank.col, direction: state.localTank.direction))
-                }
-            }
-        }
-        
-        // Don't update if round is over or any explosion in progress
-        if state.isRoundOver() || tankExploding.contains(true) {
-            return
-        }
-        
-        // Update projectiles
-        if currentTime - lastUpdateTime > 0.05 { // ~20 FPS for projectile updates
-            // Save tank alive state before update
-            let wasAlive = state.tanks.map { $0.isAlive }
-            let tankPositions = state.tanks.map { renderer.gridPosition(row: $0.row, col: $0.col) }
-            
-            state.updateProjectiles()
-            renderProjectiles()
-            
-            // Check which tanks were hit and trigger explosions
-            for i in 0..<state.tanks.count {
-                if wasAlive[i] && !state.tanks[i].isAlive {
-                    soundManager.playSound("hit.wav")
-                    if let tankNode = tankNodes[i] {
-                        let color = renderer.tankColors[i]
-                        explosionEffects.createExplosion(at: tankPositions[i], color: color, in: tankNode) { [weak self] in
-                            self?.tankExploding[i] = false
-                        }
-                        tankExploding[i] = true
-                    }
-                }
-            }
-            
-            // Check if round ended after update
-            if state.isRoundOver() {
-                let winner = state.getWinner()
-                
-                // Wait for explosion to complete before showing round end
-                DispatchQueue.main.asyncAfter(deadline: .now() + 1.0) { [weak self] in
-                    guard let self = self, let state = self.gameState else { return }
-                    
-                    // Update score and play win/lose sound
-                    if let winner = winner {
-                        state.wins[winner] += 1
-                        if winner == state.localPlayerIndex {
-                            self.soundManager.playSound("win.wav")
-                        } else {
-                            self.soundManager.playSound("lose.wav")
-                        }
-                    }
-                    
-                    // Remove tank nodes now that explosion is done
-                    self.renderTanks()
-                    self.showRoundEnd(winner: winner)
-                    self.updateScore()
-                    
-                    // Notify that round ended after a longer delay
-                    DispatchQueue.main.asyncAfter(deadline: .now() + 2.0) { [weak self] in
-                        guard let state = self?.gameState else { return }
-                        self?.onGameMessage?(.readyForNextRound(playerIndex: state.localPlayerIndex))
-                    }
-                }
-            }
-            
-            lastUpdateTime = currentTime
-        }
+        updateLoop.update(currentTime)
     }
 }
 
@@ -233,49 +126,19 @@ class GameScene: SKScene {
 extension GameScene {
 
     override func touchesBegan(_ touches: Set<UITouch>, with event: UIEvent?) {
-        guard gameState != nil else { return }
-        
-        for touch in touches {
-            let location = touch.location(in: self)
-            
-            // Check if touching fire button
-            if fireButton.handleTouch(at: location) {
-                continue
-            }
-            
-            // Check if touching joystick area
-            if joystickController.handleTouchBegan(touch, in: self) {
-                continue
-            }
-        }
+        inputHandler.handleTouchesBegan(touches, with: event)
     }
     
     override func touchesMoved(_ touches: Set<UITouch>, with event: UIEvent?) {
-        for touch in touches {
-            joystickController.handleTouchMoved(touch, in: self)
-        }
+        inputHandler.handleTouchesMoved(touches)
     }
     
     override func touchesEnded(_ touches: Set<UITouch>, with event: UIEvent?) {
-        for touch in touches {
-            joystickController.handleTouchEnded(touch)
-        }
+        inputHandler.handleTouchesEnded(touches)
     }
     
     override func touchesCancelled(_ touches: Set<UITouch>, with event: UIEvent?) {
         touchesEnded(touches, with: event)
-    }
-    
-    func handleShoot() {
-        guard let state = gameState, state.localTank.isAlive else { return }
-        
-        let projectile = state.localTank.shoot()
-        state.projectiles.append(projectile)
-        renderProjectiles()
-        soundManager.playSound("shoot.wav")
-        
-        // Send shoot message
-        onGameMessage?(.playerShoot(playerIndex: state.localPlayerIndex, projectile: projectile))
     }
 }
 #endif
