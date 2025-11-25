@@ -29,6 +29,10 @@ public struct Projectile: Codable {
     }
     
     public func hits(grid: [[GridCell]]) -> Bool {
+        // Guard against empty grid
+        guard !grid.isEmpty, !grid[0].isEmpty else {
+            return false
+        }
         guard row >= 0, row < grid.count,
               col >= 0, col < grid[0].count else {
             return false

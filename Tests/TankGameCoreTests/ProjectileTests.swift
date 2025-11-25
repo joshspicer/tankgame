@@ -123,6 +123,20 @@ final class ProjectileTests: XCTestCase {
         XCTAssertFalse(projectile.hits(grid: grid))
     }
     
+    func testDoesNotHitWithEmptyGrid() {
+        let emptyGrid: [[GridCell]] = []
+        
+        let projectile = Projectile(row: 5, col: 5, direction: .up)
+        XCTAssertFalse(projectile.hits(grid: emptyGrid))
+    }
+    
+    func testDoesNotHitWithEmptyRowGrid() {
+        let emptyRowGrid: [[GridCell]] = [[]]
+        
+        let projectile = Projectile(row: 5, col: 5, direction: .up)
+        XCTAssertFalse(projectile.hits(grid: emptyRowGrid))
+    }
+    
     func testDoesNotHitOutOfBounds() {
         let grid = createEmptyGrid(size: 10)
         

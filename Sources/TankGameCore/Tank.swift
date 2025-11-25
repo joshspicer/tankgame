@@ -21,6 +21,11 @@ public struct Tank: Codable {
     }
     
     public mutating func move(in direction: Direction, grid: [[GridCell]]) -> Bool {
+        // Guard against empty grid
+        guard !grid.isEmpty, !grid[0].isEmpty else {
+            return false
+        }
+        
         let offset = direction.offset
         let newRow = row + offset.row
         let newCol = col + offset.col

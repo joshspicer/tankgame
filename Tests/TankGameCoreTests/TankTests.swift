@@ -136,6 +136,28 @@ final class TankTests: XCTestCase {
         XCTAssertEqual(tank.col, 9)
     }
     
+    func testMoveWithEmptyGrid() {
+        var tank = Tank(row: 5, col: 5)
+        let emptyGrid: [[GridCell]] = []
+        
+        let moved = tank.move(in: .up, grid: emptyGrid)
+        
+        XCTAssertFalse(moved)
+        XCTAssertEqual(tank.row, 5)
+        XCTAssertEqual(tank.col, 5)
+    }
+    
+    func testMoveWithEmptyRowGrid() {
+        var tank = Tank(row: 5, col: 5)
+        let emptyRowGrid: [[GridCell]] = [[]]
+        
+        let moved = tank.move(in: .up, grid: emptyRowGrid)
+        
+        XCTAssertFalse(moved)
+        XCTAssertEqual(tank.row, 5)
+        XCTAssertEqual(tank.col, 5)
+    }
+    
     // MARK: - Wall Collision Tests
     
     func testMoveBlockedByWall() {
