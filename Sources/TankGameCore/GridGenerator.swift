@@ -64,7 +64,7 @@ public struct SeededRandomNumberGenerator: RandomNumberGenerator {
     }
     
     public mutating func nextDouble() -> Double {
-        // Note: next() returns UInt64(state) where state is UInt32, so value is always <= UInt32.max
+        // Convert UInt64(UInt32) to [0.0, 1.0] range by dividing by UInt32.max
         let value = next()
         return Double(value) / Double(UInt32.max)
     }
