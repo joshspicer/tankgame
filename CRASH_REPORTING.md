@@ -126,6 +126,12 @@ CrashReporterTests.testExportCrashReports()
 
 // Clear all crash reports
 CrashReporterTests.clearAllReports()
+
+// Validate all crash reports have required fields
+let allValid = CrashReporterTests.runValidationTests()
+
+// Validate a specific crash report
+let (isValid, missingFields) = CrashReporterTests.validateCrashReport(report)
 #endif
 ```
 

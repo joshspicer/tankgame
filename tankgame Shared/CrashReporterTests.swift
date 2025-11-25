@@ -96,5 +96,79 @@ class CrashReporterTests {
             print("  Timestamp: \(report["timestamp"] ?? "Unknown")")
         }
     }
+    
+    /// Validate that a crash report has all required fields for issue tracking
+    /// - Parameter report: The crash report dictionary to validate
+    /// - Returns: A tuple of (isValid, missingFields)
+    static func validateCrashReport(_ report: [String: Any]) -> (isValid: Bool, missingFields: [String]) {
+        let requiredFields = [
+            "timestamp",
+            "exception_name",
+            "exception_reason",
+            "call_stack",
+            "app_version",
+            "app_build",
+            "os_version",
+            "device_model"
+        ]
+        
+        var missingFields: [String] = []
+        for field in requiredFields {
+            if let value = report[field] {
+                // Check for empty strings
+                if let stringValue = value as? String, stringValue.isEmpty {
+                    missingFields.append(field)
+                }
+                // Check for empty arrays
+                else if let arrayValue = value as? [Any], arrayValue.isEmpty {
+                    missingFields.append(field)
+                }
+            } else {
+                missingFields.append(field)
+            }
+        }
+        
+        return (missingFields.isEmpty, missingFields)
+    }
+    
+    /// Run validation tests on all crash reports
+    /// - Parameter createIfEmpty: Whether to create a sample report if none exist (default: true)
+    /// - Returns: True if all reports pass validation
+    static func runValidationTests(createIfEmpty: Bool = true) -> Bool {
+        print("=== Running Crash Report Validation Tests ===")
+        
+        var reports = CrashReporter.shared.getAllCrashReports()
+        
+        if reports.isEmpty && createIfEmpty {
+            print("No crash reports to validate. Creating a test report...")
+            createSampleCrashReport()
+            // Refresh reports list after creating sample
+            reports = CrashReporter.shared.getAllCrashReports()
+            if reports.isEmpty {
+                print("✗ Failed to create sample crash report")
+                return false
+            }
+        } else if reports.isEmpty {
+            print("No crash reports to validate.")
+            return true
+        }
+        
+        var allPassed = true
+        for (index, report) in reports.enumerated() {
+            let (isValid, missingFields) = validateCrashReport(report)
+            if isValid {
+                print("✓ Report \(index + 1): Valid")
+            } else {
+                print("✗ Report \(index + 1): Invalid - missing fields: \(missingFields.joined(separator: ", "))")
+                allPassed = false
+            }
+        }
+        
+        print("\n=== Validation Summary ===")
+        print("Total reports: \(reports.count)")
+        print("Result: \(allPassed ? "All tests passed ✓" : "Some tests failed ✗")")
+        
+        return allPassed
+    }
 }
 #endif
