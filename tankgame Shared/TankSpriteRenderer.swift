@@ -68,6 +68,9 @@ class TankSpriteRenderer {
     
     /// Add rainbow color animation to a sprite
     private func addRainbowAnimation(to sprite: SKSpriteNode, phaseOffset: CGFloat = 0) {
+        // Only apply rainbow animation if rainbow mode is enabled
+        guard RainbowModeManager.shared.isEnabled else { return }
+        
         let animationDuration: TimeInterval = 3.0
         let numberOfColors = 12
         
@@ -89,6 +92,9 @@ class TankSpriteRenderer {
     
     /// Add rainbow color animation to a shape node
     private func addRainbowAnimationToShape(_ shape: SKShapeNode, baseColor: SKColor, phaseOffset: CGFloat = 0) {
+        // Only apply rainbow animation if rainbow mode is enabled
+        guard RainbowModeManager.shared.isEnabled else { return }
+        
         let animationDuration: TimeInterval = 3.0
         let numberOfColors = 12
         
