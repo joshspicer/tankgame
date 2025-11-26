@@ -16,10 +16,14 @@ class GameSceneRenderer {
     // Tank colors for up to 4 players
     let tankColors: [SKColor] = [.blue, .red, .green, .orange]
     
+    // Rocket mode toggle - when enabled, projectiles render as rockets with fire trails
+    var rocketModeEnabled: Bool = true
+    
     // Specialized renderers
     private let gridRenderer: GridRenderer
     private let tankRenderer: TankRenderer
     private let projectileRenderer: ProjectileRenderer
+    private let rocketProjectileRenderer: RocketProjectileRenderer
     
     init(tileSize: CGFloat, gridSize: Int) {
         self.tileSize = tileSize
@@ -27,6 +31,7 @@ class GameSceneRenderer {
         self.gridRenderer = GridRenderer(tileSize: tileSize, gridSize: gridSize)
         self.tankRenderer = TankRenderer(tileSize: tileSize, gridSize: gridSize)
         self.projectileRenderer = ProjectileRenderer(tileSize: tileSize, gridSize: gridSize)
+        self.rocketProjectileRenderer = RocketProjectileRenderer(tileSize: tileSize, gridSize: gridSize)
     }
     
     // MARK: - Grid Rendering
@@ -50,9 +55,13 @@ class GameSceneRenderer {
     
     // MARK: - Projectile Rendering
     
-    /// Render all projectiles
+    /// Render all projectiles (uses rocket mode if enabled)
     func renderProjectiles(_ projectiles: [Projectile], in projectilesNode: SKNode) {
-        projectileRenderer.renderProjectiles(projectiles, in: projectilesNode)
+        if rocketModeEnabled {
+            rocketProjectileRenderer.renderRockets(projectiles, in: projectilesNode)
+        } else {
+            projectileRenderer.renderProjectiles(projectiles, in: projectilesNode)
+        }
     }
     
     // MARK: - Helper Methods
