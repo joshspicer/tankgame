@@ -12,12 +12,15 @@ class RocketProjectileRenderer {
     let tileSize: CGFloat
     let gridSize: Int
     
-    private let animationHelper: RainbowAnimationHelper
+    // Animation constants
+    private let smokeDriftRange: CGFloat = 0.05  // Relative to tileSize
+    private let smokeDriftDuration: TimeInterval = 0.2
+    private let glowWidthMax: CGFloat = 3.0
+    private let glowWidthMin: CGFloat = 1.0
     
     init(tileSize: CGFloat, gridSize: Int) {
         self.tileSize = tileSize
         self.gridSize = gridSize
-        self.animationHelper = RainbowAnimationHelper()
     }
     
     /// Render all projectiles as rockets with fire trails
@@ -126,6 +129,8 @@ class RocketProjectileRenderer {
     
     /// Add smoke trail particles
     private func addSmokeTrail(to node: SKNode, at position: CGPoint) {
+        let driftAmount = tileSize * smokeDriftRange
+        
         // Create multiple smoke particles
         for i in 0..<3 {
             let smoke = SKShapeNode(circleOfRadius: tileSize * 0.08)
@@ -145,9 +150,9 @@ class RocketProjectileRenderer {
             let fadeSequence = SKAction.sequence([fadeOut, fadeIn])
             smoke.run(SKAction.repeatForever(fadeSequence))
             
-            // Slight drift animation
-            let driftLeft = SKAction.moveBy(x: CGFloat.random(in: -3...3), y: 0, duration: 0.2)
-            let driftRight = SKAction.moveBy(x: CGFloat.random(in: -3...3), y: 0, duration: 0.2)
+            // Slight drift animation scaled to tile size
+            let driftLeft = SKAction.moveBy(x: CGFloat.random(in: -driftAmount...driftAmount), y: 0, duration: smokeDriftDuration)
+            let driftRight = SKAction.moveBy(x: CGFloat.random(in: -driftAmount...driftAmount), y: 0, duration: smokeDriftDuration)
             let driftSequence = SKAction.sequence([driftLeft, driftRight])
             smoke.run(SKAction.repeatForever(driftSequence))
         }
@@ -155,9 +160,11 @@ class RocketProjectileRenderer {
     
     /// Add animation to rocket body
     private func addRocketAnimation(to shape: SKShapeNode) {
-        // Pulsing glow effect
-        let glowUp = SKAction.run { shape.glowWidth = 3 }
-        let glowDown = SKAction.run { shape.glowWidth = 1 }
+        // Pulsing glow effect using configurable constants
+        let maxGlow = glowWidthMax
+        let minGlow = glowWidthMin
+        let glowUp = SKAction.run { shape.glowWidth = maxGlow }
+        let glowDown = SKAction.run { shape.glowWidth = minGlow }
         let wait = SKAction.wait(forDuration: 0.15)
         let glowSequence = SKAction.sequence([glowUp, wait, glowDown, wait])
         shape.run(SKAction.repeatForever(glowSequence))
