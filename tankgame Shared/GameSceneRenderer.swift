@@ -16,6 +16,12 @@ class GameSceneRenderer {
     // Tank colors for up to 4 players
     let tankColors: [SKColor] = [.blue, .red, .green, .orange]
     
+    // Game mode for rendering
+    var gameMode: GameMode {
+        get { tankRenderer.gameMode }
+        set { tankRenderer.gameMode = newValue }
+    }
+    
     // Specialized renderers
     private let gridRenderer: GridRenderer
     private let tankRenderer: TankRenderer

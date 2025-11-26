@@ -26,9 +26,10 @@ extension GameViewController {
         let seed = UInt32.random(in: 0...UInt32.max)
         gameState = GameState(seed: seed, playerCount: playerCount, localPlayerIndex: localPlayerIndex)
         
-        multiplayerManager.sendMessage(.roundStart(seed: seed, playerCount: playerCount, hostPlayerIndex: localPlayerIndex, playerAssignments: playerAssignments))
+        multiplayerManager.sendMessage(.roundStart(seed: seed, playerCount: playerCount, hostPlayerIndex: localPlayerIndex, playerAssignments: playerAssignments, gameMode: gameMode))
         
         let scene = GameScene.newGameScene()
+        scene.gameMode = gameMode
         scene.startGame(with: gameState!)
         scene.onGameMessage = { [weak self] message in
             self?.handleGameMessage(message)
@@ -69,6 +70,6 @@ extension GameViewController {
             playerAssignments[peer.displayName] = index
         }
         
-        multiplayerManager.sendMessage(.roundStart(seed: seed, playerCount: currentState.tanks.count, hostPlayerIndex: currentState.localPlayerIndex, playerAssignments: playerAssignments))
+        multiplayerManager.sendMessage(.roundStart(seed: seed, playerCount: currentState.tanks.count, hostPlayerIndex: currentState.localPlayerIndex, playerAssignments: playerAssignments, gameMode: gameMode))
     }
 }

@@ -15,14 +15,19 @@ class TankRenderer {
     // Tank colors for up to 4 players
     let tankColors: [SKColor] = [.blue, .red, .green, .orange]
     
-    // Tank sprite renderer
+    // Current game mode for rendering
+    var gameMode: GameMode = .tank
+    
+    // Sprite renderers
     private let tankSpriteRenderer: TankSpriteRenderer
+    private let racoonSpriteRenderer: RacoonSpriteRenderer
     private let animationHelper: RainbowAnimationHelper
     
     init(tileSize: CGFloat, gridSize: Int) {
         self.tileSize = tileSize
         self.gridSize = gridSize
         self.tankSpriteRenderer = TankSpriteRenderer(tileSize: tileSize)
+        self.racoonSpriteRenderer = RacoonSpriteRenderer(tileSize: tileSize)
         self.animationHelper = RainbowAnimationHelper()
     }
     
@@ -89,8 +94,18 @@ class TankRenderer {
         return diff
     }
     
-    /// Create a tank sprite node
+    /// Create a sprite node based on the current game mode
     private func createTankNode(color: SKColor, direction: Direction) -> SKNode {
+        switch gameMode {
+        case .tank:
+            return createTankSprite(color: color, direction: direction)
+        case .racoon:
+            return racoonSpriteRenderer.createRacoonNode(color: color, direction: direction)
+        }
+    }
+    
+    /// Create a tank sprite node
+    private func createTankSprite(color: SKColor, direction: Direction) -> SKNode {
         let tankNode = SKNode()
         
         // Tank body (square)

@@ -14,8 +14,8 @@ extension GameViewController {
     
     func handleReceivedMessage(_ message: GameMessage, from peerID: MCPeerID) {
         switch message {
-        case .roundStart(let seed, let playerCount, let hostPlayerIndex, let playerAssignments):
-            handleRoundStartMessage(seed: seed, playerCount: playerCount, hostPlayerIndex: hostPlayerIndex, playerAssignments: playerAssignments)
+        case .roundStart(let seed, let playerCount, let hostPlayerIndex, let playerAssignments, let gameMode):
+            handleRoundStartMessage(seed: seed, playerCount: playerCount, hostPlayerIndex: hostPlayerIndex, playerAssignments: playerAssignments, gameMode: gameMode)
             
         case .playerMove(let playerIndex, let row, let col, let direction):
             handlePlayerMoveMessage(playerIndex: playerIndex, row: row, col: col, direction: direction)
@@ -32,12 +32,13 @@ extension GameViewController {
         }
     }
     
-    private func handleRoundStartMessage(seed: UInt32, playerCount: Int, hostPlayerIndex: Int, playerAssignments: [String: Int]) {
+    private func handleRoundStartMessage(seed: UInt32, playerCount: Int, hostPlayerIndex: Int, playerAssignments: [String: Int], gameMode: GameMode) {
         if gameState == nil {
             let myName = multiplayerManager.session.myPeerID.displayName
             let localPlayerIndex = playerAssignments[myName] ?? 1
             
             gameState = GameState(seed: seed, playerCount: playerCount, localPlayerIndex: localPlayerIndex)
+            self.gameMode = gameMode
             
             DispatchQueue.main.async { [weak self] in
                 guard let self = self, let state = self.gameState else { return }
@@ -52,6 +53,7 @@ extension GameViewController {
                 }
                 
                 let scene = GameScene.newGameScene()
+                scene.gameMode = self.gameMode
                 scene.startGame(with: state)
                 scene.onGameMessage = { [weak self] msg in
                     self?.handleGameMessage(msg)
@@ -66,6 +68,8 @@ extension GameViewController {
         } else {
             guard let state = gameState else { return }
             state.reset(seed: seed)
+            self.gameMode = gameMode
+            gameScene?.gameMode = gameMode
             gameScene?.startGame(with: state)
         }
     }

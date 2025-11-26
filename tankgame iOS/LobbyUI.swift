@@ -24,12 +24,19 @@ class LobbyUI {
     private(set) var instructionsLabel: UILabel!
     private(set) var emptyStateLabel: UILabel!
     private(set) var activityIndicator: UIActivityIndicatorView!
+    private(set) var gameModeButton: UIButton!
+    private(set) var titleLabel: UILabel!
+    private(set) var tankEmojiLabel: UILabel!
+    
+    // Current game mode
+    var currentGameMode: GameMode = .tank
     
     // Callbacks
     var onHostTapped: (() -> Void)?
     var onJoinTapped: (() -> Void)?
     var onCancelTapped: (() -> Void)?
     var onStartGameTapped: (() -> Void)?
+    var onGameModeChanged: ((GameMode) -> Void)?
     
     func setup(in parentView: UIView) {
         // Create lobby view
@@ -49,7 +56,7 @@ class LobbyUI {
         lobbyView.layer.insertSublayer(gradientLayer, at: 0)
         
         // Title label
-        let titleLabel = UILabel()
+        titleLabel = UILabel()
         titleLabel.text = "TANK GAME"
         titleLabel.font = .systemFont(ofSize: 48, weight: .black)
         titleLabel.textAlignment = .center
@@ -58,7 +65,7 @@ class LobbyUI {
         lobbyView.addSubview(titleLabel)
         
         // Tank emoji below title
-        let tankEmojiLabel = UILabel()
+        tankEmojiLabel = UILabel()
         tankEmojiLabel.text = "🎯"
         tankEmojiLabel.font = .systemFont(ofSize: 60)
         tankEmojiLabel.textAlignment = .center
@@ -84,6 +91,11 @@ class LobbyUI {
         instructionsLabel.textColor = .tertiaryLabel
         instructionsLabel.translatesAutoresizingMaskIntoConstraints = false
         lobbyView.addSubview(instructionsLabel)
+        
+        // Game mode toggle button
+        gameModeButton = createButton(title: "Tank Mode", backgroundColor: .systemPurple, icon: "🎯")
+        gameModeButton.addTarget(self, action: #selector(gameModeButtonTapped), for: .touchUpInside)
+        lobbyView.addSubview(gameModeButton)
         
         // Host button
         hostButton = createButton(title: "Host Game", backgroundColor: .systemBlue, icon: "🎯")
@@ -155,7 +167,7 @@ class LobbyUI {
         emptyStateLabel.translatesAutoresizingMaskIntoConstraints = false
         lobbyView.addSubview(emptyStateLabel)
         
-        setupConstraints(titleLabel: titleLabel, tankEmojiLabel: tankEmojiLabel)
+        setupConstraints()
     }
     
     private func createButton(title: String, backgroundColor: UIColor, icon: String) -> UIButton {
@@ -198,23 +210,28 @@ class LobbyUI {
         return button
     }
     
-    private func setupConstraints(titleLabel: UILabel, tankEmojiLabel: UILabel) {
+    private func setupConstraints() {
         NSLayoutConstraint.activate([
-            tankEmojiLabel.topAnchor.constraint(equalTo: lobbyView.safeAreaLayoutGuide.topAnchor, constant: 60),
+            tankEmojiLabel.topAnchor.constraint(equalTo: lobbyView.safeAreaLayoutGuide.topAnchor, constant: 40),
             tankEmojiLabel.centerXAnchor.constraint(equalTo: lobbyView.centerXAnchor),
             
-            titleLabel.topAnchor.constraint(equalTo: tankEmojiLabel.bottomAnchor, constant: 16),
+            titleLabel.topAnchor.constraint(equalTo: tankEmojiLabel.bottomAnchor, constant: 12),
             titleLabel.centerXAnchor.constraint(equalTo: lobbyView.centerXAnchor),
             
-            statusLabel.topAnchor.constraint(equalTo: titleLabel.bottomAnchor, constant: 16),
+            statusLabel.topAnchor.constraint(equalTo: titleLabel.bottomAnchor, constant: 12),
             statusLabel.leadingAnchor.constraint(equalTo: lobbyView.leadingAnchor, constant: 30),
             statusLabel.trailingAnchor.constraint(equalTo: lobbyView.trailingAnchor, constant: -30),
             
-            instructionsLabel.topAnchor.constraint(equalTo: statusLabel.bottomAnchor, constant: 12),
+            instructionsLabel.topAnchor.constraint(equalTo: statusLabel.bottomAnchor, constant: 8),
             instructionsLabel.leadingAnchor.constraint(equalTo: lobbyView.leadingAnchor, constant: 30),
             instructionsLabel.trailingAnchor.constraint(equalTo: lobbyView.trailingAnchor, constant: -30),
             
-            hostButton.topAnchor.constraint(equalTo: instructionsLabel.bottomAnchor, constant: 50),
+            gameModeButton.topAnchor.constraint(equalTo: instructionsLabel.bottomAnchor, constant: 30),
+            gameModeButton.centerXAnchor.constraint(equalTo: lobbyView.centerXAnchor),
+            gameModeButton.widthAnchor.constraint(equalToConstant: 200),
+            gameModeButton.heightAnchor.constraint(equalToConstant: 44),
+            
+            hostButton.topAnchor.constraint(equalTo: gameModeButton.bottomAnchor, constant: 20),
             hostButton.centerXAnchor.constraint(equalTo: lobbyView.centerXAnchor),
             hostButton.widthAnchor.constraint(equalToConstant: 240),
             hostButton.heightAnchor.constraint(equalToConstant: 56),
@@ -272,11 +289,47 @@ class LobbyUI {
         onStartGameTapped?()
     }
     
+    @objc private func gameModeButtonTapped() {
+        // Toggle game mode
+        currentGameMode = currentGameMode == .tank ? .racoon : .tank
+        updateGameModeUI()
+        onGameModeChanged?(currentGameMode)
+    }
+    
+    /// Update UI elements based on current game mode
+    private func updateGameModeUI() {
+        // Update button appearance
+        updateButtonContent(gameModeButton, title: "\(currentGameMode.displayName) Mode", icon: currentGameMode.emoji)
+        
+        // Update title and emoji
+        switch currentGameMode {
+        case .tank:
+            titleLabel.text = "TANK GAME"
+            tankEmojiLabel.text = "🎯"
+        case .racoon:
+            titleLabel.text = "RACOON GAME"
+            tankEmojiLabel.text = "🦝"
+        }
+    }
+    
+    /// Update button content (icon and title)
+    private func updateButtonContent(_ button: UIButton, title: String, icon: String) {
+        if let stackView = button.subviews.first(where: { $0 is UIStackView }) as? UIStackView {
+            if let iconLabel = stackView.arrangedSubviews.first as? UILabel {
+                iconLabel.text = icon
+            }
+            if let textLabel = stackView.arrangedSubviews.last as? UILabel {
+                textLabel.text = title
+            }
+        }
+    }
+    
     /// Reset lobby to initial state
     func reset() {
         hostButton.isHidden = false
         joinButton.isHidden = false
         instructionsLabel.isHidden = false
+        gameModeButton.isHidden = false
         cancelButton.isHidden = true
         startGameButton.isHidden = true
         connectedPlayersView.isHidden = true

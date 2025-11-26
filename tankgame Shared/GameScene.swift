@@ -14,6 +14,13 @@ class GameScene: SKScene {
     var gameState: GameState?
     var onGameMessage: ((GameMessage) -> Void)?
     
+    // Game mode (tank or racoon)
+    var gameMode: GameMode = .tank {
+        didSet {
+            renderer?.gameMode = gameMode
+        }
+    }
+    
     // Constants
     let tileSize: CGFloat = 64
     let gridSize = 8
