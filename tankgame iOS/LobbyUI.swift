@@ -358,5 +358,6 @@ class LobbyUI {
         emptyStateLabel.isHidden = true
         activityIndicator.stopAnimating()
         statusLabel.text = "Choose an option to start"
+        updateRainbowModeButton()
     }
 }

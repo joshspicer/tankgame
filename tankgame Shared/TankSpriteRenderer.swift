@@ -10,9 +10,11 @@ import SpriteKit
 /// Handles tank sprite creation and rendering
 class TankSpriteRenderer {
     let tileSize: CGFloat
+    private let animationHelper: RainbowAnimationHelper
     
     init(tileSize: CGFloat) {
         self.tileSize = tileSize
+        self.animationHelper = RainbowAnimationHelper()
     }
     
     /// Create a tank sprite node with improved visual details
@@ -51,66 +53,16 @@ class TankSpriteRenderer {
         muzzle.position = CGPoint(x: 0, y: tileSize * 0.56)
         tankNode.addChild(muzzle)
         
-        // Add rainbow animation to all colored parts (only if rainbow mode is enabled)
-        if RainbowModeSettings.shared.isEnabled {
-            addRainbowAnimation(to: leftTread, phaseOffset: 0)
-            addRainbowAnimation(to: rightTread, phaseOffset: 0)
-            addRainbowAnimation(to: body, phaseOffset: 0.1)
-            addRainbowAnimation(to: barrel, phaseOffset: 0.2)
-            
-            // Add rainbow animation to turret base (for SKShapeNode, we need a different approach)
-            addRainbowAnimationToShape(turretBase, baseColor: color, phaseOffset: 0.15)
-        }
+        // Add rainbow animation to all colored parts (uses RainbowAnimationHelper which checks settings)
+        animationHelper.addRainbowAnimation(to: leftTread, phaseOffset: 0)
+        animationHelper.addRainbowAnimation(to: rightTread, phaseOffset: 0)
+        animationHelper.addRainbowAnimation(to: body, phaseOffset: 0.1)
+        animationHelper.addRainbowAnimation(to: barrel, phaseOffset: 0.2)
+        animationHelper.addRainbowAnimation(to: turretBase, baseColor: color, phaseOffset: 0.15)
         
         // Rotate based on direction
         tankNode.zRotation = CGFloat(direction.angle)
         
         return tankNode
-    }
-    
-    /// Add rainbow color animation to a sprite
-    private func addRainbowAnimation(to sprite: SKSpriteNode, phaseOffset: CGFloat = 0) {
-        let animationDuration: TimeInterval = 3.0
-        let numberOfColors = 12
-        
-        var colorActions: [SKAction] = []
-        
-        // Create a smooth rainbow by cycling through hue values
-        for i in 0...numberOfColors {
-            let hue = (CGFloat(i) / CGFloat(numberOfColors) + phaseOffset).truncatingRemainder(dividingBy: 1.0)
-            let color = SKColor(hue: hue, saturation: 0.9, brightness: 0.9, alpha: 1.0)
-            let colorAction = SKAction.colorize(with: color, colorBlendFactor: 1.0, duration: animationDuration / Double(numberOfColors))
-            colorActions.append(colorAction)
-        }
-        
-        let rainbowSequence = SKAction.sequence(colorActions)
-        let repeatForever = SKAction.repeatForever(rainbowSequence)
-        
-        sprite.run(repeatForever)
-    }
-    
-    /// Add rainbow color animation to a shape node
-    private func addRainbowAnimationToShape(_ shape: SKShapeNode, baseColor: SKColor, phaseOffset: CGFloat = 0) {
-        let animationDuration: TimeInterval = 3.0
-        let numberOfColors = 12
-        
-        var colorActions: [SKAction] = []
-        
-        // Create a smooth rainbow by cycling through hue values
-        for i in 0...numberOfColors {
-            let hue = (CGFloat(i) / CGFloat(numberOfColors) + phaseOffset).truncatingRemainder(dividingBy: 1.0)
-            let color = SKColor(hue: hue, saturation: 0.9, brightness: 0.9, alpha: 0.9)
-            let colorAction = SKAction.run {
-                shape.fillColor = color
-                shape.strokeColor = color.withAlphaComponent(0.5)
-            }
-            let waitAction = SKAction.wait(forDuration: animationDuration / Double(numberOfColors))
-            colorActions.append(SKAction.sequence([colorAction, waitAction]))
-        }
-        
-        let rainbowSequence = SKAction.sequence(colorActions)
-        let repeatForever = SKAction.repeatForever(rainbowSequence)
-        
-        shape.run(repeatForever)
     }
 }
