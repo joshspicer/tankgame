@@ -20,6 +20,7 @@ class GameSceneRenderer {
     private let gridRenderer: GridRenderer
     private let tankRenderer: TankRenderer
     private let projectileRenderer: ProjectileRenderer
+    private let dinosaurRenderer: DinosaurRenderer
     
     init(tileSize: CGFloat, gridSize: Int) {
         self.tileSize = tileSize
@@ -27,6 +28,7 @@ class GameSceneRenderer {
         self.gridRenderer = GridRenderer(tileSize: tileSize, gridSize: gridSize)
         self.tankRenderer = TankRenderer(tileSize: tileSize, gridSize: gridSize)
         self.projectileRenderer = ProjectileRenderer(tileSize: tileSize, gridSize: gridSize)
+        self.dinosaurRenderer = DinosaurRenderer(tileSize: tileSize, gridSize: gridSize)
     }
     
     // MARK: - Grid Rendering
@@ -53,6 +55,23 @@ class GameSceneRenderer {
     /// Render all projectiles
     func renderProjectiles(_ projectiles: [Projectile], in projectilesNode: SKNode) {
         projectileRenderer.renderProjectiles(projectiles, in: projectilesNode)
+    }
+    
+    // MARK: - Dinosaur Rendering
+    
+    /// Render all dinosaurs
+    func renderDinosaurs(_ dinosaurs: [Dinosaur], in dinosaurNode: SKNode) {
+        dinosaurRenderer.renderDinosaurs(dinosaurs, in: dinosaurNode)
+    }
+    
+    /// Render all dinosaurs with smooth animation
+    func renderDinosaursWithSmoothing(_ dinosaurs: [Dinosaur], existingNodes: [SKNode], in dinosaurNode: SKNode, duration: TimeInterval) {
+        dinosaurRenderer.renderDinosaursWithSmoothing(dinosaurs, existingNodes: existingNodes, in: dinosaurNode, duration: duration)
+    }
+    
+    /// Get dinosaur position for explosion effects
+    func dinosaurPosition(row: Int, col: Int) -> CGPoint {
+        return dinosaurRenderer.gridPosition(row: row, col: col)
     }
     
     // MARK: - Helper Methods

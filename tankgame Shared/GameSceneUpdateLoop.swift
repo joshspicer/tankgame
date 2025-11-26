@@ -13,6 +13,7 @@ class GameSceneUpdateLoop {
     
     var lastUpdateTime: TimeInterval = 0
     var lastMoveTime: TimeInterval = 0
+    var lastDinosaurMoveTime: TimeInterval = 0
     
     init(scene: GameScene) {
         self.scene = scene
@@ -33,6 +34,12 @@ class GameSceneUpdateLoop {
         if currentTime - lastUpdateTime > 0.05 { // ~20 FPS for projectile updates
             updateProjectiles(state: state)
             lastUpdateTime = currentTime
+        }
+        
+        // Update dinosaur AI movement (slower than projectiles)
+        if currentTime - lastDinosaurMoveTime > 0.4 { // Dinosaurs move every 0.4 seconds
+            updateDinosaurs(state: state)
+            lastDinosaurMoveTime = currentTime
         }
     }
     
@@ -64,7 +71,11 @@ class GameSceneUpdateLoop {
         let wasAlive = state.tanks.map { $0.isAlive }
         let tankPositions = state.tanks.map { scene.renderer.gridPosition(row: $0.row, col: $0.col) }
         
-        state.updateProjectiles()
+        // Save dinosaur alive state before update
+        let dinosaursWereAlive = state.dinosaurs.map { $0.isAlive }
+        let dinosaurPositions = state.dinosaurs.map { scene.renderer.dinosaurPosition(row: $0.row, col: $0.col) }
+        
+        let hitDinosaurIndices = state.updateProjectiles()
         scene.renderProjectiles()
         
         // Check which tanks were hit and trigger explosions
@@ -74,7 +85,46 @@ class GameSceneUpdateLoop {
             }
         }
         
+        // Check which dinosaurs were hit and trigger explosions
+        for i in hitDinosaurIndices {
+            if dinosaursWereAlive[i] && !state.dinosaurs[i].isAlive {
+                triggerDinosaurExplosion(dinosaurIndex: i, position: dinosaurPositions[i])
+            }
+        }
+        
+        // Re-render dinosaurs if any were hit
+        if !hitDinosaurIndices.isEmpty {
+            scene.renderDinosaurs()
+        }
+        
         // Check if round ended after update
+        if state.isRoundOver() {
+            handleRoundEnd()
+        }
+    }
+    
+    private func updateDinosaurs(state: GameState) {
+        guard let scene = scene else { return }
+        
+        // Save tank alive state before dinosaur collision check
+        let wasAlive = state.tanks.map { $0.isAlive }
+        let tankPositions = state.tanks.map { scene.renderer.gridPosition(row: $0.row, col: $0.col) }
+        
+        // Move dinosaurs
+        state.updateDinosaurs()
+        scene.renderDinosaursWithSmoothing()
+        
+        // Check for dinosaur-tank collisions
+        let hitTankIndices = state.checkDinosaurTankCollisions()
+        
+        // Trigger explosions for tanks hit by dinosaurs
+        for i in hitTankIndices {
+            if wasAlive[i] && !state.tanks[i].isAlive {
+                triggerTankExplosion(tankIndex: i, position: tankPositions[i])
+            }
+        }
+        
+        // Check if round ended after dinosaur collision
         if state.isRoundOver() {
             handleRoundEnd()
         }
@@ -89,6 +139,21 @@ class GameSceneUpdateLoop {
             scene?.tankExploding[tankIndex] = false
         }
         scene.tankExploding[tankIndex] = true
+    }
+    
+    private func triggerDinosaurExplosion(dinosaurIndex: Int, position: CGPoint) {
+        guard let scene = scene, let dinoNode = scene.dinosaurNode else { return }
+        
+        scene.soundManager.playSound("hit.wav")
+        // Use green color for dinosaur explosions
+        scene.explosionEffects.createExplosion(at: position, color: .systemGreen, in: dinoNode) { [weak scene] in
+            if dinosaurIndex < scene?.dinosaurExploding.count ?? 0 {
+                scene?.dinosaurExploding[dinosaurIndex] = false
+            }
+        }
+        if dinosaurIndex < scene.dinosaurExploding.count {
+            scene.dinosaurExploding[dinosaurIndex] = true
+        }
     }
     
     private func handleRoundEnd() {
@@ -111,6 +176,7 @@ class GameSceneUpdateLoop {
             
             // Remove tank nodes now that explosion is done
             scene.renderTanks()
+            scene.renderDinosaurs()
             scene.showRoundEnd(winner: winner)
             scene.updateScore()
             

@@ -28,6 +28,12 @@ class GameSceneSetup {
         scene.addChild(newProjectilesNode)
         scene.projectilesNode = newProjectilesNode
         
+        // Create dinosaur container
+        let newDinosaurNode = SKNode()
+        newDinosaurNode.position = gridOffset
+        scene.addChild(newDinosaurNode)
+        scene.dinosaurNode = newDinosaurNode
+        
         // Create tank nodes for all possible players
         for i in 0..<4 {
             let tankNode = SKNode()
