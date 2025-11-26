@@ -16,6 +16,7 @@ extension GameViewController {
         lobbyUI.hostButton.isHidden = true
         lobbyUI.joinButton.isHidden = true
         lobbyUI.instructionsLabel.isHidden = true
+        lobbyUI.bunnyModeContainer.isHidden = true
         lobbyUI.cancelButton.isHidden = false
         lobbyUI.connectedPlayersView.isHidden = false
         lobbyUI.startGameButton.isHidden = false
@@ -30,6 +31,7 @@ extension GameViewController {
         lobbyUI.hostButton.isHidden = true
         lobbyUI.joinButton.isHidden = true
         lobbyUI.instructionsLabel.isHidden = true
+        lobbyUI.bunnyModeContainer.isHidden = true
         lobbyUI.cancelButton.isHidden = false
         lobbyUI.activityIndicator.startAnimating()
         lobbyUI.statusLabel.text = "Searching for nearby games..."

@@ -96,8 +96,14 @@ class BunnySpriteRenderer {
         
         // Add rainbow color animation to body
         addRainbowAnimationToShape(body, phaseOffset: 0)
-        addRainbowAnimationToShape(leftEar.children.first as? SKShapeNode, phaseOffset: 0.1)
-        addRainbowAnimationToShape(rightEar.children.first as? SKShapeNode, phaseOffset: 0.1)
+        
+        // Add rainbow animation to ears if they have shape children
+        if let leftEarShape = leftEar.children.first as? SKShapeNode {
+            addRainbowAnimationToShape(leftEarShape, phaseOffset: 0.1)
+        }
+        if let rightEarShape = rightEar.children.first as? SKShapeNode {
+            addRainbowAnimationToShape(rightEarShape, phaseOffset: 0.1)
+        }
         
         // Rotate based on direction
         bunnyNode.zRotation = CGFloat(direction.angle)

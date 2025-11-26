@@ -28,20 +28,24 @@ class TankRenderer {
         self.animationHelper = RainbowAnimationHelper()
     }
     
+    /// Create a sprite for the given player index and direction
+    private func createSprite(for playerIndex: Int, direction: Direction) -> SKNode {
+        let isBunnyMode = GameModeSettings.shared.currentMode == .bunny
+        let color = isBunnyMode ? bunnySpriteRenderer.bunnyColors[playerIndex] : tankColors[playerIndex]
+        return isBunnyMode
+            ? bunnySpriteRenderer.createBunnyNode(color: color, direction: direction)
+            : createTankNode(color: color, direction: direction)
+    }
+    
     /// Render all tanks
     func renderTanks(_ tanks: [Tank], tankExploding: [Bool], in tankNodes: [SKNode?]) {
-        let isBunnyMode = GameModeSettings.shared.currentMode == .bunny
-        
         for i in 0..<tanks.count {
             guard let tankNode = tankNodes[i] else { continue }
             tankNode.removeAllChildren()
             
             let tank = tanks[i]
             if tank.isAlive || tankExploding[i] {
-                let color = isBunnyMode ? bunnySpriteRenderer.bunnyColors[i] : tankColors[i]
-                let sprite = isBunnyMode
-                    ? bunnySpriteRenderer.createBunnyNode(color: color, direction: tank.direction)
-                    : createTankNode(color: color, direction: tank.direction)
+                let sprite = createSprite(for: i, direction: tank.direction)
                 sprite.position = gridPosition(row: tank.row, col: tank.col)
                 tankNode.addChild(sprite)
             }
@@ -50,8 +54,6 @@ class TankRenderer {
     
     /// Render all tanks with smooth animation
     func renderTanksWithSmoothing(_ tanks: [Tank], tankExploding: [Bool], in tankNodes: [SKNode?], duration: TimeInterval) {
-        let isBunnyMode = GameModeSettings.shared.currentMode == .bunny
-        
         for i in 0..<tanks.count {
             guard let tankNode = tankNodes[i] else { continue }
             
@@ -78,10 +80,7 @@ class TankRenderer {
                     }
                 } else {
                     // Create new sprite if doesn't exist
-                    let color = isBunnyMode ? bunnySpriteRenderer.bunnyColors[i] : tankColors[i]
-                    let sprite = isBunnyMode
-                        ? bunnySpriteRenderer.createBunnyNode(color: color, direction: tank.direction)
-                        : createTankNode(color: color, direction: tank.direction)
+                    let sprite = createSprite(for: i, direction: tank.direction)
                     sprite.position = targetPosition
                     tankNode.addChild(sprite)
                 }
