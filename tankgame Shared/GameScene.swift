@@ -48,7 +48,7 @@ class GameScene: SKScene {
     override func didMove(to view: SKView) {
         // Apply background color based on game mode
         if GameSettings.shared.isBatmanMode {
-            backgroundColor = SKColor(red: 0.05, green: 0.05, blue: 0.1, alpha: 1.0)
+            backgroundColor = BatmanAnimationHelper.backgroundColor
         } else {
             backgroundColor = .darkGray
         }

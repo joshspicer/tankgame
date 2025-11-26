@@ -6,6 +6,7 @@
 //
 
 import UIKit
+import SpriteKit
 import MultipeerConnectivity
 import QuartzCore
 
@@ -230,11 +231,11 @@ class LobbyUI {
         
         button.addSubview(stackView)
         button.backgroundColor = GameSettings.shared.isBatmanMode ? 
-            UIColor(red: 0.1, green: 0.1, blue: 0.15, alpha: 1.0) : .systemGray
+            BatmanAnimationHelper.darkColor : .systemGray
         button.layer.cornerRadius = 12
         button.layer.borderWidth = 2
         button.layer.borderColor = GameSettings.shared.isBatmanMode ? 
-            UIColor(red: 0.95, green: 0.85, blue: 0.1, alpha: 1.0).cgColor : UIColor.clear.cgColor
+            BatmanAnimationHelper.accentColor.cgColor : UIColor.clear.cgColor
         button.layer.shadowColor = UIColor.black.cgColor
         button.layer.shadowOpacity = 0.1
         button.layer.shadowOffset = CGSize(width: 0, height: 2)
@@ -260,9 +261,9 @@ class LobbyUI {
         
         UIView.animate(withDuration: 0.3) {
             self.batmanModeButton.backgroundColor = isBatmanMode ? 
-                UIColor(red: 0.1, green: 0.1, blue: 0.15, alpha: 1.0) : .systemGray
+                BatmanAnimationHelper.darkColor : .systemGray
             self.batmanModeButton.layer.borderColor = isBatmanMode ? 
-                UIColor(red: 0.95, green: 0.85, blue: 0.1, alpha: 1.0).cgColor : UIColor.clear.cgColor
+                BatmanAnimationHelper.accentColor.cgColor : UIColor.clear.cgColor
         }
     }
     

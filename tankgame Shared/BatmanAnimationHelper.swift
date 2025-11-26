@@ -79,4 +79,9 @@ class BatmanAnimationHelper {
     static var darkColor: SKColor {
         return SKColor(red: 0.1, green: 0.1, blue: 0.1, alpha: 1.0)
     }
+    
+    /// Get the Batman mode background color (very dark blue)
+    static var backgroundColor: SKColor {
+        return SKColor(red: 0.05, green: 0.05, blue: 0.1, alpha: 1.0)
+    }
 }

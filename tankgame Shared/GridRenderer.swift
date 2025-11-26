@@ -24,7 +24,7 @@ class GridRenderer {
         
         // Choose colors based on mode
         let wallColor: SKColor = isBatmanMode ? BatmanAnimationHelper.darkColor : .black
-        let emptyColor: SKColor = isBatmanMode ? SKColor(red: 0.15, green: 0.15, blue: 0.2, alpha: 1.0) : .white
+        let emptyColor: SKColor = isBatmanMode ? BatmanAnimationHelper.primaryColor : .white
         
         for row in 0..<gridSize {
             for col in 0..<gridSize {
