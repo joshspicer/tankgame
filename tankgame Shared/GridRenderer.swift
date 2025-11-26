@@ -12,12 +12,9 @@ class GridRenderer {
     let tileSize: CGFloat
     let gridSize: Int
     
-    private let animationHelper: RainbowAnimationHelper
-    
     init(tileSize: CGFloat, gridSize: Int) {
         self.tileSize = tileSize
         self.gridSize = gridSize
-        self.animationHelper = RainbowAnimationHelper()
     }
     
     /// Render the game grid
@@ -37,7 +34,7 @@ class GridRenderer {
                 if isFunkyMode && cell == .empty {
                     // Calculate phase offset based on position for wave effect
                     let phaseOffset = CGFloat(row + col) / CGFloat(gridSize * 2)
-                    animationHelper.addRainbowAnimation(to: tile, phaseOffset: phaseOffset)
+                    RainbowAnimationHelper.addRainbowAnimation(to: tile, phaseOffset: phaseOffset)
                     
                     // Add subtle pulsing effect
                     let scaleUp = SKAction.scale(to: 1.05, duration: 0.5 + Double(row + col) * 0.05)

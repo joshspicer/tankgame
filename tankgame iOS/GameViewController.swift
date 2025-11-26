@@ -68,6 +68,9 @@ class GameViewController: UIViewController {
             self?.handleFunkyModeTapped()
         }
         
+        // Initialize funky mode button state
+        lobbyUI.updateFunkyModeButton(isEnabled: FunkyMode.shared.isEnabled)
+        
         // Setup table view
         lobbyUI.peerTableView.delegate = self
         lobbyUI.peerTableView.dataSource = self

@@ -12,12 +12,9 @@ class ProjectileRenderer {
     let tileSize: CGFloat
     let gridSize: Int
     
-    private let animationHelper: RainbowAnimationHelper
-    
     init(tileSize: CGFloat, gridSize: Int) {
         self.tileSize = tileSize
         self.gridSize = gridSize
-        self.animationHelper = RainbowAnimationHelper()
     }
     
     /// Render all projectiles
@@ -31,7 +28,7 @@ class ProjectileRenderer {
             bullet.position = gridPosition(row: projectile.row, col: projectile.col)
             
             // Add rainbow color animation
-            animationHelper.addRainbowAnimation(to: bullet, phaseOffset: 0.5)
+            RainbowAnimationHelper.addRainbowAnimation(to: bullet, phaseOffset: 0.5)
             
             // Add pulsing scale animation
             let scaleUp = SKAction.scale(to: 1.2, duration: 0.3)

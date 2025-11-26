@@ -11,7 +11,7 @@ import SpriteKit
 class RainbowAnimationHelper {
     
     /// Add rainbow color animation to a sprite
-    func addRainbowAnimation(to sprite: SKSpriteNode, phaseOffset: CGFloat = 0) {
+    static func addRainbowAnimation(to sprite: SKSpriteNode, phaseOffset: CGFloat = 0) {
         let animationDuration: TimeInterval = 3.0
         let numberOfColors = 12
         

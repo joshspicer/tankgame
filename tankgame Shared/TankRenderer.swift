@@ -17,13 +17,11 @@ class TankRenderer {
     
     // Tank sprite renderer
     private let tankSpriteRenderer: TankSpriteRenderer
-    private let animationHelper: RainbowAnimationHelper
     
     init(tileSize: CGFloat, gridSize: Int) {
         self.tileSize = tileSize
         self.gridSize = gridSize
         self.tankSpriteRenderer = TankSpriteRenderer(tileSize: tileSize)
-        self.animationHelper = RainbowAnimationHelper()
     }
     
     /// Render all tanks
@@ -103,8 +101,8 @@ class TankRenderer {
         tankNode.addChild(barrel)
         
         // Add rainbow animation to body and barrel
-        animationHelper.addRainbowAnimation(to: body, phaseOffset: 0)
-        animationHelper.addRainbowAnimation(to: barrel, phaseOffset: 0.15)
+        RainbowAnimationHelper.addRainbowAnimation(to: body, phaseOffset: 0)
+        RainbowAnimationHelper.addRainbowAnimation(to: barrel, phaseOffset: 0.15)
         
         // Rotate based on direction
         tankNode.zRotation = CGFloat(direction.angle)
