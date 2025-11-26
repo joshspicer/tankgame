@@ -21,6 +21,12 @@ class GameSceneRenderer {
     private let tankRenderer: TankRenderer
     private let projectileRenderer: ProjectileRenderer
     
+    /// Current game mode affecting tank appearance
+    var gameMode: GameMode {
+        get { tankRenderer.gameMode }
+        set { tankRenderer.gameMode = newValue }
+    }
+    
     init(tileSize: CGFloat, gridSize: Int) {
         self.tileSize = tileSize
         self.gridSize = gridSize

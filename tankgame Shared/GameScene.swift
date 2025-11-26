@@ -39,6 +39,12 @@ class GameScene: SKScene {
     // Explosion state
     var tankExploding: [Bool] = [false, false, false, false]
     
+    /// Current game mode affecting tank appearance
+    var gameMode: GameMode {
+        get { renderer?.gameMode ?? .normal }
+        set { renderer?.gameMode = newValue }
+    }
+    
     class func newGameScene() -> GameScene {
         let scene = GameScene(size: CGSize(width: 600, height: 800))
         scene.scaleMode = .aspectFit

@@ -26,6 +26,9 @@ class GameViewController: UIViewController {
     var gameScene: GameScene?
     var gameState: GameState?
     var skView: SKView?
+    
+    // Game mode
+    var currentGameMode: GameMode = .normal
 
     override func viewDidLoad() {
         super.viewDidLoad()
@@ -62,6 +65,10 @@ class GameViewController: UIViewController {
         
         lobbyUI.onStartGameTapped = { [weak self] in
             self?.handleStartGameTapped()
+        }
+        
+        lobbyUI.onGameModeChanged = { [weak self] mode in
+            self?.currentGameMode = mode
         }
         
         // Setup table view

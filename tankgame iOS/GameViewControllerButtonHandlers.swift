@@ -19,6 +19,7 @@ extension GameViewController {
         lobbyUI.cancelButton.isHidden = false
         lobbyUI.connectedPlayersView.isHidden = false
         lobbyUI.startGameButton.isHidden = false
+        lobbyUI.gameModeButton.isHidden = false
         lobbyUI.activityIndicator.startAnimating()
         lobbyUI.statusLabel.text = "Hosting game...\nWaiting for players to join (2-4 players)"
         updateConnectedPlayersUI()
@@ -63,6 +64,7 @@ extension GameViewController {
         }
         
         let playerAssignments = multiplayerCoordinator.assignPlayerIndices()
-        startGame(playerCount: playerCount, localPlayerIndex: 0, playerAssignments: playerAssignments)
+        let selectedMode = lobbyUI.selectedGameMode
+        startGame(playerCount: playerCount, localPlayerIndex: 0, playerAssignments: playerAssignments, gameMode: selectedMode)
     }
 }

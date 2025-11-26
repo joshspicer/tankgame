@@ -17,12 +17,17 @@ class TankRenderer {
     
     // Tank sprite renderer
     private let tankSpriteRenderer: TankSpriteRenderer
+    private let spiderTankSpriteRenderer: SpiderTankSpriteRenderer
     private let animationHelper: RainbowAnimationHelper
+    
+    // Current game mode
+    var gameMode: GameMode = .normal
     
     init(tileSize: CGFloat, gridSize: Int) {
         self.tileSize = tileSize
         self.gridSize = gridSize
         self.tankSpriteRenderer = TankSpriteRenderer(tileSize: tileSize)
+        self.spiderTankSpriteRenderer = SpiderTankSpriteRenderer(tileSize: tileSize)
         self.animationHelper = RainbowAnimationHelper()
     }
     
@@ -91,6 +96,16 @@ class TankRenderer {
     
     /// Create a tank sprite node
     private func createTankNode(color: SKColor, direction: Direction) -> SKNode {
+        switch gameMode {
+        case .spider:
+            return spiderTankSpriteRenderer.createSpiderTankNode(color: color, direction: direction)
+        case .normal:
+            return createNormalTankNode(color: color, direction: direction)
+        }
+    }
+    
+    /// Create a normal tank sprite node
+    private func createNormalTankNode(color: SKColor, direction: Direction) -> SKNode {
         let tankNode = SKNode()
         
         // Tank body (square)

@@ -12,8 +12,11 @@ import MultipeerConnectivity
 /// Handles game lifecycle management for GameViewController
 extension GameViewController {
     
-    func startGame(playerCount: Int, localPlayerIndex: Int, playerAssignments: [String: Int]) {
+    func startGame(playerCount: Int, localPlayerIndex: Int, playerAssignments: [String: Int], gameMode: GameMode = .normal) {
         lobbyUI.lobbyView.isHidden = true
+        
+        // Store the current game mode
+        currentGameMode = gameMode
         
         // Create SKView if needed
         if skView == nil {
@@ -26,9 +29,10 @@ extension GameViewController {
         let seed = UInt32.random(in: 0...UInt32.max)
         gameState = GameState(seed: seed, playerCount: playerCount, localPlayerIndex: localPlayerIndex)
         
-        multiplayerManager.sendMessage(.roundStart(seed: seed, playerCount: playerCount, hostPlayerIndex: localPlayerIndex, playerAssignments: playerAssignments))
+        multiplayerManager.sendMessage(.roundStart(seed: seed, playerCount: playerCount, hostPlayerIndex: localPlayerIndex, playerAssignments: playerAssignments, gameMode: gameMode))
         
         let scene = GameScene.newGameScene()
+        scene.gameMode = gameMode
         scene.startGame(with: gameState!)
         scene.onGameMessage = { [weak self] message in
             self?.handleGameMessage(message)
@@ -69,6 +73,6 @@ extension GameViewController {
             playerAssignments[peer.displayName] = index
         }
         
-        multiplayerManager.sendMessage(.roundStart(seed: seed, playerCount: currentState.tanks.count, hostPlayerIndex: currentState.localPlayerIndex, playerAssignments: playerAssignments))
+        multiplayerManager.sendMessage(.roundStart(seed: seed, playerCount: currentState.tanks.count, hostPlayerIndex: currentState.localPlayerIndex, playerAssignments: playerAssignments, gameMode: currentGameMode))
     }
 }
