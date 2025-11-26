@@ -17,6 +17,7 @@ class LobbyUI {
     private(set) var joinButton: UIButton!
     private(set) var cancelButton: UIButton!
     private(set) var startGameButton: UIButton!
+    private(set) var batmanModeButton: UIButton!
     private(set) var peerTableView: UITableView!
     private(set) var connectedPlayersView: UIView!
     private(set) var connectedPlayersLabel: UILabel!
@@ -94,6 +95,11 @@ class LobbyUI {
         joinButton = createButton(title: "Join Game", backgroundColor: .systemGreen, icon: "🔍")
         joinButton.addTarget(self, action: #selector(joinButtonTapped), for: .touchUpInside)
         lobbyView.addSubview(joinButton)
+        
+        // Batman mode toggle button
+        batmanModeButton = createBatmanModeButton()
+        batmanModeButton.addTarget(self, action: #selector(batmanModeButtonTapped), for: .touchUpInside)
+        lobbyView.addSubview(batmanModeButton)
         
         // Cancel button
         cancelButton = UIButton(type: .system)
@@ -198,6 +204,68 @@ class LobbyUI {
         return button
     }
     
+    private func createBatmanModeButton() -> UIButton {
+        let button = UIButton(type: .system)
+        
+        // Create stack view for icon and text
+        let stackView = UIStackView()
+        stackView.axis = .horizontal
+        stackView.spacing = 8
+        stackView.alignment = .center
+        stackView.isUserInteractionEnabled = false
+        stackView.translatesAutoresizingMaskIntoConstraints = false
+        
+        let iconLabel = UILabel()
+        iconLabel.text = "🦇"
+        iconLabel.font = .systemFont(ofSize: 20)
+        
+        let textLabel = UILabel()
+        textLabel.text = GameSettings.shared.isBatmanMode ? "Batman Mode: ON" : "Batman Mode: OFF"
+        textLabel.font = .systemFont(ofSize: 16, weight: .medium)
+        textLabel.textColor = .white
+        textLabel.tag = 100  // Tag to find and update later
+        
+        stackView.addArrangedSubview(iconLabel)
+        stackView.addArrangedSubview(textLabel)
+        
+        button.addSubview(stackView)
+        button.backgroundColor = GameSettings.shared.isBatmanMode ? 
+            UIColor(red: 0.1, green: 0.1, blue: 0.15, alpha: 1.0) : .systemGray
+        button.layer.cornerRadius = 12
+        button.layer.borderWidth = 2
+        button.layer.borderColor = GameSettings.shared.isBatmanMode ? 
+            UIColor(red: 0.95, green: 0.85, blue: 0.1, alpha: 1.0).cgColor : UIColor.clear.cgColor
+        button.layer.shadowColor = UIColor.black.cgColor
+        button.layer.shadowOpacity = 0.1
+        button.layer.shadowOffset = CGSize(width: 0, height: 2)
+        button.layer.shadowRadius = 4
+        button.translatesAutoresizingMaskIntoConstraints = false
+        
+        NSLayoutConstraint.activate([
+            stackView.centerXAnchor.constraint(equalTo: button.centerXAnchor),
+            stackView.centerYAnchor.constraint(equalTo: button.centerYAnchor)
+        ])
+        
+        return button
+    }
+    
+    private func updateBatmanModeButton() {
+        let isBatmanMode = GameSettings.shared.isBatmanMode
+        
+        // Find the text label inside the button's stack view
+        if let stackView = batmanModeButton.subviews.first(where: { $0 is UIStackView }) as? UIStackView,
+           let textLabel = stackView.arrangedSubviews.first(where: { $0.tag == 100 }) as? UILabel {
+            textLabel.text = isBatmanMode ? "Batman Mode: ON" : "Batman Mode: OFF"
+        }
+        
+        UIView.animate(withDuration: 0.3) {
+            self.batmanModeButton.backgroundColor = isBatmanMode ? 
+                UIColor(red: 0.1, green: 0.1, blue: 0.15, alpha: 1.0) : .systemGray
+            self.batmanModeButton.layer.borderColor = isBatmanMode ? 
+                UIColor(red: 0.95, green: 0.85, blue: 0.1, alpha: 1.0).cgColor : UIColor.clear.cgColor
+        }
+    }
+    
     private func setupConstraints(titleLabel: UILabel, tankEmojiLabel: UILabel) {
         NSLayoutConstraint.activate([
             tankEmojiLabel.topAnchor.constraint(equalTo: lobbyView.safeAreaLayoutGuide.topAnchor, constant: 60),
@@ -224,7 +292,12 @@ class LobbyUI {
             joinButton.widthAnchor.constraint(equalToConstant: 240),
             joinButton.heightAnchor.constraint(equalToConstant: 56),
             
-            cancelButton.topAnchor.constraint(equalTo: joinButton.bottomAnchor, constant: 20),
+            batmanModeButton.topAnchor.constraint(equalTo: joinButton.bottomAnchor, constant: 16),
+            batmanModeButton.centerXAnchor.constraint(equalTo: lobbyView.centerXAnchor),
+            batmanModeButton.widthAnchor.constraint(equalToConstant: 200),
+            batmanModeButton.heightAnchor.constraint(equalToConstant: 44),
+            
+            cancelButton.topAnchor.constraint(equalTo: batmanModeButton.bottomAnchor, constant: 20),
             cancelButton.centerXAnchor.constraint(equalTo: lobbyView.centerXAnchor),
             
             connectedPlayersView.topAnchor.constraint(equalTo: cancelButton.bottomAnchor, constant: 20),
@@ -270,6 +343,11 @@ class LobbyUI {
     
     @objc private func startGameButtonTapped() {
         onStartGameTapped?()
+    }
+    
+    @objc private func batmanModeButtonTapped() {
+        GameSettings.shared.toggleMode()
+        updateBatmanModeButton()
     }
     
     /// Reset lobby to initial state

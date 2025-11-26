@@ -15,27 +15,40 @@ class TankRenderer {
     // Tank colors for up to 4 players
     let tankColors: [SKColor] = [.blue, .red, .green, .orange]
     
+    // Batman mode tank colors - darker variants
+    let batmanTankColors: [SKColor] = [
+        SKColor(red: 0.2, green: 0.2, blue: 0.3, alpha: 1.0),    // Dark blue-gray
+        SKColor(red: 0.3, green: 0.15, blue: 0.15, alpha: 1.0),  // Dark red
+        SKColor(red: 0.15, green: 0.25, blue: 0.15, alpha: 1.0), // Dark green
+        SKColor(red: 0.3, green: 0.25, blue: 0.1, alpha: 1.0)    // Dark orange
+    ]
+    
     // Tank sprite renderer
     private let tankSpriteRenderer: TankSpriteRenderer
     private let animationHelper: RainbowAnimationHelper
+    private let batmanAnimationHelper: BatmanAnimationHelper
     
     init(tileSize: CGFloat, gridSize: Int) {
         self.tileSize = tileSize
         self.gridSize = gridSize
         self.tankSpriteRenderer = TankSpriteRenderer(tileSize: tileSize)
         self.animationHelper = RainbowAnimationHelper()
+        self.batmanAnimationHelper = BatmanAnimationHelper()
     }
     
     /// Render all tanks
     func renderTanks(_ tanks: [Tank], tankExploding: [Bool], in tankNodes: [SKNode?]) {
+        let isBatmanMode = GameSettings.shared.isBatmanMode
+        let colors = isBatmanMode ? batmanTankColors : tankColors
+        
         for i in 0..<tanks.count {
             guard let tankNode = tankNodes[i] else { continue }
             tankNode.removeAllChildren()
             
             let tank = tanks[i]
             if tank.isAlive || tankExploding[i] {
-                let color = tankColors[i]
-                let tankSprite = createTankNode(color: color, direction: tank.direction)
+                let color = colors[i]
+                let tankSprite = createTankNode(color: color, direction: tank.direction, isBatmanMode: isBatmanMode)
                 tankSprite.position = gridPosition(row: tank.row, col: tank.col)
                 tankNode.addChild(tankSprite)
             }
@@ -44,6 +57,9 @@ class TankRenderer {
     
     /// Render all tanks with smooth animation
     func renderTanksWithSmoothing(_ tanks: [Tank], tankExploding: [Bool], in tankNodes: [SKNode?], duration: TimeInterval) {
+        let isBatmanMode = GameSettings.shared.isBatmanMode
+        let colors = isBatmanMode ? batmanTankColors : tankColors
+        
         for i in 0..<tanks.count {
             guard let tankNode = tankNodes[i] else { continue }
             
@@ -70,8 +86,8 @@ class TankRenderer {
                     }
                 } else {
                     // Create new sprite if doesn't exist
-                    let color = tankColors[i]
-                    let tankSprite = createTankNode(color: color, direction: tank.direction)
+                    let color = colors[i]
+                    let tankSprite = createTankNode(color: color, direction: tank.direction, isBatmanMode: isBatmanMode)
                     tankSprite.position = targetPosition
                     tankNode.addChild(tankSprite)
                 }
@@ -90,7 +106,7 @@ class TankRenderer {
     }
     
     /// Create a tank sprite node
-    private func createTankNode(color: SKColor, direction: Direction) -> SKNode {
+    private func createTankNode(color: SKColor, direction: Direction, isBatmanMode: Bool = false) -> SKNode {
         let tankNode = SKNode()
         
         // Tank body (square)
@@ -102,9 +118,14 @@ class TankRenderer {
         barrel.position = CGPoint(x: 0, y: tileSize * 0.35)
         tankNode.addChild(barrel)
         
-        // Add rainbow animation to body and barrel
-        animationHelper.addRainbowAnimation(to: body, phaseOffset: 0)
-        animationHelper.addRainbowAnimation(to: barrel, phaseOffset: 0.15)
+        // Add animation based on mode
+        if isBatmanMode {
+            batmanAnimationHelper.addBatmanAnimation(to: body, phaseOffset: 0)
+            batmanAnimationHelper.addBatmanAnimation(to: barrel, phaseOffset: 0.15)
+        } else {
+            animationHelper.addRainbowAnimation(to: body, phaseOffset: 0)
+            animationHelper.addRainbowAnimation(to: barrel, phaseOffset: 0.15)
+        }
         
         // Rotate based on direction
         tankNode.zRotation = CGFloat(direction.angle)

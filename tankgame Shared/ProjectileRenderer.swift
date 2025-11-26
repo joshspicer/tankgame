@@ -13,25 +13,34 @@ class ProjectileRenderer {
     let gridSize: Int
     
     private let animationHelper: RainbowAnimationHelper
+    private let batmanAnimationHelper: BatmanAnimationHelper
     
     init(tileSize: CGFloat, gridSize: Int) {
         self.tileSize = tileSize
         self.gridSize = gridSize
         self.animationHelper = RainbowAnimationHelper()
+        self.batmanAnimationHelper = BatmanAnimationHelper()
     }
     
     /// Render all projectiles
     func renderProjectiles(_ projectiles: [Projectile], in projectilesNode: SKNode) {
         projectilesNode.removeAllChildren()
+        let isBatmanMode = GameSettings.shared.isBatmanMode
         
         for projectile in projectiles {
             // Make projectile larger and more visible
-            let bullet = SKSpriteNode(color: .yellow, size: CGSize(width: tileSize * 0.5, height: tileSize * 0.5))
+            // Use Batman yellow accent color or regular yellow
+            let bulletColor: SKColor = isBatmanMode ? BatmanAnimationHelper.accentColor : .yellow
+            let bullet = SKSpriteNode(color: bulletColor, size: CGSize(width: tileSize * 0.5, height: tileSize * 0.5))
             bullet.zPosition = 5
             bullet.position = gridPosition(row: projectile.row, col: projectile.col)
             
-            // Add rainbow color animation
-            animationHelper.addRainbowAnimation(to: bullet, phaseOffset: 0.5)
+            // Add color animation based on mode
+            if isBatmanMode {
+                batmanAnimationHelper.addBatmanAnimation(to: bullet, phaseOffset: 0.5)
+            } else {
+                animationHelper.addRainbowAnimation(to: bullet, phaseOffset: 0.5)
+            }
             
             // Add pulsing scale animation
             let scaleUp = SKAction.scale(to: 1.2, duration: 0.3)

@@ -18,6 +18,7 @@
 			membershipExceptions = (
 				Actions.sks,
 				Assets.xcassets,
+				BatmanAnimationHelper.swift,
 				CrashReporter.swift,
 				CrashReporterTests.swift,
 				Direction.swift,
@@ -31,6 +32,7 @@
 				GameSceneSetup.swift,
 				GameSceneUI.swift,
 				GameSceneUpdateLoop.swift,
+				GameSettings.swift,
 				GameState.swift,
 				GridCell.swift,
 				GridGenerator.swift,
@@ -52,6 +54,7 @@
 			membershipExceptions = (
 				Actions.sks,
 				Assets.xcassets,
+				BatmanAnimationHelper.swift,
 				CrashReporter.swift,
 				CrashReporterTests.swift,
 				Direction.swift,
@@ -65,6 +68,7 @@
 				GameSceneSetup.swift,
 				GameSceneUI.swift,
 				GameSceneUpdateLoop.swift,
+				GameSettings.swift,
 				GameState.swift,
 				GridCell.swift,
 				GridGenerator.swift,
@@ -86,6 +90,7 @@
 			membershipExceptions = (
 				Actions.sks,
 				Assets.xcassets,
+				BatmanAnimationHelper.swift,
 				CrashReporter.swift,
 				CrashReporterTests.swift,
 				Direction.swift,
@@ -99,6 +104,7 @@
 				GameSceneSetup.swift,
 				GameSceneUI.swift,
 				GameSceneUpdateLoop.swift,
+				GameSettings.swift,
 				GameState.swift,
 				GridCell.swift,
 				GridGenerator.swift,
