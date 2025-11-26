@@ -65,4 +65,9 @@ extension GameViewController {
         let playerAssignments = multiplayerCoordinator.assignPlayerIndices()
         startGame(playerCount: playerCount, localPlayerIndex: 0, playerAssignments: playerAssignments)
     }
+    
+    func handleFunkyModeTapped() {
+        FunkyMode.shared.toggle()
+        lobbyUI.updateFunkyModeButton(isEnabled: FunkyMode.shared.isEnabled)
+    }
 }

@@ -64,6 +64,10 @@ class GameViewController: UIViewController {
             self?.handleStartGameTapped()
         }
         
+        lobbyUI.onFunkyModeTapped = { [weak self] in
+            self?.handleFunkyModeTapped()
+        }
+        
         // Setup table view
         lobbyUI.peerTableView.delegate = self
         lobbyUI.peerTableView.dataSource = self

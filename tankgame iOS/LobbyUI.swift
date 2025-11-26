@@ -15,6 +15,7 @@ class LobbyUI {
     private(set) var lobbyView: UIView!
     private(set) var hostButton: UIButton!
     private(set) var joinButton: UIButton!
+    private(set) var funkyModeButton: UIButton!
     private(set) var cancelButton: UIButton!
     private(set) var startGameButton: UIButton!
     private(set) var peerTableView: UITableView!
@@ -30,6 +31,7 @@ class LobbyUI {
     var onJoinTapped: (() -> Void)?
     var onCancelTapped: (() -> Void)?
     var onStartGameTapped: (() -> Void)?
+    var onFunkyModeTapped: (() -> Void)?
     
     func setup(in parentView: UIView) {
         // Create lobby view
@@ -94,6 +96,11 @@ class LobbyUI {
         joinButton = createButton(title: "Join Game", backgroundColor: .systemGreen, icon: "🔍")
         joinButton.addTarget(self, action: #selector(joinButtonTapped), for: .touchUpInside)
         lobbyView.addSubview(joinButton)
+        
+        // Funky Mode toggle button
+        funkyModeButton = createFunkyModeButton()
+        funkyModeButton.addTarget(self, action: #selector(funkyModeButtonTapped), for: .touchUpInside)
+        lobbyView.addSubview(funkyModeButton)
         
         // Cancel button
         cancelButton = UIButton(type: .system)
@@ -198,6 +205,72 @@ class LobbyUI {
         return button
     }
     
+    private func createFunkyModeButton() -> UIButton {
+        let button = UIButton(type: .system)
+        
+        // Create stack view for icon and text
+        let stackView = UIStackView()
+        stackView.axis = .horizontal
+        stackView.spacing = 8
+        stackView.alignment = .center
+        stackView.isUserInteractionEnabled = false
+        stackView.translatesAutoresizingMaskIntoConstraints = false
+        
+        let iconLabel = UILabel()
+        iconLabel.text = "🌈"
+        iconLabel.font = .systemFont(ofSize: 20)
+        
+        let textLabel = UILabel()
+        textLabel.text = "Funky Mode: OFF"
+        textLabel.tag = 100 // Tag for easy access to update text
+        textLabel.font = .systemFont(ofSize: 16, weight: .semibold)
+        textLabel.textColor = .white
+        
+        stackView.addArrangedSubview(iconLabel)
+        stackView.addArrangedSubview(textLabel)
+        
+        button.addSubview(stackView)
+        button.backgroundColor = .systemPurple.withAlphaComponent(0.7)
+        button.layer.cornerRadius = 12
+        button.layer.borderWidth = 2
+        button.layer.borderColor = UIColor.systemPurple.cgColor
+        button.translatesAutoresizingMaskIntoConstraints = false
+        
+        NSLayoutConstraint.activate([
+            stackView.centerXAnchor.constraint(equalTo: button.centerXAnchor),
+            stackView.centerYAnchor.constraint(equalTo: button.centerYAnchor)
+        ])
+        
+        return button
+    }
+    
+    /// Update the funky mode button appearance based on current state
+    func updateFunkyModeButton(isEnabled: Bool) {
+        if let stackView = funkyModeButton.subviews.first as? UIStackView,
+           let textLabel = stackView.arrangedSubviews.last as? UILabel {
+            textLabel.text = isEnabled ? "Funky Mode: ON" : "Funky Mode: OFF"
+        }
+        
+        if isEnabled {
+            funkyModeButton.backgroundColor = .systemPurple
+            funkyModeButton.layer.borderColor = UIColor.systemYellow.cgColor
+            
+            // Add a pulsing animation when enabled
+            let pulse = CABasicAnimation(keyPath: "transform.scale")
+            pulse.duration = 0.8
+            pulse.fromValue = 1.0
+            pulse.toValue = 1.05
+            pulse.timingFunction = CAMediaTimingFunction(name: .easeInEaseOut)
+            pulse.autoreverses = true
+            pulse.repeatCount = .infinity
+            funkyModeButton.layer.add(pulse, forKey: "pulse")
+        } else {
+            funkyModeButton.backgroundColor = .systemPurple.withAlphaComponent(0.7)
+            funkyModeButton.layer.borderColor = UIColor.systemPurple.cgColor
+            funkyModeButton.layer.removeAnimation(forKey: "pulse")
+        }
+    }
+    
     private func setupConstraints(titleLabel: UILabel, tankEmojiLabel: UILabel) {
         NSLayoutConstraint.activate([
             tankEmojiLabel.topAnchor.constraint(equalTo: lobbyView.safeAreaLayoutGuide.topAnchor, constant: 60),
@@ -224,7 +297,12 @@ class LobbyUI {
             joinButton.widthAnchor.constraint(equalToConstant: 240),
             joinButton.heightAnchor.constraint(equalToConstant: 56),
             
-            cancelButton.topAnchor.constraint(equalTo: joinButton.bottomAnchor, constant: 20),
+            funkyModeButton.topAnchor.constraint(equalTo: joinButton.bottomAnchor, constant: 16),
+            funkyModeButton.centerXAnchor.constraint(equalTo: lobbyView.centerXAnchor),
+            funkyModeButton.widthAnchor.constraint(equalToConstant: 180),
+            funkyModeButton.heightAnchor.constraint(equalToConstant: 44),
+            
+            cancelButton.topAnchor.constraint(equalTo: funkyModeButton.bottomAnchor, constant: 20),
             cancelButton.centerXAnchor.constraint(equalTo: lobbyView.centerXAnchor),
             
             connectedPlayersView.topAnchor.constraint(equalTo: cancelButton.bottomAnchor, constant: 20),
@@ -270,6 +348,10 @@ class LobbyUI {
     
     @objc private func startGameButtonTapped() {
         onStartGameTapped?()
+    }
+    
+    @objc private func funkyModeButtonTapped() {
+        onFunkyModeTapped?()
     }
     
     /// Reset lobby to initial state
