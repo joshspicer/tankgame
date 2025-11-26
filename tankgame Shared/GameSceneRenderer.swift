@@ -20,6 +20,7 @@ class GameSceneRenderer {
     private let gridRenderer: GridRenderer
     private let tankRenderer: TankRenderer
     private let projectileRenderer: ProjectileRenderer
+    private let lizardRenderer: LizardRenderer
     
     init(tileSize: CGFloat, gridSize: Int) {
         self.tileSize = tileSize
@@ -27,6 +28,7 @@ class GameSceneRenderer {
         self.gridRenderer = GridRenderer(tileSize: tileSize, gridSize: gridSize)
         self.tankRenderer = TankRenderer(tileSize: tileSize, gridSize: gridSize)
         self.projectileRenderer = ProjectileRenderer(tileSize: tileSize, gridSize: gridSize)
+        self.lizardRenderer = LizardRenderer(tileSize: tileSize, gridSize: gridSize)
     }
     
     // MARK: - Grid Rendering
@@ -53,6 +55,18 @@ class GameSceneRenderer {
     /// Render all projectiles
     func renderProjectiles(_ projectiles: [Projectile], in projectilesNode: SKNode) {
         projectileRenderer.renderProjectiles(projectiles, in: projectilesNode)
+    }
+    
+    // MARK: - Lizard Rendering
+    
+    /// Render all lizards
+    func renderLizards(_ lizards: [Lizard], in lizardNode: SKNode) {
+        lizardRenderer.renderLizards(lizards, in: lizardNode)
+    }
+    
+    /// Render lizards with smooth animation
+    func renderLizardsWithSmoothing(_ lizards: [Lizard], in lizardNode: SKNode, duration: TimeInterval) {
+        lizardRenderer.renderLizardsWithSmoothing(lizards, in: lizardNode, duration: duration)
     }
     
     // MARK: - Helper Methods

@@ -28,10 +28,18 @@ class GameSceneSetup {
         scene.addChild(newProjectilesNode)
         scene.projectilesNode = newProjectilesNode
         
+        // Create lizard container
+        let newLizardNode = SKNode()
+        newLizardNode.position = gridOffset
+        newLizardNode.zPosition = 5 // Above grid, below tanks
+        scene.addChild(newLizardNode)
+        scene.lizardNode = newLizardNode
+        
         // Create tank nodes for all possible players
         for i in 0..<4 {
             let tankNode = SKNode()
             tankNode.position = gridOffset
+            tankNode.zPosition = 10 // Above lizards
             scene.addChild(tankNode)
             scene.tankNodes[i] = tankNode
         }
