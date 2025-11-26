@@ -17,12 +17,14 @@ class TankRenderer {
     
     // Tank sprite renderer
     private let tankSpriteRenderer: TankSpriteRenderer
+    private let dolphinSpriteRenderer: DolphinSpriteRenderer
     private let animationHelper: RainbowAnimationHelper
     
     init(tileSize: CGFloat, gridSize: Int) {
         self.tileSize = tileSize
         self.gridSize = gridSize
         self.tankSpriteRenderer = TankSpriteRenderer(tileSize: tileSize)
+        self.dolphinSpriteRenderer = DolphinSpriteRenderer(tileSize: tileSize)
         self.animationHelper = RainbowAnimationHelper()
     }
     
@@ -89,8 +91,18 @@ class TankRenderer {
         return diff
     }
     
-    /// Create a tank sprite node
+    /// Create a tank sprite node based on current sprite mode
     private func createTankNode(color: SKColor, direction: Direction) -> SKNode {
+        switch GameSettings.shared.spriteMode {
+        case .dolphin:
+            return dolphinSpriteRenderer.createDolphinNode(color: color, direction: direction)
+        case .tank:
+            return createTankSpriteNode(color: color, direction: direction)
+        }
+    }
+    
+    /// Create a traditional tank sprite node
+    private func createTankSpriteNode(color: SKColor, direction: Direction) -> SKNode {
         let tankNode = SKNode()
         
         // Tank body (square)
