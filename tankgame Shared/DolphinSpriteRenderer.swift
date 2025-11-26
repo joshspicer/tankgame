@@ -84,13 +84,13 @@ class DolphinSpriteRenderer {
     
     /// Create a triangle-shaped fin
     private func createTriangleFin(size: CGSize, color: SKColor) -> SKShapeNode {
-        let path = UIBezierPath()
+        let path = CGMutablePath()
         path.move(to: CGPoint(x: 0, y: size.height / 2))
         path.addLine(to: CGPoint(x: -size.width / 2, y: -size.height / 2))
         path.addLine(to: CGPoint(x: size.width / 2, y: -size.height / 2))
-        path.close()
+        path.closeSubpath()
         
-        let fin = SKShapeNode(path: path.cgPath)
+        let fin = SKShapeNode(path: path)
         fin.fillColor = color
         fin.strokeColor = .clear
         return fin
