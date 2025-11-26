@@ -89,10 +89,8 @@ final class GameState {
             guard !isNearSpawnPoint(row: row, col: col) else { continue }
             guard !isOccupiedByLizard(row: row, col: col, lizards: newLizards) else { continue }
             
-            // Create lizard with random direction
-            let directions: [Direction] = [.up, .down, .left, .right]
-            let directionIndex = Int(drand48() * 4)
-            let direction = directions[directionIndex]
+            // Create lizard with random direction using the static constant from Lizard
+            let direction = Lizard.cardinalDirections.randomElement() ?? .right
             
             newLizards.append(Lizard(row: row, col: col, direction: direction))
         }
