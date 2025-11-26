@@ -22,6 +22,7 @@ class GameScene: SKScene {
     var gridNode: SKNode?
     var tankNodes: [SKNode?] = [nil, nil, nil, nil] // Support up to 4 tanks
     var projectilesNode: SKNode?
+    var dinosaurNodes: [SKNode?] = [nil] // Support dinosaurs
     
     // Components
     var renderer: GameSceneRenderer!
@@ -38,6 +39,7 @@ class GameScene: SKScene {
     
     // Explosion state
     var tankExploding: [Bool] = [false, false, false, false]
+    var dinosaurExploding: [Bool] = [false]
     
     class func newGameScene() -> GameScene {
         let scene = GameScene(size: CGSize(width: 600, height: 800))
@@ -55,6 +57,7 @@ class GameScene: SKScene {
         if gameState != nil {
             renderGrid()
             renderTanks()
+            renderDinosaurs()
             renderProjectiles()
             updateScore()
         }
@@ -80,8 +83,10 @@ class GameScene: SKScene {
     func startGame(with state: GameState) {
         self.gameState = state
         tankExploding = Array(repeating: false, count: state.tanks.count)
+        dinosaurExploding = Array(repeating: false, count: max(1, state.dinosaurs.count))
         renderGrid()
         renderTanks()
+        renderDinosaurs()
         updateScore()
         ui.updateStatus("Fight!")
     }
@@ -99,6 +104,16 @@ class GameScene: SKScene {
     func renderTanksWithSmoothing() {
         guard let state = gameState else { return }
         renderer.renderTanksWithSmoothing(state.tanks, tankExploding: tankExploding, in: tankNodes, duration: 0.08)
+    }
+    
+    func renderDinosaurs() {
+        guard let state = gameState else { return }
+        renderer.renderDinosaurs(state.dinosaurs, dinosaurExploding: dinosaurExploding, in: dinosaurNodes)
+    }
+    
+    func renderDinosaursWithSmoothing() {
+        guard let state = gameState else { return }
+        renderer.renderDinosaursWithSmoothing(state.dinosaurs, dinosaurExploding: dinosaurExploding, in: dinosaurNodes, duration: 0.15)
     }
     
     func renderProjectiles() {

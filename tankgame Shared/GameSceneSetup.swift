@@ -36,6 +36,14 @@ class GameSceneSetup {
             scene.tankNodes[i] = tankNode
         }
         
+        // Create dinosaur nodes
+        for i in 0..<scene.dinosaurNodes.count {
+            let dinosaurNode = SKNode()
+            dinosaurNode.position = gridOffset
+            scene.addChild(dinosaurNode)
+            scene.dinosaurNodes[i] = dinosaurNode
+        }
+        
         // Setup UI components
         scene.joystickController.setup(in: scene, at: CGPoint(x: 80, y: 100))
         scene.fireButton.setup(in: scene, at: CGPoint(x: scene.size.width - 80, y: 100))

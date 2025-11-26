@@ -13,6 +13,7 @@ class GameSceneUpdateLoop {
     
     var lastUpdateTime: TimeInterval = 0
     var lastMoveTime: TimeInterval = 0
+    var lastDinosaurMoveTime: TimeInterval = 0
     
     init(scene: GameScene) {
         self.scene = scene
@@ -33,6 +34,12 @@ class GameSceneUpdateLoop {
         if currentTime - lastUpdateTime > 0.05 { // ~20 FPS for projectile updates
             updateProjectiles(state: state)
             lastUpdateTime = currentTime
+        }
+        
+        // Update dinosaur AI movement (slower pace)
+        if currentTime - lastDinosaurMoveTime > 0.5 { // Move dinosaur every 0.5 seconds
+            updateDinosaurs(state: state)
+            lastDinosaurMoveTime = currentTime
         }
     }
     
@@ -64,6 +71,10 @@ class GameSceneUpdateLoop {
         let wasAlive = state.tanks.map { $0.isAlive }
         let tankPositions = state.tanks.map { scene.renderer.gridPosition(row: $0.row, col: $0.col) }
         
+        // Save dinosaur alive state before update
+        let dinosaurWasAlive = state.dinosaurs.map { $0.isAlive }
+        let dinosaurPositions = state.dinosaurs.map { scene.renderer.gridPosition(row: $0.row, col: $0.col) }
+        
         state.updateProjectiles()
         scene.renderProjectiles()
         
@@ -74,10 +85,24 @@ class GameSceneUpdateLoop {
             }
         }
         
+        // Check which dinosaurs were hit and trigger explosions
+        for i in 0..<state.dinosaurs.count {
+            if dinosaurWasAlive[i] && !state.dinosaurs[i].isAlive {
+                triggerDinosaurExplosion(dinosaurIndex: i, position: dinosaurPositions[i])
+            }
+        }
+        
         // Check if round ended after update
         if state.isRoundOver() {
             handleRoundEnd()
         }
+    }
+    
+    private func updateDinosaurs(state: GameState) {
+        guard let scene = scene else { return }
+        
+        state.updateDinosaurs()
+        scene.renderDinosaursWithSmoothing()
     }
     
     private func triggerTankExplosion(tankIndex: Int, position: CGPoint) {
@@ -89,6 +114,22 @@ class GameSceneUpdateLoop {
             scene?.tankExploding[tankIndex] = false
         }
         scene.tankExploding[tankIndex] = true
+    }
+    
+    private func triggerDinosaurExplosion(dinosaurIndex: Int, position: CGPoint) {
+        guard let scene = scene else { return }
+        guard dinosaurIndex < scene.dinosaurNodes.count, let dinosaurNode = scene.dinosaurNodes[dinosaurIndex] else { return }
+        
+        scene.soundManager.playSound("hit.wav")
+        let color = SKColor(red: 0.2, green: 0.7, blue: 0.3, alpha: 1.0) // Dinosaur green color
+        scene.explosionEffects.createExplosion(at: position, color: color, in: dinosaurNode) { [weak scene] in
+            if dinosaurIndex < scene?.dinosaurExploding.count ?? 0 {
+                scene?.dinosaurExploding[dinosaurIndex] = false
+            }
+        }
+        if dinosaurIndex < scene.dinosaurExploding.count {
+            scene.dinosaurExploding[dinosaurIndex] = true
+        }
     }
     
     private func handleRoundEnd() {
@@ -111,6 +152,7 @@ class GameSceneUpdateLoop {
             
             // Remove tank nodes now that explosion is done
             scene.renderTanks()
+            scene.renderDinosaurs()
             scene.showRoundEnd(winner: winner)
             scene.updateScore()
             
