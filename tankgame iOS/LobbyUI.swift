@@ -11,6 +11,9 @@ import QuartzCore
 
 /// Manages the lobby user interface
 class LobbyUI {
+    // Constants
+    private static let funkyModeTextLabelTag = 100
+    
     // UI Elements
     private(set) var lobbyView: UIView!
     private(set) var hostButton: UIButton!
@@ -222,7 +225,7 @@ class LobbyUI {
         
         let textLabel = UILabel()
         textLabel.text = "Funky Mode: OFF"
-        textLabel.tag = 100 // Tag for easy access to update text
+        textLabel.tag = LobbyUI.funkyModeTextLabelTag
         textLabel.font = .systemFont(ofSize: 16, weight: .semibold)
         textLabel.textColor = .white
         

@@ -36,9 +36,10 @@ class GridRenderer {
                     let phaseOffset = CGFloat(row + col) / CGFloat(gridSize * 2)
                     RainbowAnimationHelper.addRainbowAnimation(to: tile, phaseOffset: phaseOffset)
                     
-                    // Add subtle pulsing effect
-                    let scaleUp = SKAction.scale(to: 1.05, duration: 0.5 + Double(row + col) * 0.05)
-                    let scaleDown = SKAction.scale(to: 0.95, duration: 0.5 + Double(row + col) * 0.05)
+                    // Add subtle pulsing effect with capped duration
+                    let pulseDuration = min(0.5 + Double(row + col) * 0.03, 1.0)
+                    let scaleUp = SKAction.scale(to: 1.05, duration: pulseDuration)
+                    let scaleDown = SKAction.scale(to: 0.95, duration: pulseDuration)
                     let pulse = SKAction.sequence([scaleUp, scaleDown])
                     let repeatPulse = SKAction.repeatForever(pulse)
                     tile.run(repeatPulse)
