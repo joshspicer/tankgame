@@ -26,6 +26,8 @@ class ExplosionEffects {
         
         // Create explosion particles - more particles in funky mode
         let particleCount = isFunkyMode ? 20 : 12
+        let duration = isFunkyMode ? 0.8 : 0.6
+        
         for i in 0..<particleCount {
             let particle = SKShapeNode(circleOfRadius: isFunkyMode ? 12 : 8)
             particle.fillColor = color
@@ -41,20 +43,13 @@ class ExplosionEffects {
             let dy = sin(angle) * velocity
             
             // Create movement animation
-            let moveAction = SKAction.moveBy(x: dx, y: dy, duration: isFunkyMode ? 0.8 : 0.6)
-            let fadeOut = SKAction.fadeOut(withDuration: isFunkyMode ? 0.8 : 0.6)
+            let moveAction = SKAction.moveBy(x: dx, y: dy, duration: duration)
+            let fadeOut = SKAction.fadeOut(withDuration: duration)
             let scaleUp = SKAction.scale(to: isFunkyMode ? 2.5 : 2.0, duration: isFunkyMode ? 0.4 : 0.3)
             let scaleDown = SKAction.scale(to: 0.1, duration: isFunkyMode ? 0.4 : 0.3)
             let scaleSequence = SKAction.sequence([scaleUp, scaleDown])
             
-            // In funky mode, add rainbow color cycling to particles
-            var actions: [SKAction] = [moveAction, fadeOut, scaleSequence]
-            if isFunkyMode, let spriteNode = particle as? SKShapeNode {
-                let colorAction = createRainbowColorAction(duration: 0.8)
-                spriteNode.run(colorAction)
-            }
-            
-            let group = SKAction.group(actions)
+            let group = SKAction.group([moveAction, fadeOut, scaleSequence])
             let remove = SKAction.removeFromParent()
             let sequence = SKAction.sequence([group, remove])
             
@@ -105,21 +100,5 @@ class ExplosionEffects {
         
         let shakeSequence = SKAction.sequence(shakeActions)
         scene.run(shakeSequence)
-    }
-    
-    /// Create a rainbow color cycling action for shape nodes
-    private func createRainbowColorAction(duration: TimeInterval) -> SKAction {
-        let colors: [SKColor] = [.red, .orange, .yellow, .green, .cyan, .blue, .purple, .magenta]
-        var colorActions: [SKAction] = []
-        
-        for color in colors {
-            let colorAction = SKAction.run {
-                // This would need to be applied differently for shape nodes
-            }
-            let wait = SKAction.wait(forDuration: duration / Double(colors.count))
-            colorActions.append(contentsOf: [colorAction, wait])
-        }
-        
-        return SKAction.sequence(colorActions)
     }
 }
