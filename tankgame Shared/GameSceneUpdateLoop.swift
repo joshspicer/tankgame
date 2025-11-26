@@ -11,6 +11,10 @@ import SpriteKit
 class GameSceneUpdateLoop {
     weak var scene: GameScene?
     
+    // Update timing constants
+    private static let projectileUpdateInterval: TimeInterval = 0.05 // ~20 FPS for projectile updates
+    private static let dinosaurMoveInterval: TimeInterval = 0.4 // Dinosaurs move every 0.4 seconds
+    
     var lastUpdateTime: TimeInterval = 0
     var lastMoveTime: TimeInterval = 0
     var lastDinosaurMoveTime: TimeInterval = 0
@@ -31,13 +35,13 @@ class GameSceneUpdateLoop {
         }
         
         // Update projectiles
-        if currentTime - lastUpdateTime > 0.05 { // ~20 FPS for projectile updates
+        if currentTime - lastUpdateTime > Self.projectileUpdateInterval {
             updateProjectiles(state: state)
             lastUpdateTime = currentTime
         }
         
         // Update dinosaur AI movement (slower than projectiles)
-        if currentTime - lastDinosaurMoveTime > 0.4 { // Dinosaurs move every 0.4 seconds
+        if currentTime - lastDinosaurMoveTime > Self.dinosaurMoveInterval {
             updateDinosaurs(state: state)
             lastDinosaurMoveTime = currentTime
         }

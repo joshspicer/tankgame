@@ -19,6 +19,9 @@ final class GameState {
     // Random number generator for dinosaur AI
     var dinosaurRng: SeededRandomNumberGenerator
     
+    // Dinosaur AI constants
+    static let dinosaurDirectionChangeProbability: Double = 0.3
+    
     // Spawn positions for up to 4 players
     static let spawnPositions: [(row: Int, col: Int, direction: Direction)] = [
         (0, 0, .down),      // Player 0: top-left
@@ -132,7 +135,7 @@ final class GameState {
     func updateDinosaurs() {
         for i in 0..<dinosaurs.count where dinosaurs[i].isAlive {
             // Random chance to change direction
-            if dinosaurRng.nextDouble() < 0.3 {
+            if dinosaurRng.nextDouble() < GameState.dinosaurDirectionChangeProbability {
                 dinosaurs[i].direction = Dinosaur.randomDirection(using: &dinosaurRng)
             }
             
