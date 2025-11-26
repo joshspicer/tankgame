@@ -50,10 +50,12 @@ struct Dinosaur: Codable {
         return true
     }
     
+    /// Cardinal directions for AI movement
+    private static let cardinalDirections: [Direction] = [.up, .down, .left, .right]
+    
     /// Choose a random direction for AI movement
     mutating func chooseRandomDirection(using rng: inout SeededRandomNumberGenerator) -> Direction {
-        let directions: [Direction] = [.up, .down, .left, .right]
-        let index = Int(rng.next() % UInt64(directions.count))
-        return directions[index]
+        let index = Int(rng.next() % UInt64(Dinosaur.cardinalDirections.count))
+        return Dinosaur.cardinalDirections[index]
     }
 }

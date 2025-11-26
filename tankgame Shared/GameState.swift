@@ -67,10 +67,17 @@ final class GameState {
     /// Spawn a dinosaur at the center of the grid
     private func spawnDinosaur() {
         let spawn = GameState.dinosaurSpawnPosition
-        // Only spawn if the cell is empty
-        if grid[spawn.row][spawn.col] == .empty {
-            dinosaurs.append(Dinosaur(row: spawn.row, col: spawn.col, direction: spawn.direction))
+        // Only spawn if the cell is empty (not a wall)
+        guard grid[spawn.row][spawn.col] == .empty else { return }
+        
+        // Check if any tank is at the spawn position
+        for tank in tanks {
+            if tank.row == spawn.row && tank.col == spawn.col {
+                return // Don't spawn if a tank is there
+            }
         }
+        
+        dinosaurs.append(Dinosaur(row: spawn.row, col: spawn.col, direction: spawn.direction))
     }
     
     var localTank: Tank {
