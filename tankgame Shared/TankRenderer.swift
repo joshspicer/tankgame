@@ -102,9 +102,11 @@ class TankRenderer {
         barrel.position = CGPoint(x: 0, y: tileSize * 0.35)
         tankNode.addChild(barrel)
         
-        // Add rainbow animation to body and barrel
-        animationHelper.addRainbowAnimation(to: body, phaseOffset: 0)
-        animationHelper.addRainbowAnimation(to: barrel, phaseOffset: 0.15)
+        // Add rainbow animation to body and barrel (only if rainbow mode is enabled)
+        if RainbowModeSettings.shared.isEnabled {
+            animationHelper.addRainbowAnimation(to: body, phaseOffset: 0)
+            animationHelper.addRainbowAnimation(to: barrel, phaseOffset: 0.15)
+        }
         
         // Rotate based on direction
         tankNode.zRotation = CGFloat(direction.angle)

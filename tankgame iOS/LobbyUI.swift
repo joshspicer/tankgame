@@ -17,6 +17,7 @@ class LobbyUI {
     private(set) var joinButton: UIButton!
     private(set) var cancelButton: UIButton!
     private(set) var startGameButton: UIButton!
+    private(set) var rainbowModeButton: UIButton!
     private(set) var peerTableView: UITableView!
     private(set) var connectedPlayersView: UIView!
     private(set) var connectedPlayersLabel: UILabel!
@@ -155,6 +156,11 @@ class LobbyUI {
         emptyStateLabel.translatesAutoresizingMaskIntoConstraints = false
         lobbyView.addSubview(emptyStateLabel)
         
+        // Rainbow mode toggle button
+        rainbowModeButton = createRainbowModeButton()
+        rainbowModeButton.addTarget(self, action: #selector(rainbowModeButtonTapped), for: .touchUpInside)
+        lobbyView.addSubview(rainbowModeButton)
+        
         setupConstraints(titleLabel: titleLabel, tankEmojiLabel: tankEmojiLabel)
     }
     
@@ -196,6 +202,63 @@ class LobbyUI {
         ])
         
         return button
+    }
+    
+    private func createRainbowModeButton() -> UIButton {
+        let button = UIButton(type: .system)
+        
+        // Create stack view for icon and text
+        let stackView = UIStackView()
+        stackView.axis = .horizontal
+        stackView.spacing = 8
+        stackView.alignment = .center
+        stackView.isUserInteractionEnabled = false
+        stackView.translatesAutoresizingMaskIntoConstraints = false
+        stackView.tag = 100 // Tag for finding it later
+        
+        let iconLabel = UILabel()
+        iconLabel.text = "🌈"
+        iconLabel.font = .systemFont(ofSize: 20)
+        iconLabel.tag = 101 // Tag for finding the icon label
+        
+        let textLabel = UILabel()
+        textLabel.text = rainbowModeButtonTitle()
+        textLabel.font = .systemFont(ofSize: 16, weight: .medium)
+        textLabel.textColor = .white
+        textLabel.tag = 102 // Tag for finding the text label
+        
+        stackView.addArrangedSubview(iconLabel)
+        stackView.addArrangedSubview(textLabel)
+        
+        button.addSubview(stackView)
+        button.backgroundColor = RainbowModeSettings.shared.isEnabled ? .systemPurple : .systemGray
+        button.layer.cornerRadius = 12
+        button.layer.shadowColor = UIColor.black.cgColor
+        button.layer.shadowOpacity = 0.1
+        button.layer.shadowOffset = CGSize(width: 0, height: 2)
+        button.layer.shadowRadius = 4
+        button.translatesAutoresizingMaskIntoConstraints = false
+        
+        NSLayoutConstraint.activate([
+            stackView.centerXAnchor.constraint(equalTo: button.centerXAnchor),
+            stackView.centerYAnchor.constraint(equalTo: button.centerYAnchor)
+        ])
+        
+        return button
+    }
+    
+    private func rainbowModeButtonTitle() -> String {
+        return RainbowModeSettings.shared.isEnabled ? "Rainbow: ON" : "Rainbow: OFF"
+    }
+    
+    private func updateRainbowModeButton() {
+        rainbowModeButton.backgroundColor = RainbowModeSettings.shared.isEnabled ? .systemPurple : .systemGray
+        
+        // Find and update the text label
+        if let stackView = rainbowModeButton.viewWithTag(100) as? UIStackView,
+           let textLabel = stackView.viewWithTag(102) as? UILabel {
+            textLabel.text = rainbowModeButtonTitle()
+        }
     }
     
     private func setupConstraints(titleLabel: UILabel, tankEmojiLabel: UILabel) {
@@ -252,7 +315,13 @@ class LobbyUI {
             
             emptyStateLabel.topAnchor.constraint(equalTo: cancelButton.bottomAnchor, constant: 40),
             emptyStateLabel.leadingAnchor.constraint(equalTo: lobbyView.leadingAnchor, constant: 30),
-            emptyStateLabel.trailingAnchor.constraint(equalTo: lobbyView.trailingAnchor, constant: -30)
+            emptyStateLabel.trailingAnchor.constraint(equalTo: lobbyView.trailingAnchor, constant: -30),
+            
+            // Rainbow mode button at the bottom
+            rainbowModeButton.bottomAnchor.constraint(equalTo: lobbyView.safeAreaLayoutGuide.bottomAnchor, constant: -30),
+            rainbowModeButton.centerXAnchor.constraint(equalTo: lobbyView.centerXAnchor),
+            rainbowModeButton.widthAnchor.constraint(equalToConstant: 160),
+            rainbowModeButton.heightAnchor.constraint(equalToConstant: 44)
         ])
     }
     
@@ -270,6 +339,11 @@ class LobbyUI {
     
     @objc private func startGameButtonTapped() {
         onStartGameTapped?()
+    }
+    
+    @objc private func rainbowModeButtonTapped() {
+        RainbowModeSettings.shared.toggle()
+        updateRainbowModeButton()
     }
     
     /// Reset lobby to initial state

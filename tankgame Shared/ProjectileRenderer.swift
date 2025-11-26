@@ -30,8 +30,10 @@ class ProjectileRenderer {
             bullet.zPosition = 5
             bullet.position = gridPosition(row: projectile.row, col: projectile.col)
             
-            // Add rainbow color animation
-            animationHelper.addRainbowAnimation(to: bullet, phaseOffset: 0.5)
+            // Add rainbow color animation (only if rainbow mode is enabled)
+            if RainbowModeSettings.shared.isEnabled {
+                animationHelper.addRainbowAnimation(to: bullet, phaseOffset: 0.5)
+            }
             
             // Add pulsing scale animation
             let scaleUp = SKAction.scale(to: 1.2, duration: 0.3)

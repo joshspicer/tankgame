@@ -51,14 +51,16 @@ class TankSpriteRenderer {
         muzzle.position = CGPoint(x: 0, y: tileSize * 0.56)
         tankNode.addChild(muzzle)
         
-        // Add rainbow animation to all colored parts
-        addRainbowAnimation(to: leftTread, phaseOffset: 0)
-        addRainbowAnimation(to: rightTread, phaseOffset: 0)
-        addRainbowAnimation(to: body, phaseOffset: 0.1)
-        addRainbowAnimation(to: barrel, phaseOffset: 0.2)
-        
-        // Add rainbow animation to turret base (for SKShapeNode, we need a different approach)
-        addRainbowAnimationToShape(turretBase, baseColor: color, phaseOffset: 0.15)
+        // Add rainbow animation to all colored parts (only if rainbow mode is enabled)
+        if RainbowModeSettings.shared.isEnabled {
+            addRainbowAnimation(to: leftTread, phaseOffset: 0)
+            addRainbowAnimation(to: rightTread, phaseOffset: 0)
+            addRainbowAnimation(to: body, phaseOffset: 0.1)
+            addRainbowAnimation(to: barrel, phaseOffset: 0.2)
+            
+            // Add rainbow animation to turret base (for SKShapeNode, we need a different approach)
+            addRainbowAnimationToShape(turretBase, baseColor: color, phaseOffset: 0.15)
+        }
         
         // Rotate based on direction
         tankNode.zRotation = CGFloat(direction.angle)
