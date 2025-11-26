@@ -27,7 +27,7 @@ extension GameViewController {
             multiplayerCoordinator.markPlayerReady(playerIndex)
             checkAndStartNextRound()
             
-        case .playerHit, .startGame, .playerJoined:
+        case .playerHit, .startGame(_), .playerJoined:
             break
         }
     }

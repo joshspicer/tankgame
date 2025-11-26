@@ -25,7 +25,6 @@ class LobbyUI {
     private(set) var emptyStateLabel: UILabel!
     private(set) var activityIndicator: UIActivityIndicatorView!
     private(set) var gameModeButton: UIButton!
-    private(set) var gameModeLabel: UILabel!
     
     // Game mode state
     private(set) var selectedGameMode: GameMode = .normal
@@ -106,16 +105,6 @@ class LobbyUI {
         gameModeButton.isHidden = true
         gameModeButton.addTarget(self, action: #selector(gameModeButtonTapped), for: .touchUpInside)
         lobbyView.addSubview(gameModeButton)
-        
-        // Game mode label (for non-hosts)
-        gameModeLabel = UILabel()
-        gameModeLabel.text = "Mode: \(selectedGameMode.emoji) \(selectedGameMode.displayName)"
-        gameModeLabel.font = .systemFont(ofSize: 16, weight: .medium)
-        gameModeLabel.textAlignment = .center
-        gameModeLabel.textColor = .secondaryLabel
-        gameModeLabel.isHidden = true
-        gameModeLabel.translatesAutoresizingMaskIntoConstraints = false
-        lobbyView.addSubview(gameModeLabel)
         
         // Cancel button
         cancelButton = UIButton(type: .system)
@@ -303,10 +292,6 @@ class LobbyUI {
             gameModeButton.widthAnchor.constraint(equalToConstant: 180),
             gameModeButton.heightAnchor.constraint(equalToConstant: 40),
             
-            // Game mode label (shown for non-hosts)
-            gameModeLabel.topAnchor.constraint(equalTo: cancelButton.bottomAnchor, constant: 16),
-            gameModeLabel.centerXAnchor.constraint(equalTo: lobbyView.centerXAnchor),
-            
             connectedPlayersView.topAnchor.constraint(equalTo: gameModeButton.bottomAnchor, constant: 16),
             connectedPlayersView.centerXAnchor.constraint(equalTo: lobbyView.centerXAnchor),
             connectedPlayersView.widthAnchor.constraint(equalToConstant: 280),
@@ -376,15 +361,6 @@ class LobbyUI {
                 textLabel.text = "Mode: \(selectedGameMode.displayName)"
             }
         }
-        
-        // Also update the game mode label
-        gameModeLabel.text = "Mode: \(selectedGameMode.emoji) \(selectedGameMode.displayName)"
-    }
-    
-    /// Set the game mode (used when receiving mode from host)
-    func setGameMode(_ mode: GameMode) {
-        selectedGameMode = mode
-        updateGameModeButtonDisplay()
     }
     
     /// Reset lobby to initial state
@@ -398,7 +374,6 @@ class LobbyUI {
         peerTableView.isHidden = true
         emptyStateLabel.isHidden = true
         gameModeButton.isHidden = true
-        gameModeLabel.isHidden = true
         activityIndicator.stopAnimating()
         statusLabel.text = "Choose an option to start"
         selectedGameMode = .normal
