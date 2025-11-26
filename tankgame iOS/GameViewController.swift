@@ -64,6 +64,10 @@ class GameViewController: UIViewController {
             self?.handleStartGameTapped()
         }
         
+        lobbyUI.onBunnyModeChanged = { [weak self] isOn in
+            self?.handleBunnyModeChanged(isOn)
+        }
+        
         // Setup table view
         lobbyUI.peerTableView.delegate = self
         lobbyUI.peerTableView.dataSource = self
@@ -76,6 +80,11 @@ class GameViewController: UIViewController {
         multiplayerCoordinator.onReadyForNextRound = { [weak self] in
             self?.startNextRound()
         }
+    }
+    
+    /// Handle bunny mode toggle change
+    private func handleBunnyModeChanged(_ isOn: Bool) {
+        GameModeSettings.shared.currentMode = isOn ? .bunny : .tank
     }
     
     override var supportedInterfaceOrientations: UIInterfaceOrientationMask {

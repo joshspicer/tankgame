@@ -14,8 +14,8 @@ extension GameViewController {
     
     func handleReceivedMessage(_ message: GameMessage, from peerID: MCPeerID) {
         switch message {
-        case .roundStart(let seed, let playerCount, let hostPlayerIndex, let playerAssignments):
-            handleRoundStartMessage(seed: seed, playerCount: playerCount, hostPlayerIndex: hostPlayerIndex, playerAssignments: playerAssignments)
+        case .roundStart(let seed, let playerCount, let hostPlayerIndex, let playerAssignments, let gameMode):
+            handleRoundStartMessage(seed: seed, playerCount: playerCount, hostPlayerIndex: hostPlayerIndex, playerAssignments: playerAssignments, gameMode: gameMode)
             
         case .playerMove(let playerIndex, let row, let col, let direction):
             handlePlayerMoveMessage(playerIndex: playerIndex, row: row, col: col, direction: direction)
@@ -32,7 +32,10 @@ extension GameViewController {
         }
     }
     
-    private func handleRoundStartMessage(seed: UInt32, playerCount: Int, hostPlayerIndex: Int, playerAssignments: [String: Int]) {
+    private func handleRoundStartMessage(seed: UInt32, playerCount: Int, hostPlayerIndex: Int, playerAssignments: [String: Int], gameMode: GameMode) {
+        // Apply the game mode from the host
+        GameModeSettings.shared.currentMode = gameMode
+        
         if gameState == nil {
             let myName = multiplayerManager.session.myPeerID.displayName
             let localPlayerIndex = playerAssignments[myName] ?? 1

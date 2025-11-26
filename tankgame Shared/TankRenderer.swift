@@ -17,33 +17,41 @@ class TankRenderer {
     
     // Tank sprite renderer
     private let tankSpriteRenderer: TankSpriteRenderer
+    private let bunnySpriteRenderer: BunnySpriteRenderer
     private let animationHelper: RainbowAnimationHelper
     
     init(tileSize: CGFloat, gridSize: Int) {
         self.tileSize = tileSize
         self.gridSize = gridSize
         self.tankSpriteRenderer = TankSpriteRenderer(tileSize: tileSize)
+        self.bunnySpriteRenderer = BunnySpriteRenderer(tileSize: tileSize)
         self.animationHelper = RainbowAnimationHelper()
     }
     
     /// Render all tanks
     func renderTanks(_ tanks: [Tank], tankExploding: [Bool], in tankNodes: [SKNode?]) {
+        let isBunnyMode = GameModeSettings.shared.currentMode == .bunny
+        
         for i in 0..<tanks.count {
             guard let tankNode = tankNodes[i] else { continue }
             tankNode.removeAllChildren()
             
             let tank = tanks[i]
             if tank.isAlive || tankExploding[i] {
-                let color = tankColors[i]
-                let tankSprite = createTankNode(color: color, direction: tank.direction)
-                tankSprite.position = gridPosition(row: tank.row, col: tank.col)
-                tankNode.addChild(tankSprite)
+                let color = isBunnyMode ? bunnySpriteRenderer.bunnyColors[i] : tankColors[i]
+                let sprite = isBunnyMode
+                    ? bunnySpriteRenderer.createBunnyNode(color: color, direction: tank.direction)
+                    : createTankNode(color: color, direction: tank.direction)
+                sprite.position = gridPosition(row: tank.row, col: tank.col)
+                tankNode.addChild(sprite)
             }
         }
     }
     
     /// Render all tanks with smooth animation
     func renderTanksWithSmoothing(_ tanks: [Tank], tankExploding: [Bool], in tankNodes: [SKNode?], duration: TimeInterval) {
+        let isBunnyMode = GameModeSettings.shared.currentMode == .bunny
+        
         for i in 0..<tanks.count {
             guard let tankNode = tankNodes[i] else { continue }
             
@@ -70,10 +78,12 @@ class TankRenderer {
                     }
                 } else {
                     // Create new sprite if doesn't exist
-                    let color = tankColors[i]
-                    let tankSprite = createTankNode(color: color, direction: tank.direction)
-                    tankSprite.position = targetPosition
-                    tankNode.addChild(tankSprite)
+                    let color = isBunnyMode ? bunnySpriteRenderer.bunnyColors[i] : tankColors[i]
+                    let sprite = isBunnyMode
+                        ? bunnySpriteRenderer.createBunnyNode(color: color, direction: tank.direction)
+                        : createTankNode(color: color, direction: tank.direction)
+                    sprite.position = targetPosition
+                    tankNode.addChild(sprite)
                 }
             } else {
                 tankNode.removeAllChildren()

@@ -24,12 +24,18 @@ class LobbyUI {
     private(set) var instructionsLabel: UILabel!
     private(set) var emptyStateLabel: UILabel!
     private(set) var activityIndicator: UIActivityIndicatorView!
+    private(set) var bunnyModeToggle: UISwitch!
+    private(set) var bunnyModeLabel: UILabel!
+    private(set) var bunnyModeContainer: UIView!
+    private(set) var titleLabel: UILabel!
+    private(set) var tankEmojiLabel: UILabel!
     
     // Callbacks
     var onHostTapped: (() -> Void)?
     var onJoinTapped: (() -> Void)?
     var onCancelTapped: (() -> Void)?
     var onStartGameTapped: (() -> Void)?
+    var onBunnyModeChanged: ((Bool) -> Void)?
     
     func setup(in parentView: UIView) {
         // Create lobby view
@@ -49,7 +55,7 @@ class LobbyUI {
         lobbyView.layer.insertSublayer(gradientLayer, at: 0)
         
         // Title label
-        let titleLabel = UILabel()
+        titleLabel = UILabel()
         titleLabel.text = "TANK GAME"
         titleLabel.font = .systemFont(ofSize: 48, weight: .black)
         titleLabel.textAlignment = .center
@@ -58,7 +64,7 @@ class LobbyUI {
         lobbyView.addSubview(titleLabel)
         
         // Tank emoji below title
-        let tankEmojiLabel = UILabel()
+        tankEmojiLabel = UILabel()
         tankEmojiLabel.text = "🎯"
         tankEmojiLabel.font = .systemFont(ofSize: 60)
         tankEmojiLabel.textAlignment = .center
@@ -94,6 +100,47 @@ class LobbyUI {
         joinButton = createButton(title: "Join Game", backgroundColor: .systemGreen, icon: "🔍")
         joinButton.addTarget(self, action: #selector(joinButtonTapped), for: .touchUpInside)
         lobbyView.addSubview(joinButton)
+        
+        // Bunny mode toggle container
+        bunnyModeContainer = UIView()
+        bunnyModeContainer.backgroundColor = .secondarySystemBackground
+        bunnyModeContainer.layer.cornerRadius = 12
+        bunnyModeContainer.translatesAutoresizingMaskIntoConstraints = false
+        lobbyView.addSubview(bunnyModeContainer)
+        
+        // Bunny emoji
+        let bunnyEmoji = UILabel()
+        bunnyEmoji.text = "🐰"
+        bunnyEmoji.font = .systemFont(ofSize: 28)
+        bunnyEmoji.translatesAutoresizingMaskIntoConstraints = false
+        bunnyModeContainer.addSubview(bunnyEmoji)
+        
+        // Bunny mode label
+        bunnyModeLabel = UILabel()
+        bunnyModeLabel.text = "Bunny Mode"
+        bunnyModeLabel.font = .systemFont(ofSize: 18, weight: .semibold)
+        bunnyModeLabel.textColor = .label
+        bunnyModeLabel.translatesAutoresizingMaskIntoConstraints = false
+        bunnyModeContainer.addSubview(bunnyModeLabel)
+        
+        // Bunny mode toggle
+        bunnyModeToggle = UISwitch()
+        bunnyModeToggle.isOn = false
+        bunnyModeToggle.onTintColor = .systemPink
+        bunnyModeToggle.addTarget(self, action: #selector(bunnyModeToggleChanged), for: .valueChanged)
+        bunnyModeToggle.translatesAutoresizingMaskIntoConstraints = false
+        bunnyModeContainer.addSubview(bunnyModeToggle)
+        
+        NSLayoutConstraint.activate([
+            bunnyEmoji.leadingAnchor.constraint(equalTo: bunnyModeContainer.leadingAnchor, constant: 16),
+            bunnyEmoji.centerYAnchor.constraint(equalTo: bunnyModeContainer.centerYAnchor),
+            
+            bunnyModeLabel.leadingAnchor.constraint(equalTo: bunnyEmoji.trailingAnchor, constant: 12),
+            bunnyModeLabel.centerYAnchor.constraint(equalTo: bunnyModeContainer.centerYAnchor),
+            
+            bunnyModeToggle.trailingAnchor.constraint(equalTo: bunnyModeContainer.trailingAnchor, constant: -16),
+            bunnyModeToggle.centerYAnchor.constraint(equalTo: bunnyModeContainer.centerYAnchor)
+        ])
         
         // Cancel button
         cancelButton = UIButton(type: .system)
@@ -214,17 +261,22 @@ class LobbyUI {
             instructionsLabel.leadingAnchor.constraint(equalTo: lobbyView.leadingAnchor, constant: 30),
             instructionsLabel.trailingAnchor.constraint(equalTo: lobbyView.trailingAnchor, constant: -30),
             
-            hostButton.topAnchor.constraint(equalTo: instructionsLabel.bottomAnchor, constant: 50),
+            hostButton.topAnchor.constraint(equalTo: instructionsLabel.bottomAnchor, constant: 40),
             hostButton.centerXAnchor.constraint(equalTo: lobbyView.centerXAnchor),
             hostButton.widthAnchor.constraint(equalToConstant: 240),
             hostButton.heightAnchor.constraint(equalToConstant: 56),
             
-            joinButton.topAnchor.constraint(equalTo: hostButton.bottomAnchor, constant: 20),
+            joinButton.topAnchor.constraint(equalTo: hostButton.bottomAnchor, constant: 16),
             joinButton.centerXAnchor.constraint(equalTo: lobbyView.centerXAnchor),
             joinButton.widthAnchor.constraint(equalToConstant: 240),
             joinButton.heightAnchor.constraint(equalToConstant: 56),
             
-            cancelButton.topAnchor.constraint(equalTo: joinButton.bottomAnchor, constant: 20),
+            bunnyModeContainer.topAnchor.constraint(equalTo: joinButton.bottomAnchor, constant: 20),
+            bunnyModeContainer.centerXAnchor.constraint(equalTo: lobbyView.centerXAnchor),
+            bunnyModeContainer.widthAnchor.constraint(equalToConstant: 240),
+            bunnyModeContainer.heightAnchor.constraint(equalToConstant: 50),
+            
+            cancelButton.topAnchor.constraint(equalTo: bunnyModeContainer.bottomAnchor, constant: 20),
             cancelButton.centerXAnchor.constraint(equalTo: lobbyView.centerXAnchor),
             
             connectedPlayersView.topAnchor.constraint(equalTo: cancelButton.bottomAnchor, constant: 20),
@@ -272,11 +324,29 @@ class LobbyUI {
         onStartGameTapped?()
     }
     
+    @objc private func bunnyModeToggleChanged() {
+        let isOn = bunnyModeToggle.isOn
+        onBunnyModeChanged?(isOn)
+        updateTitleForBunnyMode(isOn)
+    }
+    
+    /// Update the title and emoji based on bunny mode
+    func updateTitleForBunnyMode(_ isBunnyMode: Bool) {
+        if isBunnyMode {
+            titleLabel.text = "BUNNY GAME"
+            tankEmojiLabel.text = "🐰"
+        } else {
+            titleLabel.text = "TANK GAME"
+            tankEmojiLabel.text = "🎯"
+        }
+    }
+    
     /// Reset lobby to initial state
     func reset() {
         hostButton.isHidden = false
         joinButton.isHidden = false
         instructionsLabel.isHidden = false
+        bunnyModeContainer.isHidden = false
         cancelButton.isHidden = true
         startGameButton.isHidden = true
         connectedPlayersView.isHidden = true
