@@ -84,13 +84,20 @@ xcrun simctl list devices
 xcrun simctl boot "iPhone 15 Pro"
 xcrun simctl boot "iPhone 14"
 
-# Install app on booted simulators
-xcrun simctl install booted /path/to/TankGame.app
+# Build the app (run from project root directory)
+xcodebuild -scheme "tankgame iOS" -configuration Debug -sdk iphonesimulator -derivedDataPath ./build
 
-# Launch app
-xcrun simctl launch "iPhone 15 Pro" com.tankgame.ios
-xcrun simctl launch "iPhone 14" com.tankgame.ios
+# Install app on booted simulators
+# The .app file is located in: ./build/Build/Products/Debug-iphonesimulator/tankgame iOS.app
+xcrun simctl install booted "./build/Build/Products/Debug-iphonesimulator/tankgame iOS.app"
+
+# Launch app (bundle identifier: com.joshspicer.tankgame)
+xcrun simctl launch "iPhone 15 Pro" com.joshspicer.tankgame
+xcrun simctl launch "iPhone 14" com.joshspicer.tankgame
 ```
+
+**Note:** If you built via Xcode's default settings, the app is in:
+`~/Library/Developer/Xcode/DerivedData/tankgame-<hash>/Build/Products/Debug-iphonesimulator/tankgame iOS.app`
 
 ## Testing Checklist
 
