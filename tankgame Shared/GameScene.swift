@@ -57,6 +57,7 @@ class GameScene: SKScene {
             renderTanks()
             renderProjectiles()
             updateScore()
+            ui.updateStatus("Fight!")
         }
     }
     
@@ -80,6 +81,11 @@ class GameScene: SKScene {
     func startGame(with state: GameState) {
         self.gameState = state
         tankExploding = Array(repeating: false, count: state.tanks.count)
+        
+        // Only render if the scene has been set up (didMove has been called)
+        // If not, didMove will handle rendering when it's called
+        guard renderer != nil, ui != nil else { return }
+        
         renderGrid()
         renderTanks()
         updateScore()
