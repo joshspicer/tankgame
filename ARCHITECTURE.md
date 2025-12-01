@@ -54,8 +54,11 @@ Main game loop and coordination (now split):
 - `GameSceneUpdateLoop.swift` - Game loop and update logic
 
 ### 7. Networking Layer
-Multiplayer communication:
-- `MultiplayerManager.swift` - Low-level MultipeerConnectivity wrapper
+Multiplayer communication (now modular):
+- `MultiplayerManager.swift` - Core MultipeerConnectivity coordinator
+- `MultiplayerSessionHandler.swift` - MCSessionDelegate implementation
+- `MultiplayerAdvertiser.swift` - MCNearbyServiceAdvertiserDelegate implementation
+- `MultiplayerBrowser.swift` - MCNearbyServiceBrowserDelegate implementation
 - `MultiplayerCoordinator.swift` - High-level session and player management
 
 ### 8. UI Layer (iOS)
@@ -89,7 +92,7 @@ Top-level coordination (now highly modular):
 **Total**: ~1,707 lines across 19 files, average 90 lines per file
 
 ### After Second Refactoring (Current)
-**Shared Components** (22 files):
+**Shared Components** (25 files):
 - GameScene.swift: 154 lines (47% reduction)
 - GameSceneRenderer.swift: 64 lines (67% reduction)
 - GameSceneInputHandler.swift: 65 lines (new)
@@ -99,6 +102,10 @@ Top-level coordination (now highly modular):
 - TankRenderer.swift: 122 lines (new)
 - ProjectileRenderer.swift: 60 lines (new)
 - RainbowAnimationHelper.swift: 33 lines (new)
+- MultiplayerManager.swift: 119 lines (44% reduction)
+- MultiplayerSessionHandler.swift: 51 lines (new)
+- MultiplayerAdvertiser.swift: 24 lines (new)
+- MultiplayerBrowser.swift: 28 lines (new)
 - Other files: ~1,223 lines
 
 **iOS-Specific** (11 files):
@@ -112,10 +119,10 @@ Top-level coordination (now highly modular):
 - GameViewControllerTableView.swift: 33 lines (new)
 - Other files: ~424 lines
 
-**Total**: ~2,373 lines across 34 files
-- Average file size: ~70 lines
+**Total**: ~2,496 lines across 37 files
+- Average file size: ~67 lines
 - Largest file: GameScene.swift (154 lines)
-- 15 new files created in this refactoring
+- 18 new files created in this refactoring
 
 ## Component Dependencies
 
@@ -131,7 +138,10 @@ GameViewController (93 lines)
   ├── LobbyUI (UI presentation)
   ├── PermissionManager (iOS permissions)
   ├── MultiplayerCoordinator (session management)
-  │   └── MultiplayerManager (network layer)
+  │   └── MultiplayerManager (network coordinator - 119 lines)
+  │       ├── MultiplayerSessionHandler (session delegate)
+  │       ├── MultiplayerAdvertiser (advertiser delegate)
+  │       └── MultiplayerBrowser (browser delegate)
   └── GameScene (game coordinator - 154 lines)
       ├── GameSceneSetup (initialization)
       ├── GameSceneInputHandler (touch events)

@@ -4,6 +4,12 @@
 //
 //  Created by jospicer on 10/28/25.
 //
+//  Core coordinator for multiplayer functionality.
+//  Delegate implementations are in separate files:
+//  - MultiplayerSessionHandler.swift (MCSessionDelegate)
+//  - MultiplayerAdvertiser.swift (MCNearbyServiceAdvertiserDelegate)
+//  - MultiplayerBrowser.swift (MCNearbyServiceBrowserDelegate)
+//
 
 import Foundation
 import MultipeerConnectivity
@@ -115,97 +121,5 @@ class MultiplayerManager: NSObject {
     
     var allPlayerNames: [String] {
         return [myPeerID.displayName] + session.connectedPeers.map { $0.displayName }
-    }
-}
-
-// MARK: - MCSessionDelegate
-
-extension MultiplayerManager: MCSessionDelegate {
-    func session(_ session: MCSession, peer peerID: MCPeerID, didChange state: MCSessionState) {
-        DispatchQueue.main.async { [weak self] in
-            guard let self = self else { return }
-            
-            switch state {
-            case .connected:
-                self.delegate?.multiplayerManager(self, didConnectToPeer: peerID)
-            case .notConnected:
-                self.delegate?.multiplayerManager(self, didDisconnectFromPeer: peerID)
-            case .connecting:
-                break
-            @unknown default:
-                break
-            }
-        }
-    }
-    
-    func session(_ session: MCSession, didReceive data: Data, fromPeer peerID: MCPeerID) {
-        do {
-            let message = try JSONDecoder().decode(GameMessage.self, from: data)
-            DispatchQueue.main.async { [weak self] in
-                guard let self = self else { return }
-                self.delegate?.multiplayerManager(self, didReceiveMessage: message, from: peerID)
-            }
-        } catch {
-            print("Error decoding message: \(error.localizedDescription)")
-        }
-    }
-    
-    func session(_ session: MCSession, didReceive stream: InputStream, withName streamName: String, fromPeer peerID: MCPeerID) {
-        // Not used
-    }
-    
-    func session(_ session: MCSession, didStartReceivingResourceWithName resourceName: String, fromPeer peerID: MCPeerID, with progress: Progress) {
-        // Not used
-    }
-    
-    func session(_ session: MCSession, didFinishReceivingResourceWithName resourceName: String, fromPeer peerID: MCPeerID, at localURL: URL?, withError error: Error?) {
-        // Not used
-    }
-}
-
-// MARK: - MCNearbyServiceAdvertiserDelegate
-
-extension MultiplayerManager: MCNearbyServiceAdvertiserDelegate {
-    func advertiser(_ advertiser: MCNearbyServiceAdvertiser, didReceiveInvitationFromPeer peerID: MCPeerID, withContext context: Data?, invitationHandler: @escaping (Bool, MCSession?) -> Void) {
-        // Accept invitations if we have room (max 4 players total)
-        if session.connectedPeers.count < maxPlayers - 1 {
-            invitationHandler(true, session)
-        } else {
-            invitationHandler(false, nil)
-        }
-    }
-    
-    func advertiser(_ advertiser: MCNearbyServiceAdvertiser, didNotStartAdvertisingPeer error: Error) {
-        print("Error starting advertising: \(error.localizedDescription)")
-        DispatchQueue.main.async { [weak self] in
-            guard let self = self else { return }
-            self.delegate?.multiplayerManager(self, didEncounterError: error)
-        }
-    }
-}
-
-// MARK: - MCNearbyServiceBrowserDelegate
-
-extension MultiplayerManager: MCNearbyServiceBrowserDelegate {
-    func browser(_ browser: MCNearbyServiceBrowser, foundPeer peerID: MCPeerID, withDiscoveryInfo info: [String : String]?) {
-        DispatchQueue.main.async { [weak self] in
-            guard let self = self else { return }
-            self.delegate?.multiplayerManager(self, didFindPeer: peerID)
-        }
-    }
-    
-    func browser(_ browser: MCNearbyServiceBrowser, lostPeer peerID: MCPeerID) {
-        DispatchQueue.main.async { [weak self] in
-            guard let self = self else { return }
-            self.delegate?.multiplayerManager(self, didLosePeer: peerID)
-        }
-    }
-    
-    func browser(_ browser: MCNearbyServiceBrowser, didNotStartBrowsingForPeers error: Error) {
-        print("Error starting browsing: \(error.localizedDescription)")
-        DispatchQueue.main.async { [weak self] in
-            guard let self = self else { return }
-            self.delegate?.multiplayerManager(self, didEncounterError: error)
-        }
     }
 }
