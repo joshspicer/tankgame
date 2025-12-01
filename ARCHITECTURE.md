@@ -102,10 +102,10 @@ Top-level coordination (now highly modular):
 - TankRenderer.swift: 122 lines (new)
 - ProjectileRenderer.swift: 60 lines (new)
 - RainbowAnimationHelper.swift: 33 lines (new)
-- MultiplayerManager.swift: 119 lines (44% reduction)
-- MultiplayerSessionHandler.swift: 51 lines (new)
-- MultiplayerAdvertiser.swift: 24 lines (new)
-- MultiplayerBrowser.swift: 28 lines (new)
+- MultiplayerManager.swift: 125 lines (41% reduction)
+- MultiplayerSessionHandler.swift: 53 lines (new)
+- MultiplayerAdvertiser.swift: 29 lines (new)
+- MultiplayerBrowser.swift: 34 lines (new)
 - Other files: ~1,223 lines
 
 **iOS-Specific** (11 files):

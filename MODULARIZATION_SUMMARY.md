@@ -26,12 +26,12 @@ Split GameSceneRenderer.swift (193 lines) into 5 files:
 
 ### MultiplayerManager Module (tankgame Shared)
 Split MultiplayerManager.swift (211 lines) into 4 files:
-1. **MultiplayerManager.swift** (119 lines) - Core MultipeerConnectivity coordinator
-2. **MultiplayerSessionHandler.swift** (51 lines) - MCSessionDelegate implementation
-3. **MultiplayerAdvertiser.swift** (24 lines) - MCNearbyServiceAdvertiserDelegate implementation
-4. **MultiplayerBrowser.swift** (28 lines) - MCNearbyServiceBrowserDelegate implementation
+1. **MultiplayerManager.swift** (125 lines) - Core MultipeerConnectivity coordinator
+2. **MultiplayerSessionHandler.swift** (53 lines) - MCSessionDelegate implementation
+3. **MultiplayerAdvertiser.swift** (29 lines) - MCNearbyServiceAdvertiserDelegate implementation
+4. **MultiplayerBrowser.swift** (34 lines) - MCNearbyServiceBrowserDelegate implementation
 
-**Result**: 44% reduction in main file size, clear separation of delegate responsibilities
+**Result**: 41% reduction in main file size, clear separation of delegate responsibilities
 
 ### GameViewController Module (tankgame iOS)
 Split GameViewController.swift (423 lines) into 8 files:
@@ -62,7 +62,7 @@ Split GameViewController.swift (423 lines) into 8 files:
 
 ### Key Metrics
 - **18 new files created**
-- **Main files reduced by 44-78%**
+- **Main files reduced by 41-78%**
 - **Maximum file size reduced from 423 to 154 lines (64% reduction)**
 - **No behavioral changes** - pure refactoring
 
