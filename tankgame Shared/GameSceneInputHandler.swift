@@ -53,7 +53,7 @@ class GameSceneInputHandler {
               let state = scene.gameState,
               state.localTank.isAlive else { return }
         
-        let projectile = state.localTank.shoot()
+        let projectile = state.localTank.shoot(ownerIndex: state.localPlayerIndex)
         state.projectiles.append(projectile)
         scene.renderProjectiles()
         scene.soundManager.playSound("shoot.wav")

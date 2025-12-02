@@ -99,9 +99,9 @@ class GameSceneUpdateLoop {
         DispatchQueue.main.asyncAfter(deadline: .now() + 1.0) { [weak scene] in
             guard let scene = scene, let state = scene.gameState else { return }
             
-            // Update score and play win/lose sound
+            // Update score using the scoring engine and play win/lose sound
             if let winner = winner {
-                state.wins[winner] += 1
+                state.recordRoundWin(by: winner)
                 if winner == state.localPlayerIndex {
                     scene.soundManager.playSound("win.wav")
                 } else {
@@ -112,7 +112,7 @@ class GameSceneUpdateLoop {
             // Remove tank nodes now that explosion is done
             scene.renderTanks()
             scene.showRoundEnd(winner: winner)
-            scene.updateScore()
+            scene.updateScoreAnimated(changedPlayerIndex: winner)
             
             // Notify that round ended after a longer delay
             DispatchQueue.main.asyncAfter(deadline: .now() + 2.0) { [weak scene] in

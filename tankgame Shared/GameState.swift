@@ -12,8 +12,15 @@ final class GameState {
     var grid: [[GridCell]]
     var tanks: [Tank] // Array of all tanks (index = player index)
     var projectiles: [Projectile] = []
-    var wins: [Int] // Wins for each player
     var localPlayerIndex: Int // Index of the local player in tanks array
+    
+    /// Centralized scoring engine for tracking scores and statistics
+    let scoringEngine: ScoringEngine
+    
+    /// Convenience accessor for backward compatibility with existing code
+    var wins: [Int] {
+        return scoringEngine.scores
+    }
     
     // Spawn positions for up to 4 players
     static let spawnPositions: [(row: Int, col: Int, direction: Direction)] = [
@@ -27,6 +34,9 @@ final class GameState {
         self.grid = GridGenerator.generate(seed: seed)
         self.localPlayerIndex = localPlayerIndex
         
+        // Initialize scoring engine
+        self.scoringEngine = ScoringEngine(playerCount: playerCount, mode: .roundWins)
+        
         // Initialize tanks for all players
         var initialTanks: [Tank] = []
         for i in 0..<playerCount {
@@ -34,14 +44,14 @@ final class GameState {
             initialTanks.append(Tank(row: spawn.row, col: spawn.col, direction: spawn.direction))
         }
         self.tanks = initialTanks
-        
-        // Initialize wins array
-        self.wins = Array(repeating: 0, count: playerCount)
     }
     
     func reset(seed: UInt32) {
         self.grid = GridGenerator.generate(seed: seed)
         self.projectiles = []
+        
+        // Reset streaks for new round
+        scoringEngine.resetStreaks()
         
         // Reset all tanks to their spawn positions
         for i in 0..<tanks.count {
@@ -71,6 +81,12 @@ final class GameState {
             for i in 0..<tanks.count {
                 if projectile.hits(tank: tanks[i]) {
                     tanks[i].isAlive = false
+                    
+                    // Record the kill in the scoring engine
+                    if projectile.ownerIndex >= 0 && projectile.ownerIndex != i {
+                        scoringEngine.recordKill(by: projectile.ownerIndex, victim: i)
+                    }
+                    
                     hitTank = true
                     break
                 }
@@ -84,6 +100,11 @@ final class GameState {
         }
         
         projectiles = activeProjectiles
+    }
+    
+    /// Record the round win in the scoring engine
+    func recordRoundWin(by playerIndex: Int) {
+        scoringEngine.recordRoundWin(by: playerIndex)
     }
     
     func isRoundOver() -> Bool {

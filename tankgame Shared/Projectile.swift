@@ -11,6 +11,14 @@ struct Projectile: Codable {
     var row: Int
     var col: Int
     var direction: Direction
+    var ownerIndex: Int  // Index of the player who fired this projectile
+    
+    init(row: Int, col: Int, direction: Direction, ownerIndex: Int = -1) {
+        self.row = row
+        self.col = col
+        self.direction = direction
+        self.ownerIndex = ownerIndex
+    }
     
     mutating func advance() {
         let offset = direction.offset

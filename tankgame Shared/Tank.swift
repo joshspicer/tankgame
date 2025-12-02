@@ -42,8 +42,8 @@ struct Tank: Codable {
         return true
     }
     
-    func shoot() -> Projectile {
+    func shoot(ownerIndex: Int = -1) -> Projectile {
         let offset = direction.offset
-        return Projectile(row: row + offset.row, col: col + offset.col, direction: direction)
+        return Projectile(row: row + offset.row, col: col + offset.col, direction: direction, ownerIndex: ownerIndex)
     }
 }

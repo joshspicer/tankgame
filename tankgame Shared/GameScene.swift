@@ -109,6 +109,13 @@ class GameScene: SKScene {
     func updateScore() {
         guard let state = gameState else { return }
         ui.updateScore(wins: state.wins)
+        ui.updateStats(scoringEngine: state.scoringEngine, localPlayerIndex: state.localPlayerIndex)
+    }
+    
+    func updateScoreAnimated(changedPlayerIndex: Int?) {
+        guard let state = gameState else { return }
+        ui.updateScoreAnimated(wins: state.wins, changedPlayerIndex: changedPlayerIndex)
+        ui.updateStats(scoringEngine: state.scoringEngine, localPlayerIndex: state.localPlayerIndex)
     }
     
     func showRoundEnd(winner: Int?) {
