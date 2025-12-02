@@ -77,7 +77,7 @@ APP_PATH=$(find ./build -name "*.app" -path "*/Debug-iphonesimulator/*" | head -
 # Install app on booted simulators
 xcrun simctl install booted "$APP_PATH"
 
-# Launch app
+# Launch app (use your bundle identifier from project settings)
 xcrun simctl launch "iPhone 15 Pro" com.joshspicer.tankgame
 xcrun simctl launch "iPhone 14" com.joshspicer.tankgame
 ```
