@@ -68,16 +68,22 @@ xcrun simctl list devices
 xcrun simctl boot "iPhone 15 Pro"
 xcrun simctl boot "iPhone 14"
 
-# Build the app
+# Build the app (adjust scheme and configuration as needed)
 xcodebuild -scheme "tankgame iOS" -configuration Debug -sdk iphonesimulator -derivedDataPath ./build
 
+# Find the built app path
+APP_PATH=$(find ./build -name "*.app" -path "*/Debug-iphonesimulator/*" | head -1)
+
 # Install app on booted simulators
-xcrun simctl install booted "./build/Build/Products/Debug-iphonesimulator/tankgame iOS.app"
+xcrun simctl install booted "$APP_PATH"
 
 # Launch app
 xcrun simctl launch "iPhone 15 Pro" com.joshspicer.tankgame
 xcrun simctl launch "iPhone 14" com.joshspicer.tankgame
 ```
+
+**Note:** If using Xcode's default DerivedData location, the app path will be:
+`~/Library/Developer/Xcode/DerivedData/tankgame-<hash>/Build/Products/Debug-iphonesimulator/tankgame iOS.app`
 
 ## Testing Checklist
 
