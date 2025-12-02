@@ -15,7 +15,7 @@ struct PlayerStats: Codable {
     var currentStreak: Int = 0
     var bestStreak: Int = 0
     
-    /// Kill/death ratio (returns 0 if no deaths)
+    /// Kill/death ratio (returns kills count if no deaths)
     var kdRatio: Double {
         guard deaths > 0 else { return Double(kills) }
         return Double(kills) / Double(deaths)

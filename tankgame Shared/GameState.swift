@@ -83,7 +83,10 @@ final class GameState {
                     tanks[i].isAlive = false
                     
                     // Record the kill in the scoring engine
-                    if projectile.ownerIndex >= 0 && projectile.ownerIndex != i {
+                    // Only count as a kill if: the projectile has a valid owner AND
+                    // the victim is not the shooter (exclude self-kills)
+                    let isValidKill = projectile.ownerIndex >= 0 && projectile.ownerIndex != i
+                    if isValidKill {
                         scoringEngine.recordKill(by: projectile.ownerIndex, victim: i)
                     }
                     
