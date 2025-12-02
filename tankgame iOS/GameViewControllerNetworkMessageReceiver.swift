@@ -75,7 +75,8 @@ extension GameViewController {
             state.tanks[playerIndex].row = row
             state.tanks[playerIndex].col = col
             state.tanks[playerIndex].direction = direction
-            gameScene?.renderTanks()
+            // Use smooth rendering for remote player movements
+            gameScene?.renderTanksWithSmoothing()
         }
     }
     
