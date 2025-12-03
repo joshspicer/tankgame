@@ -7,7 +7,9 @@
 
 import StoreKit
 
-/// Product identifiers for tank skins
+/// Product identifiers for tank skins.
+/// Raw values correspond to App Store Connect product identifiers that must be
+/// configured in App Store Connect before production release.
 enum TankSkinProduct: String, CaseIterable {
     case goldSkin = "com.tankgame.skin.gold"
     case neonSkin = "com.tankgame.skin.neon"
@@ -85,9 +87,11 @@ class StoreKitManager: ObservableObject {
     }
     
     /// Purchase a tank skin (simulated for now without App Store Connect)
+    /// TODO: Replace with actual StoreKit 2 implementation before production release.
+    /// This should use Product.purchase() and handle all purchase states properly.
     func purchase(_ product: TankSkinProduct) async -> Bool {
         // In a real implementation, this would use StoreKit 2:
-        // let result = try await product.purchase()
+        // let result = try await Product.products(for: [product.rawValue]).first?.purchase()
         // For now, we simulate a successful purchase
         
         purchasedSkins.insert(product)

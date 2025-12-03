@@ -161,7 +161,6 @@ class StoreUI {
             actionButton.setTitle(price, for: .normal)
             actionButton.backgroundColor = .systemGreen
             actionButton.setTitleColor(.white, for: .normal)
-            actionButton.tag = TankSkinProduct.allCases.firstIndex(of: product) ?? 0
             actionButton.addAction(UIAction { [weak self] _ in
                 self?.onPurchaseTapped?(product)
             }, for: .touchUpInside)
@@ -221,11 +220,14 @@ class StoreUI {
                     actionButton.setTitle("Select", for: .normal)
                     actionButton.backgroundColor = .systemBlue
                     
-                    // Update action to select instead of purchase
-                    actionButton.removeTarget(nil, action: nil, for: .allEvents)
-                    actionButton.addAction(UIAction { [weak self] _ in
+                    // Create action with unique identifier - UIButton deduplicates by identifier
+                    let actionId = UIAction.Identifier("select_\(product.rawValue)")
+                    let selectAction = UIAction(identifier: actionId) { [weak self] _ in
                         self?.onSelectTapped?(product)
-                    }, for: .touchUpInside)
+                    }
+                    // Remove previous action with same identifier if exists, then add new one
+                    actionButton.removeAction(identifiedBy: actionId, for: .touchUpInside)
+                    actionButton.addAction(selectAction, for: .touchUpInside)
                     
                     // Highlight if selected
                     if storeManager.selectedSkin == product {
