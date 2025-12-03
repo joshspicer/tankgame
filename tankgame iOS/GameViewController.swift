@@ -21,6 +21,7 @@ class GameViewController: UIViewController {
     
     // UI components
     private var lobbyUI: LobbyUI!
+    private var storeUI: StoreUI!
     
     // Game components
     private var gameScene: GameScene?
@@ -38,6 +39,7 @@ class GameViewController: UIViewController {
         
         // Setup UI
         setupLobby()
+        setupStore()
         
         // Request permissions on first launch
         permissionManager.requestPermissionsIfNeeded()
@@ -64,6 +66,10 @@ class GameViewController: UIViewController {
             self?.handleStartGameTapped()
         }
         
+        lobbyUI.onStoreTapped = { [weak self] in
+            self?.handleStoreTapped()
+        }
+        
         // Setup table view
         lobbyUI.peerTableView.delegate = self
         lobbyUI.peerTableView.dataSource = self
@@ -78,12 +84,37 @@ class GameViewController: UIViewController {
         }
     }
     
+    private func setupStore() {
+        storeUI = StoreUI()
+        storeUI.setup(in: view)
+        
+        storeUI.onCloseTapped = { [weak self] in
+            self?.storeUI.hide()
+            self?.lobbyUI.updateCoinsDisplay()
+        }
+        
+        storeUI.onSkinSelected = { [weak self] skin in
+            StoreManager.shared.selectSkin(skin.id)
+            self?.storeUI.refreshSkinCards()
+        }
+        
+        storeUI.onSkinPurchased = { [weak self] skin in
+            self?.handleSkinPurchase(skin)
+        }
+        
+        storeUI.onCoinPackageTapped = { [weak self] packageId in
+            self?.handleCoinPackagePurchase(packageId)
+        }
+    }
+    
     // MARK: - Button Handlers
     
     private func handleHostTapped() {
         multiplayerManager.isHost = true
         lobbyUI.hostButton.isHidden = true
         lobbyUI.joinButton.isHidden = true
+        lobbyUI.storeButton.isHidden = true
+        lobbyUI.coinsDisplayLabel.isHidden = true
         lobbyUI.instructionsLabel.isHidden = true
         lobbyUI.cancelButton.isHidden = false
         lobbyUI.connectedPlayersView.isHidden = false
@@ -98,6 +129,8 @@ class GameViewController: UIViewController {
     private func handleJoinTapped() {
         lobbyUI.hostButton.isHidden = true
         lobbyUI.joinButton.isHidden = true
+        lobbyUI.storeButton.isHidden = true
+        lobbyUI.coinsDisplayLabel.isHidden = true
         lobbyUI.instructionsLabel.isHidden = true
         lobbyUI.cancelButton.isHidden = false
         lobbyUI.activityIndicator.startAnimating()
@@ -106,6 +139,72 @@ class GameViewController: UIViewController {
         updatePeerListUI()
         
         multiplayerManager.startBrowsing()
+    }
+    
+    private func handleStoreTapped() {
+        storeUI.show()
+    }
+    
+    private func handleSkinPurchase(_ skin: TankSkin) {
+        let storeManager = StoreManager.shared
+        
+        if storeManager.coins < skin.price {
+            let alert = UIAlertController(
+                title: "Not Enough Coins",
+                message: "You need \(skin.price) TankCoins to purchase this skin.\n\nYou have: \(storeManager.coins) TankCoins",
+                preferredStyle: .alert
+            )
+            alert.addAction(UIAlertAction(title: "Get Coins", style: .default) { [weak self] _ in
+                // Scroll to coins section (handled by UI)
+            })
+            alert.addAction(UIAlertAction(title: "Cancel", style: .cancel))
+            present(alert, animated: true)
+            return
+        }
+        
+        let alert = UIAlertController(
+            title: "Purchase \(skin.name)?",
+            message: "This will cost \(skin.price) TankCoins.\n\n\(skin.description)",
+            preferredStyle: .alert
+        )
+        alert.addAction(UIAlertAction(title: "Buy", style: .default) { [weak self] _ in
+            if storeManager.purchaseSkin(skin) {
+                self?.storeUI.refreshSkinCards()
+                self?.showPurchaseSuccess(skin.name)
+            }
+        })
+        alert.addAction(UIAlertAction(title: "Cancel", style: .cancel))
+        present(alert, animated: true)
+    }
+    
+    private func handleCoinPackagePurchase(_ packageId: String) {
+        // In a real app, this would trigger StoreKit purchase
+        // For demo purposes, we'll show an alert
+        guard let package = StoreManager.coinPackages.first(where: { $0.id == packageId }) else { return }
+        
+        let alert = UIAlertController(
+            title: "Purchase \(package.coins) TankCoins?",
+            message: "This will cost \(package.price) (In-App Purchase)\n\nNote: StoreKit integration requires App Store Connect setup.",
+            preferredStyle: .alert
+        )
+        alert.addAction(UIAlertAction(title: "Buy (Demo)", style: .default) { [weak self] _ in
+            // Demo mode: give coins for free
+            StoreManager.shared.addCoins(package.coins)
+            self?.storeUI.updateCoinsDisplay()
+            self?.showPurchaseSuccess("\(package.coins) TankCoins")
+        })
+        alert.addAction(UIAlertAction(title: "Cancel", style: .cancel))
+        present(alert, animated: true)
+    }
+    
+    private func showPurchaseSuccess(_ itemName: String) {
+        let alert = UIAlertController(
+            title: "Purchase Successful! 🎉",
+            message: "You now own \(itemName)",
+            preferredStyle: .alert
+        )
+        alert.addAction(UIAlertAction(title: "OK", style: .default))
+        present(alert, animated: true)
     }
     
     private func handleCancelTapped() {

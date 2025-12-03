@@ -107,6 +107,11 @@ class GameScene: SKScene {
     func startGame(with state: GameState) {
         self.gameState = state
         tankExploding = Array(repeating: false, count: state.tanks.count)
+        
+        // Set the local player's selected skin
+        let selectedSkin = StoreManager.shared.selectedSkin
+        renderer.setSkin(selectedSkin, forPlayer: state.localPlayerIndex)
+        
         renderGrid()
         renderTanks()
         updateScore()
@@ -197,9 +202,16 @@ class GameScene: SKScene {
                         state.wins[winner] += 1
                         if winner == state.localPlayerIndex {
                             self.soundManager.playSound("win.wav")
+                            // Award coins for winning
+                            StoreManager.shared.awardWinCoins()
                         } else {
                             self.soundManager.playSound("lose.wav")
+                            // Award coins for playing
+                            StoreManager.shared.awardPlayCoins()
                         }
+                    } else {
+                        // Draw - award play coins
+                        StoreManager.shared.awardPlayCoins()
                     }
                     
                     // Remove tank nodes now that explosion is done

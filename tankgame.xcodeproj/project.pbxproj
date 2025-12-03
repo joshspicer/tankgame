@@ -33,7 +33,9 @@
 				MultiplayerManager.swift,
 				Projectile.swift,
 				SoundManager.swift,
+				StoreManager.swift,
 				Tank.swift,
+				TankSkin.swift,
 			);
 			target = 0AEBC8152EB14C4300890CC1 /* tankgame iOS */;
 		};
@@ -57,7 +59,9 @@
 				MultiplayerManager.swift,
 				Projectile.swift,
 				SoundManager.swift,
+				StoreManager.swift,
 				Tank.swift,
+				TankSkin.swift,
 			);
 			target = 0AEBC8262EB14C4300890CC1 /* tankgame tvOS */;
 		};
@@ -81,7 +85,9 @@
 				MultiplayerManager.swift,
 				Projectile.swift,
 				SoundManager.swift,
+				StoreManager.swift,
 				Tank.swift,
+				TankSkin.swift,
 			);
 			target = 0AEBC8362EB14C4300890CC1 /* tankgame macOS */;
 		};

@@ -13,12 +13,20 @@ class GameSceneRenderer {
     let tileSize: CGFloat
     let gridSize: Int
     
-    // Tank colors for up to 4 players
+    // Tank colors for up to 4 players (fallback if no skin selected)
     let tankColors: [SKColor] = [.blue, .red, .green, .orange]
+    
+    // Player skins (indexed by player index)
+    var playerSkins: [Int: TankSkin] = [:]
     
     init(tileSize: CGFloat, gridSize: Int) {
         self.tileSize = tileSize
         self.gridSize = gridSize
+    }
+    
+    /// Set the skin for a player
+    func setSkin(_ skin: TankSkin, forPlayer playerIndex: Int) {
+        playerSkins[playerIndex] = skin
     }
     
     // MARK: - Grid Rendering
@@ -47,8 +55,9 @@ class GameSceneRenderer {
             
             let tank = tanks[i]
             if tank.isAlive || tankExploding[i] {
-                let color = tankColors[i]
-                let tankSprite = createTankNode(color: color, direction: tank.direction)
+                let skin = playerSkins[i]
+                let color = skin?.primaryColor ?? tankColors[i]
+                let tankSprite = createTankNode(color: color, direction: tank.direction, skin: skin)
                 tankSprite.position = gridPosition(row: tank.row, col: tank.col)
                 tankNode.addChild(tankSprite)
             }
@@ -56,7 +65,7 @@ class GameSceneRenderer {
     }
     
     /// Create a tank sprite node
-    private func createTankNode(color: SKColor, direction: Direction) -> SKNode {
+    private func createTankNode(color: SKColor, direction: Direction, skin: TankSkin? = nil) -> SKNode {
         let tankNode = SKNode()
         
         // Tank body (square)
@@ -68,9 +77,25 @@ class GameSceneRenderer {
         barrel.position = CGPoint(x: 0, y: tileSize * 0.35)
         tankNode.addChild(barrel)
         
-        // Add rainbow animation to body and barrel
-        addRainbowAnimation(to: body, phaseOffset: 0)
-        addRainbowAnimation(to: barrel, phaseOffset: 0.15)
+        // Apply skin effects
+        if let skin = skin {
+            if skin.hasRainbowEffect {
+                addRainbowAnimation(to: body, phaseOffset: 0)
+                addRainbowAnimation(to: barrel, phaseOffset: 0.15)
+            }
+            
+            if skin.hasGlowEffect {
+                addGlowEffect(to: tankNode, color: color)
+            }
+            
+            if let particleEffect = skin.particleEffect {
+                addParticleEffect(particleEffect, to: tankNode, color: color)
+            }
+        } else {
+            // Default rainbow animation for all tanks
+            addRainbowAnimation(to: body, phaseOffset: 0)
+            addRainbowAnimation(to: barrel, phaseOffset: 0.15)
+        }
         
         // Rotate based on direction
         tankNode.zRotation = CGFloat(direction.angle)
@@ -139,5 +164,83 @@ class GameSceneRenderer {
         let repeatForever = SKAction.repeatForever(rainbowSequence)
         
         sprite.run(repeatForever)
+    }
+    
+    /// Add glow effect to a node
+    private func addGlowEffect(to node: SKNode, color: SKColor) {
+        let glowNode = SKEffectNode()
+        glowNode.shouldRasterize = true
+        glowNode.filter = CIFilter(name: "CIGaussianBlur", parameters: ["inputRadius": 8.0])
+        
+        let glowSprite = SKSpriteNode(color: color, size: CGSize(width: tileSize * 0.9, height: tileSize * 0.9))
+        glowSprite.alpha = 0.5
+        glowNode.addChild(glowSprite)
+        glowNode.zPosition = -1
+        
+        // Pulsing glow
+        let fadeOut = SKAction.fadeAlpha(to: 0.3, duration: 0.5)
+        let fadeIn = SKAction.fadeAlpha(to: 0.7, duration: 0.5)
+        let pulse = SKAction.sequence([fadeOut, fadeIn])
+        glowNode.run(SKAction.repeatForever(pulse))
+        
+        node.addChild(glowNode)
+    }
+    
+    /// Add particle effect to a node
+    private func addParticleEffect(_ effectType: TankSkin.ParticleEffectType, to node: SKNode, color: SKColor) {
+        let emitter = SKEmitterNode()
+        
+        switch effectType {
+        case .fire:
+            emitter.particleTexture = SKTexture(imageNamed: "spark")
+            emitter.particleBirthRate = 50
+            emitter.particleLifetime = 0.5
+            emitter.particleSpeed = 20
+            emitter.particleSpeedRange = 10
+            emitter.particleAlpha = 0.8
+            emitter.particleAlphaSpeed = -1.5
+            emitter.particleScale = 0.2
+            emitter.particleScaleRange = 0.1
+            emitter.particleColor = .orange
+            emitter.particleColorBlendFactor = 1.0
+            emitter.emissionAngle = .pi
+            emitter.emissionAngleRange = .pi / 4
+            
+        case .sparkle:
+            emitter.particleTexture = SKTexture(imageNamed: "spark")
+            emitter.particleBirthRate = 20
+            emitter.particleLifetime = 1.0
+            emitter.particleSpeed = 30
+            emitter.particleSpeedRange = 20
+            emitter.particleAlpha = 1.0
+            emitter.particleAlphaSpeed = -1.0
+            emitter.particleScale = 0.15
+            emitter.particleScaleRange = 0.1
+            emitter.particleColor = color
+            emitter.particleColorBlendFactor = 1.0
+            emitter.emissionAngleRange = .pi * 2
+            
+        case .smoke:
+            emitter.particleTexture = SKTexture(imageNamed: "spark")
+            emitter.particleBirthRate = 30
+            emitter.particleLifetime = 1.5
+            emitter.particleSpeed = 15
+            emitter.particleSpeedRange = 5
+            emitter.particleAlpha = 0.4
+            emitter.particleAlphaSpeed = -0.3
+            emitter.particleScale = 0.3
+            emitter.particleScaleSpeed = 0.2
+            emitter.particleColor = .gray
+            emitter.particleColorBlendFactor = 1.0
+            emitter.emissionAngle = .pi
+            emitter.emissionAngleRange = .pi / 6
+            
+        case .none:
+            return
+        }
+        
+        emitter.position = CGPoint(x: 0, y: -tileSize * 0.3)
+        emitter.zPosition = -1
+        node.addChild(emitter)
     }
 }

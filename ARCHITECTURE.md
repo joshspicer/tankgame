@@ -56,9 +56,15 @@ Multiplayer communication:
 ### 8. UI Layer (iOS)
 User interface components:
 - `LobbyUI.swift` - Complete lobby interface with all UI elements
+- `StoreUI.swift` - In-game store for purchasing skins and coins
 - `PermissionManager.swift` - iOS permission request handling
 
-### 9. Application Layer
+### 9. Monetization Layer
+In-app purchases and virtual currency:
+- `TankSkin.swift` - Tank skin definitions and customization options
+- `StoreManager.swift` - Virtual currency, purchases, and StoreKit integration
+
+### 10. Application Layer
 Top-level coordination:
 - `GameViewController.swift` - Main view controller coordinating all layers
 

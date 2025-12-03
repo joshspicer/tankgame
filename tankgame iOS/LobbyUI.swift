@@ -16,6 +16,8 @@ class LobbyUI {
     private(set) var joinButton: UIButton!
     private(set) var cancelButton: UIButton!
     private(set) var startGameButton: UIButton!
+    private(set) var storeButton: UIButton!
+    private(set) var coinsDisplayLabel: UILabel!
     private(set) var peerTableView: UITableView!
     private(set) var connectedPlayersView: UIView!
     private(set) var connectedPlayersLabel: UILabel!
@@ -29,6 +31,7 @@ class LobbyUI {
     var onJoinTapped: (() -> Void)?
     var onCancelTapped: (() -> Void)?
     var onStartGameTapped: (() -> Void)?
+    var onStoreTapped: (() -> Void)?
     
     func setup(in parentView: UIView) {
         // Create lobby view
@@ -73,6 +76,20 @@ class LobbyUI {
         joinButton = createButton(title: "🔍 Join Game", backgroundColor: .systemGreen)
         joinButton.addTarget(self, action: #selector(joinButtonTapped), for: .touchUpInside)
         lobbyView.addSubview(joinButton)
+        
+        // Store button
+        storeButton = createButton(title: "🏪 Store", backgroundColor: .systemOrange)
+        storeButton.addTarget(self, action: #selector(storeButtonTapped), for: .touchUpInside)
+        lobbyView.addSubview(storeButton)
+        
+        // Coins display
+        coinsDisplayLabel = UILabel()
+        coinsDisplayLabel.text = "🪙 \(StoreManager.shared.coins) TankCoins"
+        coinsDisplayLabel.font = .systemFont(ofSize: 16, weight: .semibold)
+        coinsDisplayLabel.textAlignment = .center
+        coinsDisplayLabel.textColor = .systemYellow
+        coinsDisplayLabel.translatesAutoresizingMaskIntoConstraints = false
+        lobbyView.addSubview(coinsDisplayLabel)
         
         // Cancel button
         cancelButton = UIButton(type: .system)
@@ -175,7 +192,15 @@ class LobbyUI {
             joinButton.widthAnchor.constraint(equalToConstant: 240),
             joinButton.heightAnchor.constraint(equalToConstant: 56),
             
-            cancelButton.topAnchor.constraint(equalTo: joinButton.bottomAnchor, constant: 20),
+            storeButton.topAnchor.constraint(equalTo: joinButton.bottomAnchor, constant: 20),
+            storeButton.centerXAnchor.constraint(equalTo: lobbyView.centerXAnchor),
+            storeButton.widthAnchor.constraint(equalToConstant: 240),
+            storeButton.heightAnchor.constraint(equalToConstant: 56),
+            
+            coinsDisplayLabel.topAnchor.constraint(equalTo: storeButton.bottomAnchor, constant: 12),
+            coinsDisplayLabel.centerXAnchor.constraint(equalTo: lobbyView.centerXAnchor),
+            
+            cancelButton.topAnchor.constraint(equalTo: coinsDisplayLabel.bottomAnchor, constant: 20),
             cancelButton.centerXAnchor.constraint(equalTo: lobbyView.centerXAnchor),
             
             connectedPlayersView.topAnchor.constraint(equalTo: cancelButton.bottomAnchor, constant: 20),
@@ -223,10 +248,21 @@ class LobbyUI {
         onStartGameTapped?()
     }
     
+    @objc private func storeButtonTapped() {
+        onStoreTapped?()
+    }
+    
+    /// Update the coins display
+    func updateCoinsDisplay() {
+        coinsDisplayLabel.text = "🪙 \(StoreManager.shared.coins) TankCoins"
+    }
+    
     /// Reset lobby to initial state
     func reset() {
         hostButton.isHidden = false
         joinButton.isHidden = false
+        storeButton.isHidden = false
+        coinsDisplayLabel.isHidden = false
         instructionsLabel.isHidden = false
         cancelButton.isHidden = true
         startGameButton.isHidden = true
@@ -235,5 +271,6 @@ class LobbyUI {
         emptyStateLabel.isHidden = true
         activityIndicator.stopAnimating()
         statusLabel.text = "Choose an option to start"
+        updateCoinsDisplay()
     }
 }
