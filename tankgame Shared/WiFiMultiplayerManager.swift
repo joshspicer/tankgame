@@ -231,18 +231,20 @@ class WiFiMultiplayerManager {
                 // Host sends to all connected clients
                 for connection in connections {
                     connection.send(content: frameData, completion: .contentProcessed { [weak self] error in
+                        guard let self = self else { return }
                         if let error = error {
                             print("WiFi send error: \(error)")
-                            self?.delegate?.wifiManager(self!, didEncounterError: error)
+                            self.delegate?.wifiManager(self, didEncounterError: error)
                         }
                     })
                 }
             } else if let hostConn = hostConnection {
                 // Client sends to host
                 hostConn.send(content: frameData, completion: .contentProcessed { [weak self] error in
+                    guard let self = self else { return }
                     if let error = error {
                         print("WiFi send error: \(error)")
-                        self?.delegate?.wifiManager(self!, didEncounterError: error)
+                        self.delegate?.wifiManager(self, didEncounterError: error)
                     }
                 })
             }
@@ -288,7 +290,8 @@ class WiFiMultiplayerManager {
     
     var allPlayerNames: [String] {
         if isHost {
-            return [displayName] + connectedPeerNames.values
+            // Sort peer names for consistent ordering
+            return [displayName] + connectedPeerNames.values.sorted()
         } else {
             // For clients, return known players (includes self, host, and any other players)
             return knownPlayerNames.isEmpty ? [displayName] : knownPlayerNames

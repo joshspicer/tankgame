@@ -20,8 +20,13 @@ extension GameViewController: UITableViewDelegate, UITableViewDataSource {
     func tableView(_ tableView: UITableView, cellForRowAt indexPath: IndexPath) -> UITableViewCell {
         if tableView === wifiLobbyUI?.wifiHostsTableView {
             let cell = tableView.dequeueReusableCell(withIdentifier: "WiFiHostCell", for: indexPath)
-            if let host = wifiCoordinator?.discoveredHosts[indexPath.row] {
+            // Safe array access
+            if let hosts = wifiCoordinator?.discoveredHosts,
+               indexPath.row < hosts.count {
+                let host = hosts[indexPath.row]
                 cell.textLabel?.text = "📶 \(host.name) (\(host.roomCode))"
+            } else {
+                cell.textLabel?.text = "📶 Unknown Host"
             }
             cell.textLabel?.font = .systemFont(ofSize: 16, weight: .medium)
             cell.accessoryType = .disclosureIndicator
@@ -29,8 +34,13 @@ extension GameViewController: UITableViewDelegate, UITableViewDataSource {
         }
         
         let cell = tableView.dequeueReusableCell(withIdentifier: "PeerCell", for: indexPath)
-        let peer = multiplayerCoordinator.discoveredPeers[indexPath.row]
-        cell.textLabel?.text = "📱 \(peer.displayName)"
+        // Safe array access
+        if indexPath.row < multiplayerCoordinator.discoveredPeers.count {
+            let peer = multiplayerCoordinator.discoveredPeers[indexPath.row]
+            cell.textLabel?.text = "📱 \(peer.displayName)"
+        } else {
+            cell.textLabel?.text = "📱 Unknown Peer"
+        }
         cell.textLabel?.font = .systemFont(ofSize: 16, weight: .medium)
         cell.accessoryType = .disclosureIndicator
         return cell
@@ -40,14 +50,18 @@ extension GameViewController: UITableViewDelegate, UITableViewDataSource {
         tableView.deselectRow(at: indexPath, animated: true)
         
         if tableView === wifiLobbyUI?.wifiHostsTableView {
-            if let host = wifiCoordinator?.discoveredHosts[indexPath.row] {
-                wifiMultiplayerManager?.joinHost(host)
-                lobbyUI.statusLabel.text = "Connecting to \(host.name)..."
-                lobbyUI.activityIndicator.startAnimating()
-            }
+            // Safe array access
+            guard let hosts = wifiCoordinator?.discoveredHosts,
+                  indexPath.row < hosts.count else { return }
+            let host = hosts[indexPath.row]
+            wifiMultiplayerManager?.joinHost(host)
+            lobbyUI.statusLabel.text = "Connecting to \(host.name)..."
+            lobbyUI.activityIndicator.startAnimating()
             return
         }
         
+        // Safe array access
+        guard indexPath.row < multiplayerCoordinator.discoveredPeers.count else { return }
         let peer = multiplayerCoordinator.discoveredPeers[indexPath.row]
         multiplayerManager.invitePeer(peer)
         lobbyUI.statusLabel.text = "Connecting to \(peer.displayName)..."
