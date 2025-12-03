@@ -172,10 +172,10 @@ class StoreKitManager: NSObject, ObservableObject {
     
     /// Listen for transactions
     private func listenForTransactions() -> Task<Void, Error> {
-        return Task.detached {
+        return Task { @MainActor in
             for await result in Transaction.updates {
                 do {
-                    let transaction = try await self.checkVerified(result)
+                    let transaction = try self.checkVerified(result)
                     await self.updateCustomerProductStatus()
                     await transaction.finish()
                 } catch {
@@ -252,7 +252,7 @@ class StoreKitManager: NSObject, ObservableObject {
     
     /// Select a tank skin
     func selectSkin(_ skin: StoreProduct) {
-        guard isPurchased(skin) || skin == .rainbowTankSkin else { return }
+        guard isPurchased(skin) else { return }
         selectedTankSkin = skin
         saveSelectedSkin()
     }

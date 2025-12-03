@@ -247,8 +247,12 @@ class StoreUI {
     }
     
     private func getPriceString(for product: StoreProduct) -> String {
-        // In a real app, this would come from the StoreKit Product
-        // For now, return placeholder prices
+        // Try to get actual price from StoreKit Product
+        if let storeKitProduct = storeManager.products.first(where: { $0.id == product.rawValue }) {
+            return storeKitProduct.displayPrice
+        }
+        
+        // Fallback placeholder prices if products haven't loaded yet
         switch product {
         case .goldTankSkin: return "$2.99"
         case .rainbowTankSkin: return "$1.99"
