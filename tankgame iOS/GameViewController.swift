@@ -21,6 +21,7 @@ class GameViewController: UIViewController {
     
     // UI components
     var lobbyUI: LobbyUI!
+    var storeUI: StoreUI!
     
     // Game components
     var gameScene: GameScene?
@@ -47,6 +48,13 @@ class GameViewController: UIViewController {
         lobbyUI = LobbyUI()
         lobbyUI.setup(in: view)
         
+        // Setup Store UI
+        storeUI = StoreUI()
+        storeUI.setup(in: view)
+        storeUI.onClose = { [weak self] in
+            self?.lobbyUI.lobbyView.isHidden = false
+        }
+        
         // Setup callbacks
         lobbyUI.onHostTapped = { [weak self] in
             self?.handleHostTapped()
@@ -54,6 +62,10 @@ class GameViewController: UIViewController {
         
         lobbyUI.onJoinTapped = { [weak self] in
             self?.handleJoinTapped()
+        }
+        
+        lobbyUI.onStoreTapped = { [weak self] in
+            self?.handleStoreTapped()
         }
         
         lobbyUI.onCancelTapped = { [weak self] in
