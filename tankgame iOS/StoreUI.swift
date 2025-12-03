@@ -54,12 +54,14 @@ class StoreUI {
         coinsLabel.translatesAutoresizingMaskIntoConstraints = false
         storeView.addSubview(coinsLabel)
         
-        // Close button
+        // Close button using SF Symbols for better accessibility
         closeButton = UIButton(type: .system)
-        closeButton.setTitle("✕", for: .normal)
-        closeButton.titleLabel?.font = .systemFont(ofSize: 24, weight: .bold)
-        closeButton.setTitleColor(.label, for: .normal)
+        let closeConfig = UIImage.SymbolConfiguration(pointSize: 20, weight: .bold)
+        let closeImage = UIImage(systemName: "xmark.circle.fill", withConfiguration: closeConfig)
+        closeButton.setImage(closeImage, for: .normal)
+        closeButton.tintColor = .label
         closeButton.translatesAutoresizingMaskIntoConstraints = false
+        closeButton.accessibilityLabel = "Close store"
         closeButton.addTarget(self, action: #selector(closeButtonTapped), for: .touchUpInside)
         storeView.addSubview(closeButton)
         

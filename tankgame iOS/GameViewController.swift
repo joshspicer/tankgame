@@ -168,9 +168,15 @@ class GameViewController: UIViewController {
             preferredStyle: .alert
         )
         alert.addAction(UIAlertAction(title: "Buy", style: .default) { [weak self] _ in
-            if storeManager.purchaseSkin(skin) {
+            let result = storeManager.purchaseSkin(skin)
+            switch result {
+            case .success:
                 self?.storeUI.refreshSkinCards()
                 self?.showPurchaseSuccess(skin.name)
+            case .alreadyOwned:
+                self?.storeUI.refreshSkinCards()
+            case .insufficientFunds:
+                break // Should not happen since we checked above
             }
         })
         alert.addAction(UIAlertAction(title: "Cancel", style: .cancel))
@@ -179,7 +185,8 @@ class GameViewController: UIViewController {
     
     private func handleCoinPackagePurchase(_ packageId: String) {
         // TODO: Implement real StoreKit purchase flow for production
-        // This requires App Store Connect product configuration
+        // This demo mode should be removed before App Store submission
+        // Real implementation requires App Store Connect product configuration
         guard let package = StoreManager.coinPackages.first(where: { $0.id == packageId }) else { return }
         
         let alert = UIAlertController(

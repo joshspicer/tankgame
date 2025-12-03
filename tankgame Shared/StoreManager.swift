@@ -7,6 +7,7 @@
 
 import Foundation
 import StoreKit
+import Combine
 
 /// Manages in-app purchases, virtual currency, and owned items
 class StoreManager: ObservableObject {
@@ -105,14 +106,21 @@ class StoreManager: ObservableObject {
         return ownedSkinIds.contains(skinId)
     }
     
+    /// Purchase result enum
+    enum PurchaseResult {
+        case success
+        case alreadyOwned
+        case insufficientFunds
+    }
+    
     /// Purchase a skin with coins
-    func purchaseSkin(_ skin: TankSkin) -> Bool {
-        guard !isSkinOwned(skin.id) else { return true }
-        guard spendCoins(skin.price) else { return false }
+    func purchaseSkin(_ skin: TankSkin) -> PurchaseResult {
+        guard !isSkinOwned(skin.id) else { return .alreadyOwned }
+        guard spendCoins(skin.price) else { return .insufficientFunds }
         
         ownedSkinIds.insert(skin.id)
         saveUserData()
-        return true
+        return .success
     }
     
     /// Select a skin as the active skin
