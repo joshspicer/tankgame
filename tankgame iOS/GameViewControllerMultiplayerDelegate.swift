@@ -38,8 +38,15 @@ extension GameViewController: MultiplayerManagerDelegate {
     func multiplayerManager(_ manager: MultiplayerManager, didDisconnectFromPeer peerID: MCPeerID) {
         multiplayerCoordinator.removeConnectedPeer(peerID)
         
+        // During game - show reconnection status if auto-reconnect is active
         if gameState != nil {
-            // During game - return to lobby
+            // Check if we're attempting to reconnect
+            if multiplayerManager.connectionState.isReconnecting {
+                lobbyUI.statusLabel.text = "Reconnecting to \(peerID.displayName)..."
+                return
+            }
+            
+            // Not reconnecting - return to lobby
             DispatchQueue.main.async { [weak self] in
                 guard let self = self else { return }
                 self.view.subviews.forEach { $0.removeFromSuperview() }
@@ -53,6 +60,11 @@ extension GameViewController: MultiplayerManagerDelegate {
                 self.present(alert, animated: true)
             }
         }
+    }
+    
+    func multiplayerManager(_ manager: MultiplayerManager, isConnectingToPeer peerID: MCPeerID) {
+        lobbyUI.statusLabel.text = "Connecting to \(peerID.displayName)..."
+        lobbyUI.activityIndicator.startAnimating()
     }
     
     func multiplayerManager(_ manager: MultiplayerManager, didReceiveMessage message: GameMessage, from peerID: MCPeerID) {
@@ -87,5 +99,29 @@ extension GameViewController: MultiplayerManagerDelegate {
         })
         
         present(alert, animated: true)
+    }
+    
+    func multiplayerManager(_ manager: MultiplayerManager, didChangeConnectionState state: ConnectionState) {
+        // Update UI based on connection state
+        lobbyUI.statusLabel.text = state.description
+        
+        switch state {
+        case .disconnected:
+            lobbyUI.activityIndicator.stopAnimating()
+        case .browsing, .advertising:
+            lobbyUI.activityIndicator.startAnimating()
+        case .connecting:
+            lobbyUI.activityIndicator.startAnimating()
+        case .connected:
+            lobbyUI.activityIndicator.stopAnimating()
+            updateConnectedPlayersUI()
+        case .reconnecting:
+            lobbyUI.activityIndicator.startAnimating()
+        }
+    }
+    
+    func multiplayerManager(_ manager: MultiplayerManager, isAttemptingReconnection attempt: Int, maxAttempts: Int, toPeer peerID: MCPeerID) {
+        lobbyUI.statusLabel.text = "Reconnecting to \(peerID.displayName) (attempt \(attempt)/\(maxAttempts))..."
+        lobbyUI.activityIndicator.startAnimating()
     }
 }
