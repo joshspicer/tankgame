@@ -37,4 +37,34 @@ extension GameViewController {
             lobbyUI.emptyStateLabel.isHidden = true
         }
     }
+    
+    // MARK: - WiFi UI Updates
+    
+    func updateWiFiUI() {
+        wifiLobbyUI?.wifiHostsTableView.reloadData()
+        updateWiFiHostListUI()
+        updateWiFiConnectedPlayersUI()
+    }
+    
+    func updateWiFiConnectedPlayersUI() {
+        guard let coordinator = wifiCoordinator else { return }
+        
+        let playerCount = coordinator.playerCount
+        let localName = UIDevice.current.name
+        let playerNames = coordinator.getConnectedPlayerNames(localPlayerName: localName)
+        let namesText = playerNames.enumerated().map { "P\($0.offset + 1): \($0.element)" }.joined(separator: "\n")
+        lobbyUI.connectedPlayersLabel.text = "Connected Players (\(playerCount)/4):\n\n\(namesText)"
+        
+        if wifiMultiplayerManager?.isHost == true {
+            lobbyUI.startGameButton.isEnabled = playerCount >= 2
+            lobbyUI.startGameButton.alpha = playerCount >= 2 ? 1.0 : 0.5
+        }
+    }
+    
+    func updateWiFiHostListUI() {
+        guard let coordinator = wifiCoordinator else { return }
+        
+        let hasHosts = !coordinator.discoveredHosts.isEmpty
+        wifiLobbyUI?.showWiFiHostsList(hasHosts: hasHosts)
+    }
 }

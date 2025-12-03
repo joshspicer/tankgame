@@ -15,7 +15,7 @@ extension GameViewController {
     func handleReceivedMessage(_ message: GameMessage, from peerID: MCPeerID) {
         switch message {
         case .roundStart(let seed, let playerCount, let hostPlayerIndex, let playerAssignments):
-            handleRoundStartMessage(seed: seed, playerCount: playerCount, hostPlayerIndex: hostPlayerIndex, playerAssignments: playerAssignments)
+            handleRoundStartMessage(seed: seed, playerCount: playerCount, hostPlayerIndex: hostPlayerIndex, playerAssignments: playerAssignments, isWiFi: false)
             
         case .playerMove(let playerIndex, let row, let col, let direction):
             handlePlayerMoveMessage(playerIndex: playerIndex, row: row, col: col, direction: direction)
@@ -32,9 +32,34 @@ extension GameViewController {
         }
     }
     
-    private func handleRoundStartMessage(seed: UInt32, playerCount: Int, hostPlayerIndex: Int, playerAssignments: [String: Int]) {
+    func handleReceivedWiFiMessage(_ message: GameMessage, from peerName: String) {
+        switch message {
+        case .roundStart(let seed, let playerCount, let hostPlayerIndex, let playerAssignments):
+            handleRoundStartMessage(seed: seed, playerCount: playerCount, hostPlayerIndex: hostPlayerIndex, playerAssignments: playerAssignments, isWiFi: true)
+            
+        case .playerMove(let playerIndex, let row, let col, let direction):
+            handlePlayerMoveMessage(playerIndex: playerIndex, row: row, col: col, direction: direction)
+            
+        case .playerShoot(let playerIndex, let projectile):
+            handlePlayerShootMessage(projectile: projectile)
+            
+        case .readyForNextRound(let playerIndex):
+            wifiCoordinator?.markPlayerReady(playerIndex)
+            checkAndStartNextRound()
+            
+        case .playerHit, .startGame, .playerJoined:
+            break
+        }
+    }
+    
+    private func handleRoundStartMessage(seed: UInt32, playerCount: Int, hostPlayerIndex: Int, playerAssignments: [String: Int], isWiFi: Bool) {
         if gameState == nil {
-            let myName = multiplayerManager.session.myPeerID.displayName
+            let myName: String
+            if isWiFi {
+                myName = UIDevice.current.name
+            } else {
+                myName = multiplayerManager.session.myPeerID.displayName
+            }
             let localPlayerIndex = playerAssignments[myName] ?? 1
             
             gameState = GameState(seed: seed, playerCount: playerCount, localPlayerIndex: localPlayerIndex)
@@ -54,7 +79,11 @@ extension GameViewController {
                 let scene = GameScene.newGameScene()
                 scene.startGame(with: state)
                 scene.onGameMessage = { [weak self] msg in
-                    self?.handleGameMessage(msg)
+                    if isWiFi {
+                        self?.handleWiFiGameMessage(msg)
+                    } else {
+                        self?.handleGameMessage(msg)
+                    }
                 }
                 self.gameScene = scene
                 

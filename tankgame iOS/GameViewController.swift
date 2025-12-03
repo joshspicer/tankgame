@@ -14,13 +14,21 @@ import Network
 /// Main view controller that coordinates the game experience
 class GameViewController: UIViewController {
     
-    // Core managers
+    // Core managers (Bluetooth)
     var multiplayerManager: MultiplayerManager!
     var multiplayerCoordinator: MultiplayerCoordinator!
     var permissionManager: PermissionManager!
     
+    // WiFi managers
+    var wifiMultiplayerManager: WiFiMultiplayerManager?
+    var wifiCoordinator: WiFiMultiplayerCoordinator?
+    
+    // Connection mode
+    var connectionMode: WiFiLobbyUI.ConnectionMode = .bluetooth
+    
     // UI components
     var lobbyUI: LobbyUI!
+    var wifiLobbyUI: WiFiLobbyUI?
     
     // Game components
     var gameScene: GameScene?
@@ -30,11 +38,16 @@ class GameViewController: UIViewController {
     override func viewDidLoad() {
         super.viewDidLoad()
         
-        // Initialize managers
+        // Initialize Bluetooth managers
         multiplayerManager = MultiplayerManager()
         multiplayerManager.delegate = self
         multiplayerCoordinator = MultiplayerCoordinator(multiplayerManager: multiplayerManager)
         permissionManager = PermissionManager(multiplayerManager: multiplayerManager)
+        
+        // Initialize WiFi managers
+        wifiMultiplayerManager = WiFiMultiplayerManager()
+        wifiMultiplayerManager?.delegate = self
+        wifiCoordinator = WiFiMultiplayerCoordinator(wifiManager: wifiMultiplayerManager!)
         
         // Setup UI
         setupLobby()
@@ -46,6 +59,10 @@ class GameViewController: UIViewController {
     private func setupLobby() {
         lobbyUI = LobbyUI()
         lobbyUI.setup(in: view)
+        
+        // Setup WiFi lobby UI
+        wifiLobbyUI = WiFiLobbyUI()
+        wifiLobbyUI?.setup(in: view, below: lobbyUI.statusLabel, lobbyView: lobbyUI.lobbyView)
         
         // Setup callbacks
         lobbyUI.onHostTapped = { [weak self] in
@@ -64,9 +81,20 @@ class GameViewController: UIViewController {
             self?.handleStartGameTapped()
         }
         
-        // Setup table view
+        // Setup WiFi mode callbacks
+        wifiLobbyUI?.onModeChanged = { [weak self] mode in
+            self?.handleModeChanged(mode)
+        }
+        
+        wifiLobbyUI?.onJoinByCode = { [weak self] code in
+            self?.handleJoinByCode(code)
+        }
+        
+        // Setup table views
         lobbyUI.peerTableView.delegate = self
         lobbyUI.peerTableView.dataSource = self
+        wifiLobbyUI?.wifiHostsTableView.delegate = self
+        wifiLobbyUI?.wifiHostsTableView.dataSource = self
         
         // Setup coordinator callbacks
         multiplayerCoordinator.onPeersUpdated = { [weak self] in
@@ -74,6 +102,14 @@ class GameViewController: UIViewController {
         }
         
         multiplayerCoordinator.onReadyForNextRound = { [weak self] in
+            self?.startNextRound()
+        }
+        
+        wifiCoordinator?.onPeersUpdated = { [weak self] in
+            self?.updateWiFiUI()
+        }
+        
+        wifiCoordinator?.onReadyForNextRound = { [weak self] in
             self?.startNextRound()
         }
     }
