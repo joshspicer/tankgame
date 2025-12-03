@@ -52,7 +52,9 @@ final class EntitlementManager: ObservableObject {
     private func setupTransactionObserver() {
         notificationTask = Task { [weak self] in
             for await _ in NotificationCenter.default.notifications(named: .transactionDidUpdate) {
-                await self?.updateEntitlements()
+                // Check if self is still alive, otherwise break out of the loop
+                guard let self = self else { return }
+                await self.updateEntitlements()
             }
         }
     }

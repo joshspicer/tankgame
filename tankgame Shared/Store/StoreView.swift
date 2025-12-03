@@ -14,7 +14,7 @@ struct StoreView: View {
     @Environment(\.dismiss) private var dismiss
     
     var body: some View {
-        NavigationStack {
+        NavigationView {
             Group {
                 if storeManager.isLoading && storeManager.products.isEmpty {
                     loadingView
@@ -45,6 +45,7 @@ struct StoreView: View {
                 }
             }
         }
+        .navigationViewStyle(.stack)
     }
     
     // MARK: - Subviews

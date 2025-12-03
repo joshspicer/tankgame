@@ -195,6 +195,8 @@ view.addSubview(storeButton)
 1. Open `Configuration/StoreKitConfig.storekit` in Xcode
 2. The file contains pre-configured products for testing
 
+> **Note:** The `_applicationInternalID` and `_developerTeamID` values in the configuration file are placeholders. For production testing with sandbox accounts, update these values with your actual App Store Connect application ID and developer team ID.
+
 ### Enabling Local Testing in Xcode
 
 1. Edit your scheme (Product → Scheme → Edit Scheme)

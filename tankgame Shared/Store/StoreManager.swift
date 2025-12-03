@@ -127,23 +127,24 @@ final class StoreManager: ObservableObject {
             // Iterate through any transactions that don't have a corresponding
             // call to `purchase()` (e.g., interrupted purchases, Ask to Buy)
             for await result in Transaction.updates {
+                // Check if self is still alive
+                guard let self = self else { return }
+                
                 do {
-                    let transaction = try self?.checkVerified(result)
+                    let transaction = try self.checkVerified(result)
                     
-                    if let transaction = transaction {
-                        // Update the purchased products
-                        await self?.updatePurchasedProducts()
-                        
-                        // Always finish a transaction after processing
-                        await transaction.finish()
-                        
-                        // Post notification for any observers
-                        NotificationCenter.default.post(
-                            name: .transactionDidUpdate,
-                            object: nil,
-                            userInfo: ["productID": transaction.productID]
-                        )
-                    }
+                    // Update the purchased products
+                    await self.updatePurchasedProducts()
+                    
+                    // Always finish a transaction after processing
+                    await transaction.finish()
+                    
+                    // Post notification for any observers
+                    NotificationCenter.default.post(
+                        name: .transactionDidUpdate,
+                        object: nil,
+                        userInfo: ["productID": transaction.productID]
+                    )
                 } catch {
                     // Transaction failed verification, don't deliver content
                     print("Transaction failed verification: \(error)")
