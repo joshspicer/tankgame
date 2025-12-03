@@ -39,26 +39,9 @@ extension GameViewController: MultiplayerManagerDelegate {
         multiplayerCoordinator.removeConnectedPeer(peerID)
         
         // During game - show reconnection status if auto-reconnect is active
-        if gameState != nil {
-            // Check if we're attempting to reconnect
-            if multiplayerManager.connectionState.isReconnecting {
-                lobbyUI.statusLabel.text = "Reconnecting to \(peerID.displayName)..."
-                return
-            }
-            
-            // Not reconnecting - return to lobby
-            DispatchQueue.main.async { [weak self] in
-                guard let self = self else { return }
-                self.view.subviews.forEach { $0.removeFromSuperview() }
-                self.viewDidLoad()
-                let alert = UIAlertController(
-                    title: "Disconnected",
-                    message: "Lost connection to \(peerID.displayName)",
-                    preferredStyle: .alert
-                )
-                alert.addAction(UIAlertAction(title: "OK", style: .default))
-                self.present(alert, animated: true)
-            }
+        // The actual return-to-lobby is handled by didChangeConnectionState when state becomes .disconnected
+        if gameState != nil && multiplayerManager.connectionState.isReconnecting {
+            lobbyUI.statusLabel.text = "Reconnecting to \(peerID.displayName)..."
         }
     }
     
@@ -108,6 +91,16 @@ extension GameViewController: MultiplayerManagerDelegate {
         switch state {
         case .disconnected:
             lobbyUI.activityIndicator.stopAnimating()
+            
+            // If game was in progress and we're now disconnected (e.g., reconnection failed),
+            // return to lobby with an alert
+            if gameState != nil {
+                DispatchQueue.main.async { [weak self] in
+                    guard let self = self else { return }
+                    self.returnToLobbyWithDisconnectAlert()
+                }
+            }
+            
         case .browsing, .advertising:
             lobbyUI.activityIndicator.startAnimating()
         case .connecting:
@@ -123,5 +116,20 @@ extension GameViewController: MultiplayerManagerDelegate {
     func multiplayerManager(_ manager: MultiplayerManager, isAttemptingReconnection attempt: Int, maxAttempts: Int, toPeer peerID: MCPeerID) {
         lobbyUI.statusLabel.text = "Reconnecting to \(peerID.displayName) (attempt \(attempt)/\(maxAttempts))..."
         lobbyUI.activityIndicator.startAnimating()
+    }
+    
+    // MARK: - Helper Methods
+    
+    private func returnToLobbyWithDisconnectAlert() {
+        view.subviews.forEach { $0.removeFromSuperview() }
+        viewDidLoad()
+        
+        let alert = UIAlertController(
+            title: "Connection Lost",
+            message: "Unable to reconnect. Returning to lobby.",
+            preferredStyle: .alert
+        )
+        alert.addAction(UIAlertAction(title: "OK", style: .default))
+        present(alert, animated: true)
     }
 }
