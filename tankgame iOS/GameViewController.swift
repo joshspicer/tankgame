@@ -10,6 +10,7 @@ import SpriteKit
 import GameplayKit
 import MultipeerConnectivity
 import Network
+import SwiftUI
 
 /// Main view controller that coordinates the game experience
 class GameViewController: UIViewController {
@@ -56,6 +57,10 @@ class GameViewController: UIViewController {
             self?.handleJoinTapped()
         }
         
+        lobbyUI.onShopTapped = { [weak self] in
+            self?.handleShopTapped()
+        }
+        
         lobbyUI.onCancelTapped = { [weak self] in
             self?.handleCancelTapped()
         }
@@ -84,6 +89,7 @@ class GameViewController: UIViewController {
         multiplayerManager.isHost = true
         lobbyUI.hostButton.isHidden = true
         lobbyUI.joinButton.isHidden = true
+        lobbyUI.shopButton.isHidden = true
         lobbyUI.instructionsLabel.isHidden = true
         lobbyUI.cancelButton.isHidden = false
         lobbyUI.connectedPlayersView.isHidden = false
@@ -98,6 +104,7 @@ class GameViewController: UIViewController {
     private func handleJoinTapped() {
         lobbyUI.hostButton.isHidden = true
         lobbyUI.joinButton.isHidden = true
+        lobbyUI.shopButton.isHidden = true
         lobbyUI.instructionsLabel.isHidden = true
         lobbyUI.cancelButton.isHidden = false
         lobbyUI.activityIndicator.startAnimating()
@@ -106,6 +113,13 @@ class GameViewController: UIViewController {
         updatePeerListUI()
         
         multiplayerManager.startBrowsing()
+    }
+    
+    private func handleShopTapped() {
+        let storeView = StoreView()
+        let hostingController = UIHostingController(rootView: storeView)
+        hostingController.modalPresentationStyle = .pageSheet
+        present(hostingController, animated: true)
     }
     
     private func handleCancelTapped() {

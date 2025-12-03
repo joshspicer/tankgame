@@ -1,0 +1,175 @@
+{
+  "identifier" : "04A4FC2D-B9F5-4E9C-8A28-1F54F8E3C7A2",
+  "nonRenewingSubscriptions" : [
+
+  ],
+  "products" : [
+    {
+      "displayPrice" : "0.99",
+      "familyShareable" : false,
+      "internalID" : "6670E0C1-1F9F-4B4A-8D2E-5E7D6B3C1A4F",
+      "localizations" : [
+        {
+          "description" : "A small pack of 100 coins to spend in the game",
+          "displayName" : "100 Coins",
+          "locale" : "en_US"
+        }
+      ],
+      "productID" : "com.tankgame.coins.small",
+      "referenceName" : "Small Coin Pack",
+      "type" : "Consumable"
+    },
+    {
+      "displayPrice" : "3.99",
+      "familyShareable" : false,
+      "internalID" : "8B2E4F71-3D5A-4C6B-9E1F-7A8C5D2B0E3F",
+      "localizations" : [
+        {
+          "description" : "A medium pack of 500 coins to spend in the game",
+          "displayName" : "500 Coins",
+          "locale" : "en_US"
+        }
+      ],
+      "productID" : "com.tankgame.coins.medium",
+      "referenceName" : "Medium Coin Pack",
+      "type" : "Consumable"
+    },
+    {
+      "displayPrice" : "7.99",
+      "familyShareable" : false,
+      "internalID" : "C4D6E8F0-2A4B-5C6D-7E8F-9A0B1C2D3E4F",
+      "localizations" : [
+        {
+          "description" : "A large pack of 1200 coins to spend in the game",
+          "displayName" : "1200 Coins",
+          "locale" : "en_US"
+        }
+      ],
+      "productID" : "com.tankgame.coins.large",
+      "referenceName" : "Large Coin Pack",
+      "type" : "Consumable"
+    },
+    {
+      "displayPrice" : "1.99",
+      "familyShareable" : true,
+      "internalID" : "A1B2C3D4-E5F6-7890-ABCD-EF1234567890",
+      "localizations" : [
+        {
+          "description" : "A fiery red skin for your tank",
+          "displayName" : "Red Tank Skin",
+          "locale" : "en_US"
+        }
+      ],
+      "productID" : "com.tankgame.skin.red",
+      "referenceName" : "Red Tank Skin",
+      "type" : "NonConsumable"
+    },
+    {
+      "displayPrice" : "1.99",
+      "familyShareable" : true,
+      "internalID" : "B2C3D4E5-F6A7-8901-BCDE-F23456789012",
+      "localizations" : [
+        {
+          "description" : "A cool blue skin for your tank",
+          "displayName" : "Blue Tank Skin",
+          "locale" : "en_US"
+        }
+      ],
+      "productID" : "com.tankgame.skin.blue",
+      "referenceName" : "Blue Tank Skin",
+      "type" : "NonConsumable"
+    },
+    {
+      "displayPrice" : "4.99",
+      "familyShareable" : true,
+      "internalID" : "C3D4E5F6-A7B8-9012-CDEF-345678901234",
+      "localizations" : [
+        {
+          "description" : "A premium golden skin for your tank",
+          "displayName" : "Gold Tank Skin",
+          "locale" : "en_US"
+        }
+      ],
+      "productID" : "com.tankgame.skin.gold",
+      "referenceName" : "Gold Tank Skin",
+      "type" : "NonConsumable"
+    },
+    {
+      "displayPrice" : "2.99",
+      "familyShareable" : true,
+      "internalID" : "D4E5F6A7-B8C9-0123-DEF0-456789012345",
+      "localizations" : [
+        {
+          "description" : "A tactical camouflage skin for your tank",
+          "displayName" : "Camo Tank Skin",
+          "locale" : "en_US"
+        }
+      ],
+      "productID" : "com.tankgame.skin.camo",
+      "referenceName" : "Camo Tank Skin",
+      "type" : "NonConsumable"
+    }
+  ],
+  "settings" : {
+    "_applicationInternalID" : "1234567890",
+    "_developerTeamID" : "N7C8DEK852",
+    "_failTransactionsEnabled" : false,
+    "_lastSynchronizedDate" : 751234567.89,
+    "_locale" : "en_US",
+    "_storefront" : "USA",
+    "_storeKitErrors" : [
+      {
+        "current" : null,
+        "enabled" : false,
+        "name" : "Load Products"
+      },
+      {
+        "current" : null,
+        "enabled" : false,
+        "name" : "Purchase"
+      },
+      {
+        "current" : null,
+        "enabled" : false,
+        "name" : "Verification"
+      },
+      {
+        "current" : null,
+        "enabled" : false,
+        "name" : "App Store Sync"
+      },
+      {
+        "current" : null,
+        "enabled" : false,
+        "name" : "Subscription Status"
+      },
+      {
+        "current" : null,
+        "enabled" : false,
+        "name" : "App Transaction"
+      },
+      {
+        "current" : null,
+        "enabled" : false,
+        "name" : "Manage Subscriptions Sheet"
+      },
+      {
+        "current" : null,
+        "enabled" : false,
+        "name" : "Refund Request Sheet"
+      },
+      {
+        "current" : null,
+        "enabled" : false,
+        "name" : "Offer Code Redeem Sheet"
+      }
+    ]
+  },
+  "subscriptionGroups" : [
+
+  ],
+  "version" : {
+    "major" : 4,
+    "minor" : 0
+  }
+}
