@@ -21,6 +21,7 @@ class GameViewController: UIViewController {
     
     // UI components
     var lobbyUI: LobbyUI!
+    var storeUI: StoreUI!
     
     // Game components
     var gameScene: GameScene?
@@ -38,6 +39,7 @@ class GameViewController: UIViewController {
         
         // Setup UI
         setupLobby()
+        setupStore()
         
         // Request permissions on first launch
         permissionManager.requestPermissionsIfNeeded()
@@ -54,6 +56,10 @@ class GameViewController: UIViewController {
         
         lobbyUI.onJoinTapped = { [weak self] in
             self?.handleJoinTapped()
+        }
+        
+        lobbyUI.onStoreTapped = { [weak self] in
+            self?.handleStoreTapped()
         }
         
         lobbyUI.onCancelTapped = { [weak self] in

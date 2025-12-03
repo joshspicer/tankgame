@@ -43,6 +43,7 @@
 				SoundManager.swift,
 				Tank.swift,
 				TankRenderer.swift,
+				TankSkinColors.swift,
 				TankSpriteRenderer.swift,
 			);
 			target = 0AEBC8152EB14C4300890CC1 /* tankgame iOS */;
@@ -77,6 +78,7 @@
 				SoundManager.swift,
 				Tank.swift,
 				TankRenderer.swift,
+				TankSkinColors.swift,
 				TankSpriteRenderer.swift,
 			);
 			target = 0AEBC8262EB14C4300890CC1 /* tankgame tvOS */;
@@ -111,6 +113,7 @@
 				SoundManager.swift,
 				Tank.swift,
 				TankRenderer.swift,
+				TankSkinColors.swift,
 				TankSpriteRenderer.swift,
 			);
 			target = 0AEBC8362EB14C4300890CC1 /* tankgame macOS */;
