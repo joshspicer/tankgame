@@ -94,7 +94,7 @@ class GameLogicTests {
             print("✗ \(testName): down angle expected π but got \(down)")
             allPassed = false
         }
-        if abs(left - (-.pi / 2)) > tolerance {
+        if abs(left - -.pi / 2) > tolerance {
             print("✗ \(testName): left angle expected -π/2 but got \(left)")
             allPassed = false
         }
