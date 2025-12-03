@@ -223,15 +223,18 @@ class StoreUI {
             actionButton.setTitle("✓ Selected", for: .normal)
             actionButton.backgroundColor = .systemGreen
             actionButton.setTitleColor(.white, for: .normal)
+            actionButton.accessibilityLabel = "\(skin.name) is currently selected"
         } else if isOwned {
             actionButton.setTitle("Select", for: .normal)
             actionButton.backgroundColor = .systemBlue
             actionButton.setTitleColor(.white, for: .normal)
+            actionButton.accessibilityLabel = "Select \(skin.name) skin"
             actionButton.addTarget(self, action: #selector(selectSkinTapped(_:)), for: .touchUpInside)
         } else {
             actionButton.setTitle("🪙 \(skin.price)", for: .normal)
             actionButton.backgroundColor = .systemYellow
             actionButton.setTitleColor(.black, for: .normal)
+            actionButton.accessibilityLabel = "Purchase \(skin.name) for \(skin.price) TankCoins"
             actionButton.addTarget(self, action: #selector(purchaseSkinTapped(_:)), for: .touchUpInside)
         }
         
@@ -310,6 +313,7 @@ class StoreUI {
         buyButton.titleLabel?.font = .systemFont(ofSize: 14, weight: .semibold)
         buyButton.layer.cornerRadius = 8
         buyButton.accessibilityIdentifier = package.id
+        buyButton.accessibilityLabel = "Purchase \(package.coins) TankCoins for \(package.price)"
         buyButton.addTarget(self, action: #selector(buyCoinsTapped(_:)), for: .touchUpInside)
         buyButton.translatesAutoresizingMaskIntoConstraints = false
         card.addSubview(buyButton)

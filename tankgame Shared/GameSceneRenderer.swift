@@ -22,6 +22,9 @@ class GameSceneRenderer {
     // Player skins (indexed by player index)
     var playerSkins: [Int: TankSkin] = [:]
     
+    // Cached particle texture
+    private var cachedParticleTexture: SKTexture?
+    
     init(tileSize: CGFloat, gridSize: Int) {
         self.tileSize = tileSize
         self.gridSize = gridSize
@@ -189,6 +192,17 @@ class GameSceneRenderer {
         node.addChild(glowNode)
     }
     
+    /// Create or return cached circular texture for particles
+    private func getParticleTexture() -> SKTexture {
+        if let cached = cachedParticleTexture {
+            return cached
+        }
+        
+        let texture = createParticleTexture()
+        cachedParticleTexture = texture
+        return texture
+    }
+    
     /// Create a simple circular texture for particles
     private func createParticleTexture() -> SKTexture {
         let size = CGSize(width: 16, height: 16)
@@ -213,7 +227,7 @@ class GameSceneRenderer {
     /// Add particle effect to a node
     private func addParticleEffect(_ effectType: TankSkin.ParticleEffectType, to node: SKNode, color: SKColor) {
         let emitter = SKEmitterNode()
-        let particleTexture = createParticleTexture()
+        let particleTexture = getParticleTexture()
         
         switch effectType {
         case .fire:
