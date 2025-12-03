@@ -8,6 +8,12 @@
 import Foundation
 import MultipeerConnectivity
 
+/// Message reliability mode for network communication
+enum MessageReliability {
+    case reliable    // For critical messages (hits, game state)
+    case unreliable  // For frequent updates (position, movement)
+}
+
 protocol MultiplayerManagerDelegate: AnyObject {
     func multiplayerManager(_ manager: MultiplayerManager, didFindPeer peerID: MCPeerID)
     func multiplayerManager(_ manager: MultiplayerManager, didLosePeer peerID: MCPeerID)
@@ -78,19 +84,18 @@ class MultiplayerManager: NSObject {
     
     private func setupConnectionManagers() {
         // Setup reconnection manager callbacks
-        reconnectionManager.onReconnectionAttempt = { [weak self] peerName, attempt, maxAttempts in
+        reconnectionManager.onReconnectionAttempt = { [weak self] peerID, attempt, maxAttempts in
             guard let self = self else { return }
-            let peerID = MCPeerID(displayName: peerName)
             self.connectionState = .reconnecting(attempt: attempt, maxAttempts: maxAttempts)
             self.delegate?.multiplayerManager(self, isAttemptingReconnection: attempt, maxAttempts: maxAttempts, toPeer: peerID)
         }
         
-        reconnectionManager.onReconnectionFailed = { [weak self] peerName in
+        reconnectionManager.onReconnectionFailed = { [weak self] peerID in
             guard let self = self else { return }
             self.connectionState = .disconnected
         }
         
-        reconnectionManager.onReconnectionSucceeded = { [weak self] peerName in
+        reconnectionManager.onReconnectionSucceeded = { [weak self] peerID in
             guard let self = self else { return }
             self.updateConnectionState()
         }
@@ -179,12 +184,6 @@ class MultiplayerManager: NSObject {
     }
     
     // MARK: - Messaging
-    
-    /// Message reliability mode
-    enum MessageReliability {
-        case reliable    // For critical messages (hits, game state)
-        case unreliable  // For frequent updates (position, movement)
-    }
     
     func sendMessage(_ message: GameMessage, reliability: MessageReliability = .reliable) {
         guard !session.connectedPeers.isEmpty else { return }

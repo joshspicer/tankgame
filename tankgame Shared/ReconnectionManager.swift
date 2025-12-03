@@ -21,13 +21,13 @@ class ReconnectionManager {
     
     private var reconnectionInfos: [String: ReconnectionInfo] = [:]
     private var reconnectionWorkItems: [String: DispatchWorkItem] = [:]
-    private var knownPeers: Set<String> = []
+    private var knownPeers: [String: MCPeerID] = [:]  // displayName -> MCPeerID
     
     // MARK: - Callbacks
     
-    var onReconnectionAttempt: ((String, Int, Int) -> Void)?  // peerName, attempt, maxAttempts
-    var onReconnectionFailed: ((String) -> Void)?  // peerName
-    var onReconnectionSucceeded: ((String) -> Void)?  // peerName
+    var onReconnectionAttempt: ((MCPeerID, Int, Int) -> Void)?  // peer, attempt, maxAttempts
+    var onReconnectionFailed: ((MCPeerID) -> Void)?
+    var onReconnectionSucceeded: ((MCPeerID) -> Void)?
     
     // MARK: - Reconnection Info
     
@@ -42,13 +42,13 @@ class ReconnectionManager {
     
     /// Mark a peer as known (successfully connected before)
     func markPeerAsKnown(_ peerID: MCPeerID) {
-        knownPeers.insert(peerID.displayName)
+        knownPeers[peerID.displayName] = peerID
     }
     
     /// Check if we should attempt reconnection for this peer
     func shouldAttemptReconnection(for peerID: MCPeerID) -> Bool {
         // Only reconnect to peers we've successfully connected to before
-        guard knownPeers.contains(peerID.displayName) else { return false }
+        guard knownPeers[peerID.displayName] != nil else { return false }
         
         // Check if we've exceeded max attempts
         if let info = reconnectionInfos[peerID.displayName] {
@@ -78,8 +78,8 @@ class ReconnectionManager {
             maxReconnectionDelay
         )
         
-        // Notify callback
-        onReconnectionAttempt?(peerID.displayName, info.attempts, maxReconnectionAttempts)
+        // Notify callback with actual MCPeerID
+        onReconnectionAttempt?(peerID, info.attempts, maxReconnectionAttempts)
         
         // Cancel any existing work item
         reconnectionWorkItems[key]?.cancel()
@@ -104,9 +104,9 @@ class ReconnectionManager {
         reconnectionWorkItems[key]?.cancel()
         reconnectionWorkItems.removeValue(forKey: key)
         
-        // Check if we were reconnecting and notify success
+        // Check if we were reconnecting and notify success with actual MCPeerID
         if let info = reconnectionInfos[key], info.isReconnecting {
-            onReconnectionSucceeded?(key)
+            onReconnectionSucceeded?(info.peerID)
         }
         
         // Reset reconnection info
@@ -138,9 +138,12 @@ class ReconnectionManager {
         
         reconnectionWorkItems[key]?.cancel()
         reconnectionWorkItems.removeValue(forKey: key)
+        
+        // Notify with actual MCPeerID from info or the provided one
+        let actualPeer = reconnectionInfos[key]?.peerID ?? peerID
         reconnectionInfos.removeValue(forKey: key)
         
-        onReconnectionFailed?(key)
+        onReconnectionFailed?(actualPeer)
     }
     
     /// Reset all state

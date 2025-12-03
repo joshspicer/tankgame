@@ -18,19 +18,18 @@ class ConnectionHealthMonitor {
     
     // MARK: - State
     
-    private var lastResponseTime: [String: Date] = [:]  // Key: peerID.displayName
+    /// Tracks connected peers with their last response time
+    private var trackedPeers: [String: (peer: MCPeerID, lastResponse: Date)] = [:]
     private var pingTimer: Timer?
     private var isMonitoring = false
     
     // MARK: - Callbacks
     
-    var onSendPing: (([MCPeerID]) -> Void)?  // peers to ping
-    var onStaleConnection: ((MCPeerID) -> Void)?  // peer with stale connection
-    var onConnectionHealthy: ((MCPeerID) -> Void)?  // peer with healthy connection
+    var onStaleConnection: ((MCPeerID) -> Void)?
     
     // MARK: - Public Methods
     
-    /// Start monitoring connection health for the given peers
+    /// Start monitoring connection health
     func startMonitoring() {
         guard !isMonitoring else { return }
         isMonitoring = true
@@ -45,73 +44,60 @@ class ConnectionHealthMonitor {
         isMonitoring = false
         pingTimer?.invalidate()
         pingTimer = nil
-        lastResponseTime.removeAll()
     }
     
     /// Record that we received a response from a peer
     func recordResponse(from peerID: MCPeerID) {
-        lastResponseTime[peerID.displayName] = Date()
+        if var tracked = trackedPeers[peerID.displayName] {
+            tracked.lastResponse = Date()
+            trackedPeers[peerID.displayName] = tracked
+        }
     }
     
-    /// Record initial response time when peer connects
+    /// Start tracking a peer when they connect
     func peerConnected(_ peerID: MCPeerID) {
-        lastResponseTime[peerID.displayName] = Date()
+        trackedPeers[peerID.displayName] = (peer: peerID, lastResponse: Date())
     }
     
-    /// Remove peer from health tracking
+    /// Stop tracking a peer when they disconnect
     func peerDisconnected(_ peerID: MCPeerID) {
-        lastResponseTime.removeValue(forKey: peerID.displayName)
+        trackedPeers.removeValue(forKey: peerID.displayName)
     }
     
     /// Check if a peer's connection is considered healthy
     func isConnectionHealthy(for peerID: MCPeerID) -> Bool {
-        guard let lastResponse = lastResponseTime[peerID.displayName] else {
+        guard let tracked = trackedPeers[peerID.displayName] else {
             return false
         }
-        return Date().timeIntervalSince(lastResponse) < pingTimeout
+        return Date().timeIntervalSince(tracked.lastResponse) < pingTimeout
     }
     
     /// Get the time since last response from a peer
     func timeSinceLastResponse(for peerID: MCPeerID) -> TimeInterval? {
-        guard let lastResponse = lastResponseTime[peerID.displayName] else {
+        guard let tracked = trackedPeers[peerID.displayName] else {
             return nil
         }
-        return Date().timeIntervalSince(lastResponse)
+        return Date().timeIntervalSince(tracked.lastResponse)
     }
     
     /// Reset all state
     func reset() {
         stopMonitoring()
-        lastResponseTime.removeAll()
+        trackedPeers.removeAll()
     }
     
     // MARK: - Private Methods
     
     private func performHealthCheck() {
         let now = Date()
-        var stalePeers: [MCPeerID] = []
-        var healthyPeers: [MCPeerID] = []
         
-        // Check each tracked peer
-        for (peerName, lastResponse) in lastResponseTime {
-            // Create a temporary MCPeerID for callback purposes
-            // Note: In real usage, we should track actual MCPeerID objects
-            let timeSinceResponse = now.timeIntervalSince(lastResponse)
+        for (_, tracked) in trackedPeers {
+            let timeSinceResponse = now.timeIntervalSince(tracked.lastResponse)
             
             if timeSinceResponse > pingTimeout {
-                // Connection is stale
-                let stalePeerID = MCPeerID(displayName: peerName)
-                stalePeers.append(stalePeerID)
-                onStaleConnection?(stalePeerID)
-            } else {
-                let healthyPeerID = MCPeerID(displayName: peerName)
-                healthyPeers.append(healthyPeerID)
+                // Connection appears stale - notify callback with actual MCPeerID
+                onStaleConnection?(tracked.peer)
             }
-        }
-        
-        // Request ping to all tracked peers
-        if !healthyPeers.isEmpty {
-            onSendPing?(healthyPeers)
         }
     }
 }
