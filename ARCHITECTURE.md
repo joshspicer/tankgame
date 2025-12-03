@@ -28,6 +28,10 @@ Business logic and state management:
 
 JOSH
 
+JOSH 
+
+JOSH
+
 ### 3. Rendering & Visual Layer
 All rendering and visual effects (now highly modular):
 - `GameSceneRenderer.swift` - Main rendering coordinator (delegates to specialized renderers)
