@@ -114,6 +114,16 @@ class TankPackStore: ObservableObject {
                     }
                 }
             }
+            errorMessage = nil // Clear any previous errors on success
+        } catch let error as StoreKitError {
+            switch error {
+            case .networkError:
+                errorMessage = "Network error. Please check your connection and try again."
+            case .userCancelled:
+                errorMessage = nil // User cancelled, no error to show
+            default:
+                errorMessage = "Failed to restore purchases. Please try again later."
+            }
         } catch {
             errorMessage = "Failed to restore purchases: \(error.localizedDescription)"
         }

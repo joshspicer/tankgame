@@ -148,7 +148,9 @@ extension TankPackSelectionViewController: UICollectionViewDataSource {
     }
     
     func collectionView(_ collectionView: UICollectionView, cellForItemAt indexPath: IndexPath) -> UICollectionViewCell {
-        let cell = collectionView.dequeueReusableCell(withReuseIdentifier: TankPackCell.identifier, for: indexPath) as! TankPackCell
+        guard let cell = collectionView.dequeueReusableCell(withReuseIdentifier: TankPackCell.identifier, for: indexPath) as? TankPackCell else {
+            return UICollectionViewCell()
+        }
         let pack = packs[indexPath.item]
         let isOwned = TankPackManager.shared.isPackOwned(pack)
         let isSelected = TankPackManager.shared.selectedPackID == pack.id

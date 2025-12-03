@@ -16,16 +16,12 @@ class TankRenderer {
     let tankColors: [SKColor] = [.blue, .red, .green, .orange]
     
     // Tank sprite renderer
-    private let tankSpriteRenderer: TankSpriteRenderer
     private let themedSpriteRenderer: ThemedTankSpriteRenderer
-    private let animationHelper: RainbowAnimationHelper
     
     init(tileSize: CGFloat, gridSize: Int) {
         self.tileSize = tileSize
         self.gridSize = gridSize
-        self.tankSpriteRenderer = TankSpriteRenderer(tileSize: tileSize)
         self.themedSpriteRenderer = ThemedTankSpriteRenderer(tileSize: tileSize)
-        self.animationHelper = RainbowAnimationHelper()
     }
     
     /// Render all tanks

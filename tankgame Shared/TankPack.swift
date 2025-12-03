@@ -29,13 +29,6 @@ struct TankPack: Identifiable, Codable {
             case glow
             case static_
             case sparkle
-            
-            var codingValue: String {
-                switch self {
-                case .static_: return "static"
-                default: return rawValue
-                }
-            }
         }
         
         enum BodyShape: String, Codable {

@@ -12,6 +12,10 @@ class ThemedTankSpriteRenderer {
     let tileSize: CGFloat
     private let animationHelper: RainbowAnimationHelper
     
+    // Sparkle effect constants
+    private var sparkleRadius: CGFloat { tileSize * 0.03 }
+    private var sparkleSpread: CGFloat { tileSize * 0.25 }
+    
     init(tileSize: CGFloat) {
         self.tileSize = tileSize
         self.animationHelper = RainbowAnimationHelper()
@@ -275,16 +279,20 @@ class ThemedTankSpriteRenderer {
     }
     
     private func applySparkleAnimation(to node: SKNode, baseColor: SKColor) {
+        // Calculate sparkle parameters based on tile size
+        let radius = sparkleRadius
+        let spread = sparkleSpread
+        
         // Create sparkle emitter
         let sparkleAction = SKAction.run { [weak node] in
             guard let node = node else { return }
             
-            let sparkle = SKShapeNode(circleOfRadius: 2)
+            let sparkle = SKShapeNode(circleOfRadius: radius)
             sparkle.fillColor = .white
             sparkle.strokeColor = .clear
             sparkle.position = CGPoint(
-                x: CGFloat.random(in: -15...15),
-                y: CGFloat.random(in: -15...15)
+                x: CGFloat.random(in: -spread...spread),
+                y: CGFloat.random(in: -spread...spread)
             )
             sparkle.alpha = 0
             node.addChild(sparkle)
