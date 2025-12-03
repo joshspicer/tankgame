@@ -1,0 +1,128 @@
+{
+  "identifier" : "0AE8E05C-6D62-4E89-B0E6-8BE1A8C5C5E1",
+  "nonRenewingSubscriptions" : [
+
+  ],
+  "products" : [
+    {
+      "displayPrice" : "0.99",
+      "familyShareable" : false,
+      "internalID" : "C88F7E1A-B1E2-4BF5-8C1D-1234567890AB",
+      "localizations" : [
+        {
+          "description" : "Vibrant neon colors with a pulsing glow effect",
+          "displayName" : "Neon Nights Tank Pack",
+          "locale" : "en_US"
+        }
+      ],
+      "productID" : "com.tankgame.tankpack.neon",
+      "referenceName" : "Neon Nights Tank Pack",
+      "type" : "NonConsumable"
+    },
+    {
+      "displayPrice" : "0.99",
+      "familyShareable" : false,
+      "internalID" : "D99G8F2B-C2F3-5CG6-9D2E-2345678901BC",
+      "localizations" : [
+        {
+          "description" : "Authentic military camouflage colors",
+          "displayName" : "Military Tank Pack",
+          "locale" : "en_US"
+        }
+      ],
+      "productID" : "com.tankgame.tankpack.military",
+      "referenceName" : "Military Tank Pack",
+      "type" : "NonConsumable"
+    },
+    {
+      "displayPrice" : "0.99",
+      "familyShareable" : false,
+      "internalID" : "E00H9G3C-D3G4-6DH7-AE3F-3456789012CD",
+      "localizations" : [
+        {
+          "description" : "8-bit inspired pixel art style",
+          "displayName" : "Retro Pixels Tank Pack",
+          "locale" : "en_US"
+        }
+      ],
+      "productID" : "com.tankgame.tankpack.retro",
+      "referenceName" : "Retro Pixels Tank Pack",
+      "type" : "NonConsumable"
+    },
+    {
+      "displayPrice" : "1.99",
+      "familyShareable" : false,
+      "internalID" : "F11I0H4D-E4H5-7EI8-BF4G-4567890123DE",
+      "localizations" : [
+        {
+          "description" : "Cosmic colors with sparkle effects",
+          "displayName" : "Galaxy Tank Pack",
+          "locale" : "en_US"
+        }
+      ],
+      "productID" : "com.tankgame.tankpack.galaxy",
+      "referenceName" : "Galaxy Tank Pack",
+      "type" : "NonConsumable"
+    }
+  ],
+  "settings" : {
+    "_applicationInternalID" : "1234567890",
+    "_developerTeamID" : "XXXXXXXXXX",
+    "_failTransactionsEnabled" : false,
+    "_lastSynchronizedDate" : 0,
+    "_storeKitErrors" : [
+      {
+        "current" : null,
+        "enabled" : false,
+        "name" : "Load Products"
+      },
+      {
+        "current" : null,
+        "enabled" : false,
+        "name" : "Purchase"
+      },
+      {
+        "current" : null,
+        "enabled" : false,
+        "name" : "Verification"
+      },
+      {
+        "current" : null,
+        "enabled" : false,
+        "name" : "App Store Sync"
+      },
+      {
+        "current" : null,
+        "enabled" : false,
+        "name" : "Subscription Status"
+      },
+      {
+        "current" : null,
+        "enabled" : false,
+        "name" : "App Transaction"
+      },
+      {
+        "current" : null,
+        "enabled" : false,
+        "name" : "Manage Subscriptions Sheet"
+      },
+      {
+        "current" : null,
+        "enabled" : false,
+        "name" : "Refund Request Sheet"
+      },
+      {
+        "current" : null,
+        "enabled" : false,
+        "name" : "Offer Code Redeem Sheet"
+      }
+    ]
+  },
+  "subscriptionGroups" : [
+
+  ],
+  "version" : {
+    "major" : 3,
+    "minor" : 0
+  }
+}

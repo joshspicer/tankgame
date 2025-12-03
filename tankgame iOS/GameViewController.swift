@@ -56,6 +56,10 @@ class GameViewController: UIViewController {
             self?.handleJoinTapped()
         }
         
+        lobbyUI.onTankPacksTapped = { [weak self] in
+            self?.handleTankPacksTapped()
+        }
+        
         lobbyUI.onCancelTapped = { [weak self] in
             self?.handleCancelTapped()
         }
@@ -76,6 +80,12 @@ class GameViewController: UIViewController {
         multiplayerCoordinator.onReadyForNextRound = { [weak self] in
             self?.startNextRound()
         }
+    }
+    
+    private func handleTankPacksTapped() {
+        let tankPackVC = TankPackSelectionViewController()
+        tankPackVC.modalPresentationStyle = .pageSheet
+        present(tankPackVC, animated: true)
     }
     
     override var supportedInterfaceOrientations: UIInterfaceOrientationMask {

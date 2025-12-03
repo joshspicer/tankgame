@@ -15,6 +15,7 @@ class LobbyUI {
     private(set) var lobbyView: UIView!
     private(set) var hostButton: UIButton!
     private(set) var joinButton: UIButton!
+    private(set) var tankPacksButton: UIButton!
     private(set) var cancelButton: UIButton!
     private(set) var startGameButton: UIButton!
     private(set) var peerTableView: UITableView!
@@ -28,6 +29,7 @@ class LobbyUI {
     // Callbacks
     var onHostTapped: (() -> Void)?
     var onJoinTapped: (() -> Void)?
+    var onTankPacksTapped: (() -> Void)?
     var onCancelTapped: (() -> Void)?
     var onStartGameTapped: (() -> Void)?
     
@@ -94,6 +96,11 @@ class LobbyUI {
         joinButton = createButton(title: "Join Game", backgroundColor: .systemGreen, icon: "🔍")
         joinButton.addTarget(self, action: #selector(joinButtonTapped), for: .touchUpInside)
         lobbyView.addSubview(joinButton)
+        
+        // Tank Packs button
+        tankPacksButton = createButton(title: "Tank Packs", backgroundColor: .systemPurple, icon: "🎨")
+        tankPacksButton.addTarget(self, action: #selector(tankPacksButtonTapped), for: .touchUpInside)
+        lobbyView.addSubview(tankPacksButton)
         
         // Cancel button
         cancelButton = UIButton(type: .system)
@@ -214,17 +221,22 @@ class LobbyUI {
             instructionsLabel.leadingAnchor.constraint(equalTo: lobbyView.leadingAnchor, constant: 30),
             instructionsLabel.trailingAnchor.constraint(equalTo: lobbyView.trailingAnchor, constant: -30),
             
-            hostButton.topAnchor.constraint(equalTo: instructionsLabel.bottomAnchor, constant: 50),
+            hostButton.topAnchor.constraint(equalTo: instructionsLabel.bottomAnchor, constant: 40),
             hostButton.centerXAnchor.constraint(equalTo: lobbyView.centerXAnchor),
             hostButton.widthAnchor.constraint(equalToConstant: 240),
             hostButton.heightAnchor.constraint(equalToConstant: 56),
             
-            joinButton.topAnchor.constraint(equalTo: hostButton.bottomAnchor, constant: 20),
+            joinButton.topAnchor.constraint(equalTo: hostButton.bottomAnchor, constant: 16),
             joinButton.centerXAnchor.constraint(equalTo: lobbyView.centerXAnchor),
             joinButton.widthAnchor.constraint(equalToConstant: 240),
             joinButton.heightAnchor.constraint(equalToConstant: 56),
             
-            cancelButton.topAnchor.constraint(equalTo: joinButton.bottomAnchor, constant: 20),
+            tankPacksButton.topAnchor.constraint(equalTo: joinButton.bottomAnchor, constant: 16),
+            tankPacksButton.centerXAnchor.constraint(equalTo: lobbyView.centerXAnchor),
+            tankPacksButton.widthAnchor.constraint(equalToConstant: 240),
+            tankPacksButton.heightAnchor.constraint(equalToConstant: 56),
+            
+            cancelButton.topAnchor.constraint(equalTo: tankPacksButton.bottomAnchor, constant: 20),
             cancelButton.centerXAnchor.constraint(equalTo: lobbyView.centerXAnchor),
             
             connectedPlayersView.topAnchor.constraint(equalTo: cancelButton.bottomAnchor, constant: 20),
@@ -264,6 +276,10 @@ class LobbyUI {
         onJoinTapped?()
     }
     
+    @objc private func tankPacksButtonTapped() {
+        onTankPacksTapped?()
+    }
+    
     @objc private func cancelButtonTapped() {
         onCancelTapped?()
     }
@@ -276,6 +292,7 @@ class LobbyUI {
     func reset() {
         hostButton.isHidden = false
         joinButton.isHidden = false
+        tankPacksButton.isHidden = false
         instructionsLabel.isHidden = false
         cancelButton.isHidden = true
         startGameButton.isHidden = true
