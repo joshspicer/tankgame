@@ -194,7 +194,7 @@ final class StoreManager: ObservableObject {
             switch result {
             case .success(let verification):
                 // Verify the transaction
-                let transaction = try checkVerification(verification)
+                let transaction = try StoreManager.verifyTransaction(verification)
                 
                 // Handle the purchase based on product type
                 await handlePurchase(transaction: transaction)
@@ -230,11 +230,11 @@ final class StoreManager: ObservableObject {
     
     // MARK: - Transaction Verification
     
-    /// Verify a transaction
+    /// Verify a transaction (nonisolated for use in any context)
     /// - Parameter result: The verification result to check
     /// - Returns: The verified transaction
     /// - Throws: StoreError.verificationFailed if verification fails
-    private func checkVerification<T>(_ result: VerificationResult<T>) throws -> T {
+    private nonisolated static func verifyTransaction<T>(_ result: VerificationResult<T>) throws -> T {
         switch result {
         case .verified(let safe):
             return safe
@@ -294,7 +294,7 @@ final class StoreManager: ObservableObject {
             for await result in Transaction.updates {
                 do {
                     guard let self = self else { return }
-                    let transaction = try self.checkVerificationAsync(result)
+                    let transaction = try StoreManager.verifyTransaction(result)
                     await self.handleTransactionUpdate(transaction)
                 } catch {
                     // Transaction verification failed, ignore
@@ -310,16 +310,6 @@ final class StoreManager: ObservableObject {
         await transaction.finish()
     }
     
-    /// Async version of verification check for use in detached task
-    private nonisolated func checkVerificationAsync<T>(_ result: VerificationResult<T>) throws -> T {
-        switch result {
-        case .verified(let safe):
-            return safe
-        case .unverified:
-            throw StoreError.verificationFailed
-        }
-    }
-    
     // MARK: - Entitlements
     
     /// Refresh entitlements from the App Store
@@ -330,7 +320,7 @@ final class StoreManager: ObservableObject {
         // Iterate through current entitlements
         for await result in Transaction.currentEntitlements {
             do {
-                let transaction = try checkVerification(result)
+                let transaction = try StoreManager.verifyTransaction(result)
                 
                 // Only track non-consumable entitlements
                 if StoreProductID.nonConsumables.contains(transaction.productID) {
