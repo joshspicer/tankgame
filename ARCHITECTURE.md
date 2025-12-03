@@ -11,7 +11,7 @@ The codebase has been reorganized from 2 large monolithic files into 19 focused,
 - **AI Collaboration**: Clear structure makes AI assistance more effective
 
 ## Architecture Layers
-
+   
 ### 1. Core Game Entities (Data Models)
 Simple data structures representing game objects:
 - `Tank.swift` - Tank entity with movement and shooting
