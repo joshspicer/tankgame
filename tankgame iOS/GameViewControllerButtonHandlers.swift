@@ -15,6 +15,7 @@ extension GameViewController {
         multiplayerManager.isHost = true
         lobbyUI.hostButton.isHidden = true
         lobbyUI.joinButton.isHidden = true
+        lobbyUI.storeButton.isHidden = true
         lobbyUI.instructionsLabel.isHidden = true
         lobbyUI.cancelButton.isHidden = false
         lobbyUI.connectedPlayersView.isHidden = false
@@ -29,6 +30,7 @@ extension GameViewController {
     func handleJoinTapped() {
         lobbyUI.hostButton.isHidden = true
         lobbyUI.joinButton.isHidden = true
+        lobbyUI.storeButton.isHidden = true
         lobbyUI.instructionsLabel.isHidden = true
         lobbyUI.cancelButton.isHidden = false
         lobbyUI.activityIndicator.startAnimating()
@@ -64,5 +66,9 @@ extension GameViewController {
         
         let playerAssignments = multiplayerCoordinator.assignPlayerIndices()
         startGame(playerCount: playerCount, localPlayerIndex: 0, playerAssignments: playerAssignments)
+    }
+    
+    func handleStoreTapped() {
+        presentStore()
     }
 }
