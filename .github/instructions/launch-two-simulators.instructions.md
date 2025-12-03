@@ -20,7 +20,7 @@ This game is designed to be played with two simulators running on your Mac. To t
 3. **Install and launch** the TankGame app on the first simulator
 4. **Boot the second simulator** (e.g., iPhone 15 Pro)
 5. **Install and launch** the TankGame app on the second simulator
-6. **Test multiplayer** by having one device host a game and the other join via Bluetooth/MultipeerConnectivity
+6. **Test multiplayer** by having one device host a game and the other join via MultipeerConnectivity
 
 ## Multiplayer Testing Workflow
 
