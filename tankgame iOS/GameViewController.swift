@@ -178,8 +178,8 @@ class GameViewController: UIViewController {
     }
     
     private func handleCoinPackagePurchase(_ packageId: String) {
-        // In a real app, this would trigger StoreKit purchase
-        // For demo purposes, we'll show an alert
+        // TODO: Implement real StoreKit purchase flow for production
+        // This requires App Store Connect product configuration
         guard let package = StoreManager.coinPackages.first(where: { $0.id == packageId }) else { return }
         
         let alert = UIAlertController(

@@ -359,8 +359,9 @@ class StoreUI {
     }
     
     func refreshSkinCards() {
-        // Remove existing skin cards
-        for subview in skinsSection.subviews where subview != skinsSection.subviews.first {
+        // Remove existing skin cards (keep the title label which is first)
+        let titleLabel = skinsSection.subviews.first
+        for subview in skinsSection.subviews where subview !== titleLabel {
             subview.removeFromSuperview()
         }
         populateSkins()

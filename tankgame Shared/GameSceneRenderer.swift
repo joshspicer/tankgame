@@ -6,6 +6,9 @@
 //
 
 import SpriteKit
+#if os(iOS) || os(tvOS)
+import UIKit
+#endif
 
 /// Handles all rendering operations for the game scene
 class GameSceneRenderer {
@@ -186,13 +189,35 @@ class GameSceneRenderer {
         node.addChild(glowNode)
     }
     
+    /// Create a simple circular texture for particles
+    private func createParticleTexture() -> SKTexture {
+        let size = CGSize(width: 16, height: 16)
+        #if os(iOS) || os(tvOS)
+        let renderer = UIGraphicsImageRenderer(size: size)
+        let image = renderer.image { context in
+            let rect = CGRect(origin: .zero, size: size)
+            context.cgContext.setFillColor(UIColor.white.cgColor)
+            context.cgContext.fillEllipse(in: rect)
+        }
+        return SKTexture(image: image)
+        #else
+        // macOS fallback - use a simple shape node converted to texture
+        let shapeNode = SKShapeNode(circleOfRadius: 8)
+        shapeNode.fillColor = .white
+        shapeNode.strokeColor = .clear
+        let view = SKView()
+        return view.texture(from: shapeNode) ?? SKTexture()
+        #endif
+    }
+    
     /// Add particle effect to a node
     private func addParticleEffect(_ effectType: TankSkin.ParticleEffectType, to node: SKNode, color: SKColor) {
         let emitter = SKEmitterNode()
+        let particleTexture = createParticleTexture()
         
         switch effectType {
         case .fire:
-            emitter.particleTexture = SKTexture(imageNamed: "spark")
+            emitter.particleTexture = particleTexture
             emitter.particleBirthRate = 50
             emitter.particleLifetime = 0.5
             emitter.particleSpeed = 20
@@ -207,7 +232,7 @@ class GameSceneRenderer {
             emitter.emissionAngleRange = .pi / 4
             
         case .sparkle:
-            emitter.particleTexture = SKTexture(imageNamed: "spark")
+            emitter.particleTexture = particleTexture
             emitter.particleBirthRate = 20
             emitter.particleLifetime = 1.0
             emitter.particleSpeed = 30
@@ -221,7 +246,7 @@ class GameSceneRenderer {
             emitter.emissionAngleRange = .pi * 2
             
         case .smoke:
-            emitter.particleTexture = SKTexture(imageNamed: "spark")
+            emitter.particleTexture = particleTexture
             emitter.particleBirthRate = 30
             emitter.particleLifetime = 1.5
             emitter.particleSpeed = 15

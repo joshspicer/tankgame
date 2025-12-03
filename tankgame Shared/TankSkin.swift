@@ -49,7 +49,7 @@ extension TankSkin {
             primaryHue: 0.6,
             hasRainbowEffect: false,
             hasGlowEffect: false,
-            particleEffect: nil
+            particleEffect: .none
         ),
         TankSkin(
             id: "default_red",
@@ -60,7 +60,7 @@ extension TankSkin {
             primaryHue: 0.0,
             hasRainbowEffect: false,
             hasGlowEffect: false,
-            particleEffect: nil
+            particleEffect: .none
         ),
         
         // Purchasable with coins
@@ -73,7 +73,7 @@ extension TankSkin {
             primaryHue: 0.33,
             hasRainbowEffect: false,
             hasGlowEffect: true,
-            particleEffect: nil
+            particleEffect: .none
         ),
         TankSkin(
             id: "purple_haze",

@@ -132,8 +132,9 @@ class StoreManager: ObservableObject {
     /// Load available products from App Store
     @MainActor
     func loadProducts() async {
-        let productIds = StoreManager.coinPackages.map { $0.id } + 
-                        TankSkin.allSkins.compactMap { $0.iapProductId }
+        let coinProductIds = StoreManager.coinPackages.map { $0.id }
+        let skinProductIds = TankSkin.allSkins.compactMap { $0.iapProductId }
+        let productIds = coinProductIds + skinProductIds
         
         do {
             products = try await Product.products(for: Set(productIds))
