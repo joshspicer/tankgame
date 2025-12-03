@@ -94,6 +94,10 @@ class WiFiMultiplayerManager {
     private var connectedPeerNames: [NWConnection: String] = [:]
     private var discoveredHosts: [String: HostInfo] = [:]
     
+    // For clients: track host name and all known player names
+    private var hostName: String?
+    private var knownPlayerNames: [String] = []
+    
     // MARK: - Initialization
     
     init() {
@@ -255,6 +259,7 @@ class WiFiMultiplayerManager {
         
         hostConnection?.cancel()
         hostConnection = nil
+        hostName = nil
         
         for connection in connections {
             connection.cancel()
@@ -262,6 +267,7 @@ class WiFiMultiplayerManager {
         connections.removeAll()
         connectedPeerNames.removeAll()
         discoveredHosts.removeAll()
+        knownPlayerNames.removeAll()
         
         connectionState = .disconnected
     }
@@ -284,7 +290,8 @@ class WiFiMultiplayerManager {
         if isHost {
             return [displayName] + connectedPeerNames.values
         } else {
-            return [displayName]
+            // For clients, return known players (includes self, host, and any other players)
+            return knownPlayerNames.isEmpty ? [displayName] : knownPlayerNames
         }
     }
     
@@ -350,7 +357,13 @@ class WiFiMultiplayerManager {
         switch state {
         case .ready:
             connectionState = .connected
+            self.hostName = hostName
+            knownPlayerNames = [displayName, hostName]
             startReceiving(on: hostConnection!)
+            
+            // Send our player name to the host
+            sendPlayerJoinedMessage()
+            
             DispatchQueue.main.async { [weak self] in
                 guard let self = self else { return }
                 self.delegate?.wifiManager(self, didConnectToPeer: hostName)
@@ -368,6 +381,24 @@ class WiFiMultiplayerManager {
             }
         default:
             break
+        }
+    }
+    
+    /// Send a playerJoined message to introduce ourselves to the host
+    private func sendPlayerJoinedMessage() {
+        let message = GameMessage.playerJoined(playerIndex: -1, peerName: displayName)
+        do {
+            let data = try JSONEncoder().encode(message)
+            let lengthData = withUnsafeBytes(of: UInt32(data.count).bigEndian) { Data($0) }
+            let frameData = lengthData + data
+            
+            hostConnection?.send(content: frameData, completion: .contentProcessed { error in
+                if let error = error {
+                    print("WiFi: Error sending playerJoined message: \(error)")
+                }
+            })
+        } catch {
+            print("WiFi: Error encoding playerJoined message: \(error)")
         }
     }
     
@@ -468,8 +499,25 @@ class WiFiMultiplayerManager {
         do {
             let message = try JSONDecoder().decode(GameMessage.self, from: data)
             
+            // Handle playerJoined message specially to register peer name
+            if case .playerJoined(_, let peerName) = message {
+                if isHost {
+                    // Host registers the connecting peer's name
+                    connectedPeerNames[connection] = peerName
+                    DispatchQueue.main.async { [weak self] in
+                        guard let self = self else { return }
+                        self.delegate?.wifiManager(self, didConnectToPeer: peerName)
+                    }
+                } else {
+                    // Client adds other player to known list
+                    if !knownPlayerNames.contains(peerName) {
+                        knownPlayerNames.append(peerName)
+                    }
+                }
+            }
+            
             // Extract peer name from connection or use a default
-            let peerName = connectedPeerNames[connection] ?? "Player"
+            let peerName = connectedPeerNames[connection] ?? hostName ?? "Player"
             
             // If host, forward message to other clients
             if isHost {
