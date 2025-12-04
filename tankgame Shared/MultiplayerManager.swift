@@ -171,7 +171,8 @@ class MultiplayerManager: NSObject {
     
     func invitePeer(_ peerID: MCPeerID) {
         // Guard against inviting already connected peers
-        if session.connectedPeers.contains(where: { $0.displayName == peerID.displayName }) {
+        // Note: MCPeerID uses isEqual for comparison, so we use contains() directly
+        if session.connectedPeers.contains(peerID) {
             print("Peer \(peerID.displayName) is already connected, skipping invitation")
             return
         }
@@ -190,7 +191,7 @@ class MultiplayerManager: NSObject {
         invitationRetryManager.trackInvitation(
             to: peerID,
             checkConnection: { [weak self] peer in
-                self?.session.connectedPeers.contains(where: { $0.displayName == peer.displayName }) ?? false
+                self?.session.connectedPeers.contains(peer) ?? false
             },
             retryAction: { [weak self] peer in
                 self?.invitePeer(peer)
@@ -380,7 +381,8 @@ extension MultiplayerManager: MCNearbyServiceAdvertiserDelegate {
         print("Received invitation from peer: \(peerID.displayName), current peers: \(currentPeerCount), max: \(maxPlayers)")
         
         // Check if this peer is already connected
-        if session.connectedPeers.contains(where: { $0.displayName == peerID.displayName }) {
+        // Note: MCPeerID uses isEqual for comparison, so we use contains() directly
+        if session.connectedPeers.contains(peerID) {
             print("Rejecting invitation from \(peerID.displayName) - peer already connected")
             invitationHandler(false, nil)
             return
