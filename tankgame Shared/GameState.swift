@@ -7,13 +7,20 @@
 
 import Foundation
 
-/// Manages the state of a game round including tanks, projectiles, and grid
+/// Manages the state of a game round including tanks, projectiles, lizards, and grid
 final class GameState {
     var grid: [[GridCell]]
     var tanks: [Tank] // Array of all tanks (index = player index)
     var projectiles: [Projectile] = []
+    var lizards: [Lizard] = [] // AI-controlled lizard creatures
     var wins: [Int] // Wins for each player
     var localPlayerIndex: Int // Index of the local player in tanks array
+    
+    /// Whether lizards are enabled for this game
+    var lizardsEnabled: Bool = true
+    
+    /// Number of lizards to spawn
+    static let lizardCount: Int = 2
     
     // Spawn positions for up to 4 players
     static let spawnPositions: [(row: Int, col: Int, direction: Direction)] = [
@@ -37,6 +44,9 @@ final class GameState {
         
         // Initialize wins array
         self.wins = Array(repeating: 0, count: playerCount)
+        
+        // Initialize lizards
+        spawnLizards(seed: seed)
     }
     
     func reset(seed: UInt32) {
@@ -48,6 +58,60 @@ final class GameState {
             let spawn = GameState.spawnPositions[i]
             tanks[i] = Tank(row: spawn.row, col: spawn.col, direction: spawn.direction)
         }
+        
+        // Reset lizards
+        spawnLizards(seed: seed)
+    }
+    
+    /// Spawn lizards at random empty positions
+    private func spawnLizards(seed: UInt32) {
+        guard lizardsEnabled else {
+            lizards = []
+            return
+        }
+        
+        // Use seed for deterministic placement
+        srand48(Int(seed) + 1000) // Offset seed to get different positions from grid
+        
+        var newLizards: [Lizard] = []
+        var attempts = 0
+        let maxAttempts = 100
+        
+        while newLizards.count < GameState.lizardCount && attempts < maxAttempts {
+            attempts += 1
+            
+            // Generate random position
+            let row = Int(drand48() * Double(grid.count))
+            let col = Int(drand48() * Double(grid[0].count))
+            
+            // Check if position is valid (empty and not near spawn points)
+            guard grid[row][col] == .empty else { continue }
+            guard !isNearSpawnPoint(row: row, col: col) else { continue }
+            guard !isOccupiedByLizard(row: row, col: col, lizards: newLizards) else { continue }
+            
+            // Create lizard with random direction using the static constant from Lizard
+            let direction = Lizard.cardinalDirections.randomElement() ?? .right
+            
+            newLizards.append(Lizard(row: row, col: col, direction: direction))
+        }
+        
+        lizards = newLizards
+    }
+    
+    /// Check if a position is near any spawn point
+    private func isNearSpawnPoint(row: Int, col: Int) -> Bool {
+        for spawn in GameState.spawnPositions {
+            let distance = abs(spawn.row - row) + abs(spawn.col - col)
+            if distance < 2 {
+                return true
+            }
+        }
+        return false
+    }
+    
+    /// Check if a position is occupied by another lizard
+    private func isOccupiedByLizard(row: Int, col: Int, lizards: [Lizard]) -> Bool {
+        return lizards.contains { $0.row == row && $0.col == col }
     }
     
     var localTank: Tank {
@@ -80,10 +144,48 @@ final class GameState {
                 continue
             }
             
+            // Check if hit any lizard
+            var hitLizard = false
+            for i in 0..<lizards.count {
+                if lizards[i].isAlive && projectile.hitsLizard(lizards[i]) {
+                    lizards[i].isAlive = false
+                    hitLizard = true
+                    break
+                }
+            }
+            
+            if hitLizard {
+                continue
+            }
+            
             activeProjectiles.append(projectile)
         }
         
         projectiles = activeProjectiles
+    }
+    
+    /// Update all lizards' AI behavior
+    func updateLizards() {
+        for i in 0..<lizards.count {
+            if lizards[i].isAlive {
+                // Create a grid that includes tank positions as obstacles
+                var obstacleGrid = grid
+                for tank in tanks where tank.isAlive {
+                    if tank.row >= 0 && tank.row < obstacleGrid.count &&
+                       tank.col >= 0 && tank.col < obstacleGrid[0].count {
+                        obstacleGrid[tank.row][tank.col] = .wall
+                    }
+                }
+                // Also treat other lizards as obstacles
+                for (j, otherLizard) in lizards.enumerated() where j != i && otherLizard.isAlive {
+                    if otherLizard.row >= 0 && otherLizard.row < obstacleGrid.count &&
+                       otherLizard.col >= 0 && otherLizard.col < obstacleGrid[0].count {
+                        obstacleGrid[otherLizard.row][otherLizard.col] = .wall
+                    }
+                }
+                _ = lizards[i].update(grid: obstacleGrid)
+            }
+        }
     }
     
     func isRoundOver() -> Bool {

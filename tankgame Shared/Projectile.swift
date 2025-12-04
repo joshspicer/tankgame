@@ -33,4 +33,8 @@ struct Projectile: Codable {
     func hits(tank: Tank) -> Bool {
         return tank.isAlive && row == tank.row && col == tank.col
     }
+    
+    func hitsLizard(_ lizard: Lizard) -> Bool {
+        return lizard.isAlive && row == lizard.row && col == lizard.col
+    }
 }

@@ -13,6 +13,7 @@ class GameSceneUpdateLoop {
     
     var lastUpdateTime: TimeInterval = 0
     var lastMoveTime: TimeInterval = 0
+    var lastLizardUpdateTime: TimeInterval = 0
     
     init(scene: GameScene) {
         self.scene = scene
@@ -33,6 +34,12 @@ class GameSceneUpdateLoop {
         if currentTime - lastUpdateTime > 0.05 { // ~20 FPS for projectile updates
             updateProjectiles(state: state)
             lastUpdateTime = currentTime
+        }
+        
+        // Update lizards (less frequently for smoother movement)
+        if currentTime - lastLizardUpdateTime > 0.1 { // ~10 FPS for lizard updates
+            updateLizards(state: state)
+            lastLizardUpdateTime = currentTime
         }
     }
     
@@ -64,6 +71,10 @@ class GameSceneUpdateLoop {
         let wasAlive = state.tanks.map { $0.isAlive }
         let tankPositions = state.tanks.map { scene.renderer.gridPosition(row: $0.row, col: $0.col) }
         
+        // Save lizard alive state before update
+        let lizardWasAlive = state.lizards.map { $0.isAlive }
+        let lizardPositions = state.lizards.map { scene.renderer.gridPosition(row: $0.row, col: $0.col) }
+        
         state.updateProjectiles()
         scene.renderProjectiles()
         
@@ -74,10 +85,32 @@ class GameSceneUpdateLoop {
             }
         }
         
+        // Check which lizards were hit and trigger explosions
+        for i in 0..<state.lizards.count {
+            if lizardWasAlive[i] && !state.lizards[i].isAlive {
+                triggerLizardExplosion(position: lizardPositions[i])
+            }
+        }
+        
+        // Re-render lizards if any were destroyed
+        if lizardWasAlive != state.lizards.map({ $0.isAlive }) {
+            scene.renderLizards()
+        }
+        
         // Check if round ended after update
         if state.isRoundOver() {
             handleRoundEnd()
         }
+    }
+    
+    private func updateLizards(state: GameState) {
+        guard let scene = scene else { return }
+        
+        // Update lizard AI
+        state.updateLizards()
+        
+        // Render lizards with smooth animation
+        scene.renderLizardsWithSmoothing()
     }
     
     private func triggerTankExplosion(tankIndex: Int, position: CGPoint) {
@@ -89,6 +122,14 @@ class GameSceneUpdateLoop {
             scene?.tankExploding[tankIndex] = false
         }
         scene.tankExploding[tankIndex] = true
+    }
+    
+    private func triggerLizardExplosion(position: CGPoint) {
+        guard let scene = scene, let lizardNode = scene.lizardNode else { return }
+        
+        scene.soundManager.playSound("hit.wav")
+        let color = SKColor.systemGreen
+        scene.explosionEffects.createExplosion(at: position, color: color, in: lizardNode) { }
     }
     
     private func handleRoundEnd() {

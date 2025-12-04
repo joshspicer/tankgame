@@ -22,6 +22,7 @@ class GameScene: SKScene {
     var gridNode: SKNode?
     var tankNodes: [SKNode?] = [nil, nil, nil, nil] // Support up to 4 tanks
     var projectilesNode: SKNode?
+    var lizardNode: SKNode?
     
     // Components
     var renderer: GameSceneRenderer!
@@ -56,6 +57,7 @@ class GameScene: SKScene {
             renderGrid()
             renderTanks()
             renderProjectiles()
+            renderLizards()
             updateScore()
         }
     }
@@ -82,6 +84,7 @@ class GameScene: SKScene {
         tankExploding = Array(repeating: false, count: state.tanks.count)
         renderGrid()
         renderTanks()
+        renderLizards()
         updateScore()
         ui.updateStatus("Fight!")
     }
@@ -104,6 +107,16 @@ class GameScene: SKScene {
     func renderProjectiles() {
         guard let state = gameState, let projectiles = projectilesNode else { return }
         renderer.renderProjectiles(state.projectiles, in: projectiles)
+    }
+    
+    func renderLizards() {
+        guard let state = gameState, let lizards = lizardNode else { return }
+        renderer.renderLizards(state.lizards, in: lizards)
+    }
+    
+    func renderLizardsWithSmoothing() {
+        guard let state = gameState, let lizards = lizardNode else { return }
+        renderer.renderLizardsWithSmoothing(state.lizards, in: lizards, duration: 0.1)
     }
     
     func updateScore() {
