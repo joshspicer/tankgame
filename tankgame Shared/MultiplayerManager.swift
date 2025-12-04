@@ -137,6 +137,7 @@ class MultiplayerManager: NSObject {
     // MARK: - Hosting
     
     func startHosting() {
+        print("Starting to host game as: \(myPeerID.displayName)")
         advertiser = MCNearbyServiceAdvertiser(peer: myPeerID, discoveryInfo: nil, serviceType: Self.serviceType)
         advertiser?.delegate = self
         advertiser?.startAdvertisingPeer()
@@ -153,6 +154,7 @@ class MultiplayerManager: NSObject {
     // MARK: - Browsing
     
     func startBrowsing() {
+        print("Starting to browse for games as: \(myPeerID.displayName)")
         browser = MCNearbyServiceBrowser(peer: myPeerID, serviceType: Self.serviceType)
         browser?.delegate = self
         browser?.startBrowsingForPeers()
@@ -168,6 +170,7 @@ class MultiplayerManager: NSObject {
     }
     
     func invitePeer(_ peerID: MCPeerID) {
+        print("Inviting peer: \(peerID.displayName) to session")
         connectionState = .connecting(peerName: peerID.displayName)
         browser?.invitePeer(peerID, to: session, withContext: nil, timeout: 30)
         
@@ -240,11 +243,22 @@ class MultiplayerManager: NSObject {
 
 extension MultiplayerManager: MCSessionDelegate {
     func session(_ session: MCSession, peer peerID: MCPeerID, didChange state: MCSessionState) {
+        let stateString: String
+        switch state {
+        case .connected: stateString = "connected"
+        case .connecting: stateString = "connecting"
+        case .notConnected: stateString = "notConnected"
+        @unknown default: stateString = "unknown"
+        }
+        print("Session state changed for peer \(peerID.displayName): \(stateString)")
+        
         DispatchQueue.main.async { [weak self] in
             guard let self = self else { return }
             
             switch state {
             case .connected:
+                print("Successfully connected to peer: \(peerID.displayName)")
+                
                 // Mark peer as known for future reconnection
                 self.reconnectionManager.markPeerAsKnown(peerID)
                 
@@ -263,6 +277,8 @@ extension MultiplayerManager: MCSessionDelegate {
                 self.delegate?.multiplayerManager(self, didConnectToPeer: peerID)
                 
             case .notConnected:
+                print("Disconnected from peer: \(peerID.displayName)")
+                
                 // Stop tracking health for this peer
                 self.connectionHealthMonitor.peerDisconnected(peerID)
                 
@@ -279,10 +295,12 @@ extension MultiplayerManager: MCSessionDelegate {
                 self.delegate?.multiplayerManager(self, didDisconnectFromPeer: peerID)
                 
             case .connecting:
+                print("Connecting to peer: \(peerID.displayName)")
                 self.connectionState = .connecting(peerName: peerID.displayName)
                 self.delegate?.multiplayerManager(self, isConnectingToPeer: peerID)
                 
             @unknown default:
+                print("Unknown state for peer: \(peerID.displayName)")
                 break
             }
         }
@@ -333,6 +351,13 @@ extension MultiplayerManager: MCSessionDelegate {
     func session(_ session: MCSession, didFinishReceivingResourceWithName resourceName: String, fromPeer peerID: MCPeerID, at localURL: URL?, withError error: Error?) {
         // Not used
     }
+    
+    func session(_ session: MCSession, didReceiveCertificate certificate: [Any]?, fromPeer peerID: MCPeerID, certificateHandler: @escaping (Bool) -> Void) {
+        // Accept all certificates for peer-to-peer gaming
+        // This is required when encryptionPreference is .required
+        print("Received certificate from peer: \(peerID.displayName), accepting connection")
+        certificateHandler(true)
+    }
 }
 
 // MARK: - MCNearbyServiceAdvertiserDelegate
@@ -340,9 +365,14 @@ extension MultiplayerManager: MCSessionDelegate {
 extension MultiplayerManager: MCNearbyServiceAdvertiserDelegate {
     func advertiser(_ advertiser: MCNearbyServiceAdvertiser, didReceiveInvitationFromPeer peerID: MCPeerID, withContext context: Data?, invitationHandler: @escaping (Bool, MCSession?) -> Void) {
         // Accept invitations if we have room (max 4 players total)
-        if session.connectedPeers.count < maxPlayers - 1 {
+        let currentPeerCount = session.connectedPeers.count
+        print("Received invitation from peer: \(peerID.displayName), current peers: \(currentPeerCount), max: \(maxPlayers)")
+        
+        if currentPeerCount < maxPlayers - 1 {
+            print("Accepting invitation from \(peerID.displayName)")
             invitationHandler(true, session)
         } else {
+            print("Rejecting invitation from \(peerID.displayName) - session full")
             invitationHandler(false, nil)
         }
     }
@@ -361,6 +391,8 @@ extension MultiplayerManager: MCNearbyServiceAdvertiserDelegate {
 
 extension MultiplayerManager: MCNearbyServiceBrowserDelegate {
     func browser(_ browser: MCNearbyServiceBrowser, foundPeer peerID: MCPeerID, withDiscoveryInfo info: [String : String]?) {
+        print("Found peer: \(peerID.displayName)")
+        
         // Track discovered peers for reconnection
         if !discoveredPeers.contains(where: { $0.displayName == peerID.displayName }) {
             discoveredPeers.append(peerID)
@@ -378,6 +410,7 @@ extension MultiplayerManager: MCNearbyServiceBrowserDelegate {
     }
     
     func browser(_ browser: MCNearbyServiceBrowser, lostPeer peerID: MCPeerID) {
+        print("Lost peer: \(peerID.displayName)")
         discoveredPeers.removeAll { $0.displayName == peerID.displayName }
         
         DispatchQueue.main.async { [weak self] in
