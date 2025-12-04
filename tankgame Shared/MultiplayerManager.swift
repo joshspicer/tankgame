@@ -137,11 +137,13 @@ class MultiplayerManager: NSObject {
     // MARK: - Hosting
     
     func startHosting() {
+        print("[MultiplayerManager] startHosting called")
         advertiser = MCNearbyServiceAdvertiser(peer: myPeerID, discoveryInfo: nil, serviceType: Self.serviceType)
         advertiser?.delegate = self
         advertiser?.startAdvertisingPeer()
         connectionState = .advertising
         connectionHealthMonitor.startMonitoring()
+        print("[MultiplayerManager] Now advertising as: \(myPeerID.displayName)")
     }
     
     func stopHosting() {
@@ -153,14 +155,17 @@ class MultiplayerManager: NSObject {
     // MARK: - Browsing
     
     func startBrowsing() {
+        print("[MultiplayerManager] startBrowsing called")
         browser = MCNearbyServiceBrowser(peer: myPeerID, serviceType: Self.serviceType)
         browser?.delegate = self
         browser?.startBrowsingForPeers()
         connectionState = .browsing
         connectionHealthMonitor.startMonitoring()
+        print("[MultiplayerManager] Now browsing for peers")
     }
     
     func stopBrowsing() {
+        print("[MultiplayerManager] stopBrowsing called")
         browser?.stopBrowsingForPeers()
         browser = nil
         discoveredPeers.removeAll()
