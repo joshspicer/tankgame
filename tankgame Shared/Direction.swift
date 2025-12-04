@@ -52,4 +52,7 @@ enum Direction: Int, Codable, CaseIterable {
             return false
         }
     }
+    
+    /// All cardinal (non-diagonal) directions
+    static let cardinalDirections: [Direction] = [.up, .down, .left, .right]
 }

@@ -24,9 +24,6 @@ struct AIBotTank {
     /// Whether the bot should attempt to shoot this update
     var shouldShoot: Bool = false
     
-    /// Cardinal directions for movement (bots only move in cardinal directions)
-    static let cardinalDirections: [Direction] = [.up, .down, .left, .right]
-    
     init(tankIndex: Int) {
         self.tankIndex = tankIndex
         // Randomize initial counters to avoid synchronized bot behavior
@@ -130,7 +127,7 @@ struct AIBotTank {
         case .left, .right:
             perpendicular = [.up, .down]
         default:
-            perpendicular = AIBotTank.cardinalDirections
+            perpendicular = Direction.cardinalDirections
         }
         
         for direction in perpendicular.shuffled() {
@@ -161,7 +158,7 @@ struct AIBotTank {
         
         // Add some randomness (30% chance to pick a random direction instead)
         if Double.random(in: 0...1) < 0.3 {
-            preferredDirections = AIBotTank.cardinalDirections.shuffled()
+            preferredDirections = Direction.cardinalDirections.shuffled()
         } else {
             preferredDirections.shuffle()
         }
@@ -179,7 +176,7 @@ struct AIBotTank {
     
     /// Wander in a random valid direction
     private func wanderRandomly(tank: Tank, grid: [[GridCell]], allTanks: [Tank]) -> Direction? {
-        let shuffled = AIBotTank.cardinalDirections.shuffled()
+        let shuffled = Direction.cardinalDirections.shuffled()
         for direction in shuffled {
             if canMove(tank: tank, direction: direction, grid: grid, allTanks: allTanks) {
                 return direction
