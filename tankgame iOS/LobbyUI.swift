@@ -17,6 +17,7 @@ class LobbyUI {
     private(set) var joinButton: UIButton!
     private(set) var cancelButton: UIButton!
     private(set) var startGameButton: UIButton!
+    private(set) var spriteModeButton: UIButton!
     private(set) var peerTableView: UITableView!
     private(set) var connectedPlayersView: UIView!
     private(set) var connectedPlayersLabel: UILabel!
@@ -94,6 +95,11 @@ class LobbyUI {
         joinButton = createButton(title: "Join Game", backgroundColor: .systemGreen, icon: "🔍")
         joinButton.addTarget(self, action: #selector(joinButtonTapped), for: .touchUpInside)
         lobbyView.addSubview(joinButton)
+        
+        // Sprite mode toggle button
+        spriteModeButton = createSpriteModeButton()
+        spriteModeButton.addTarget(self, action: #selector(spriteModeButtonTapped), for: .touchUpInside)
+        lobbyView.addSubview(spriteModeButton)
         
         // Cancel button
         cancelButton = UIButton(type: .system)
@@ -224,7 +230,12 @@ class LobbyUI {
             joinButton.widthAnchor.constraint(equalToConstant: 240),
             joinButton.heightAnchor.constraint(equalToConstant: 56),
             
-            cancelButton.topAnchor.constraint(equalTo: joinButton.bottomAnchor, constant: 20),
+            spriteModeButton.topAnchor.constraint(equalTo: joinButton.bottomAnchor, constant: 20),
+            spriteModeButton.centerXAnchor.constraint(equalTo: lobbyView.centerXAnchor),
+            spriteModeButton.widthAnchor.constraint(equalToConstant: 200),
+            spriteModeButton.heightAnchor.constraint(equalToConstant: 44),
+            
+            cancelButton.topAnchor.constraint(equalTo: spriteModeButton.bottomAnchor, constant: 20),
             cancelButton.centerXAnchor.constraint(equalTo: lobbyView.centerXAnchor),
             
             connectedPlayersView.topAnchor.constraint(equalTo: cancelButton.bottomAnchor, constant: 20),
@@ -272,11 +283,47 @@ class LobbyUI {
         onStartGameTapped?()
     }
     
+    @objc private func spriteModeButtonTapped() {
+        // Toggle between tank and dolphin mode
+        let currentMode = GameSettings.shared.spriteMode
+        let newMode: SpriteMode = (currentMode == .tank) ? .dolphin : .tank
+        GameSettings.shared.spriteMode = newMode
+        updateSpriteModeButton()
+    }
+    
+    /// Create sprite mode toggle button
+    private func createSpriteModeButton() -> UIButton {
+        let button = UIButton(type: .system)
+        button.backgroundColor = .secondarySystemBackground
+        button.layer.cornerRadius = 12
+        button.layer.borderWidth = 1
+        button.layer.borderColor = UIColor.separator.cgColor
+        button.translatesAutoresizingMaskIntoConstraints = false
+        
+        updateSpriteModeButtonTitle(button)
+        
+        return button
+    }
+    
+    /// Update the sprite mode button title to reflect current mode
+    private func updateSpriteModeButtonTitle(_ button: UIButton) {
+        let mode = GameSettings.shared.spriteMode
+        let title = "\(mode.icon) \(mode.displayName) Mode"
+        button.setTitle(title, for: .normal)
+        button.titleLabel?.font = .systemFont(ofSize: 16, weight: .medium)
+    }
+    
+    /// Update sprite mode button to reflect current state
+    func updateSpriteModeButton() {
+        updateSpriteModeButtonTitle(spriteModeButton)
+    }
+    
     /// Reset lobby to initial state
     func reset() {
         hostButton.isHidden = false
         joinButton.isHidden = false
         instructionsLabel.isHidden = false
+        spriteModeButton.isHidden = false
         cancelButton.isHidden = true
         startGameButton.isHidden = true
         connectedPlayersView.isHidden = true
@@ -284,5 +331,6 @@ class LobbyUI {
         emptyStateLabel.isHidden = true
         activityIndicator.stopAnimating()
         statusLabel.text = "Choose an option to start"
+        updateSpriteModeButton()
     }
 }

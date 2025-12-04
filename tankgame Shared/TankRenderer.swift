@@ -15,15 +15,15 @@ class TankRenderer {
     // Tank colors for up to 4 players
     let tankColors: [SKColor] = [.blue, .red, .green, .orange]
     
-    // Tank sprite renderer
+    // Sprite renderers
     private let tankSpriteRenderer: TankSpriteRenderer
-    private let animationHelper: RainbowAnimationHelper
+    private let dolphinSpriteRenderer: DolphinSpriteRenderer
     
     init(tileSize: CGFloat, gridSize: Int) {
         self.tileSize = tileSize
         self.gridSize = gridSize
         self.tankSpriteRenderer = TankSpriteRenderer(tileSize: tileSize)
-        self.animationHelper = RainbowAnimationHelper()
+        self.dolphinSpriteRenderer = DolphinSpriteRenderer(tileSize: tileSize)
     }
     
     /// Render all tanks
@@ -89,27 +89,14 @@ class TankRenderer {
         return diff
     }
     
-    /// Create a tank sprite node
+    /// Create a tank sprite node based on current sprite mode
     private func createTankNode(color: SKColor, direction: Direction) -> SKNode {
-        let tankNode = SKNode()
-        
-        // Tank body (square)
-        let body = SKSpriteNode(color: color, size: CGSize(width: tileSize * 0.7, height: tileSize * 0.7))
-        tankNode.addChild(body)
-        
-        // Tank barrel (rectangle)
-        let barrel = SKSpriteNode(color: color.withAlphaComponent(0.8), size: CGSize(width: tileSize * 0.2, height: tileSize * 0.5))
-        barrel.position = CGPoint(x: 0, y: tileSize * 0.35)
-        tankNode.addChild(barrel)
-        
-        // Add rainbow animation to body and barrel
-        animationHelper.addRainbowAnimation(to: body, phaseOffset: 0)
-        animationHelper.addRainbowAnimation(to: barrel, phaseOffset: 0.15)
-        
-        // Rotate based on direction
-        tankNode.zRotation = CGFloat(direction.angle)
-        
-        return tankNode
+        switch GameSettings.shared.spriteMode {
+        case .dolphin:
+            return dolphinSpriteRenderer.createDolphinNode(color: color, direction: direction)
+        case .tank:
+            return tankSpriteRenderer.createTankNode(color: color, direction: direction)
+        }
     }
     
     /// Convert grid coordinates to scene position
