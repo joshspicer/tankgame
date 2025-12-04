@@ -14,6 +14,7 @@ class GameSceneUpdateLoop {
     var lastUpdateTime: TimeInterval = 0
     var lastMoveTime: TimeInterval = 0
     var lastLizardUpdateTime: TimeInterval = 0
+    var lastBotUpdateTime: TimeInterval = 0
     
     private var explosionHandler: ExplosionHandler?
     
@@ -31,6 +32,12 @@ class GameSceneUpdateLoop {
         // Don't update if round is over or any explosion in progress
         if state.isRoundOver() || scene.tankExploding.contains(true) {
             return
+        }
+        
+        // Update AI bots
+        if currentTime - lastBotUpdateTime > 0.1 { // ~10 FPS for bot updates
+            updateBots(state: state)
+            lastBotUpdateTime = currentTime
         }
         
         // Update projectiles
@@ -104,6 +111,26 @@ class GameSceneUpdateLoop {
         
         // Render lizards with smooth animation
         scene.renderLizardsWithSmoothing()
+    }
+    
+    private func updateBots(state: GameState) {
+        guard let scene = scene else { return }
+        guard state.botManager.hasBots else { return }
+        
+        // Set up callbacks for bot actions
+        state.botManager.onBotMove = { [weak scene] tankIndex, row, col, direction in
+            scene?.renderTanksWithSmoothing()
+            scene?.soundManager.playSound("move.wav")
+        }
+        
+        state.botManager.onBotShoot = { [weak scene, weak state] tankIndex, projectile in
+            state?.projectiles.append(projectile)
+            scene?.renderProjectiles()
+            scene?.soundManager.playSound("shot.wav")
+        }
+        
+        // Update all bots
+        state.botManager.update(tanks: &state.tanks, grid: state.grid, projectiles: state.projectiles)
     }
     
     private func handleRoundEnd() {

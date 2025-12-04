@@ -15,9 +15,13 @@ class LobbyUI {
     private(set) var lobbyView: UIView!
     private(set) var hostButton: UIButton!
     private(set) var joinButton: UIButton!
+    private(set) var singlePlayerButton: UIButton!
     private(set) var cancelButton: UIButton!
     private(set) var startGameButton: UIButton!
     private(set) var spriteModeButton: UIButton!
+    private(set) var botCountStepper: UIStepper!
+    private(set) var botCountLabel: UILabel!
+    private(set) var botCountView: UIView!
     private(set) var peerTableView: UITableView!
     private(set) var connectedPlayersView: UIView!
     private(set) var connectedPlayersLabel: UILabel!
@@ -26,9 +30,13 @@ class LobbyUI {
     private(set) var emptyStateLabel: UILabel!
     private(set) var activityIndicator: UIActivityIndicatorView!
     
+    /// Number of AI bots to add
+    var botCount: Int = 1
+    
     // Callbacks
     var onHostTapped: (() -> Void)?
     var onJoinTapped: (() -> Void)?
+    var onSinglePlayerTapped: (() -> Void)?
     var onCancelTapped: (() -> Void)?
     var onStartGameTapped: (() -> Void)?
     
@@ -86,6 +94,11 @@ class LobbyUI {
         instructionsLabel.translatesAutoresizingMaskIntoConstraints = false
         lobbyView.addSubview(instructionsLabel)
         
+        // Single Player button (with AI bots)
+        singlePlayerButton = createButton(title: "Single Player", backgroundColor: .systemOrange, icon: "🤖")
+        singlePlayerButton.addTarget(self, action: #selector(singlePlayerButtonTapped), for: .touchUpInside)
+        lobbyView.addSubview(singlePlayerButton)
+        
         // Host button
         hostButton = createButton(title: "Host Game", backgroundColor: .systemBlue, icon: "🎯")
         hostButton.addTarget(self, action: #selector(hostButtonTapped), for: .touchUpInside)
@@ -95,6 +108,29 @@ class LobbyUI {
         joinButton = createButton(title: "Join Game", backgroundColor: .systemGreen, icon: "🔍")
         joinButton.addTarget(self, action: #selector(joinButtonTapped), for: .touchUpInside)
         lobbyView.addSubview(joinButton)
+        
+        // Bot count selection view (for single player mode)
+        botCountView = UIView()
+        botCountView.backgroundColor = .secondarySystemBackground
+        botCountView.layer.cornerRadius = 12
+        botCountView.isHidden = true
+        botCountView.translatesAutoresizingMaskIntoConstraints = false
+        lobbyView.addSubview(botCountView)
+        
+        botCountLabel = UILabel()
+        botCountLabel.text = "AI Bots: 1"
+        botCountLabel.font = .systemFont(ofSize: 16, weight: .medium)
+        botCountLabel.textAlignment = .center
+        botCountLabel.translatesAutoresizingMaskIntoConstraints = false
+        botCountView.addSubview(botCountLabel)
+        
+        botCountStepper = UIStepper()
+        botCountStepper.minimumValue = 1
+        botCountStepper.maximumValue = 3
+        botCountStepper.value = 1
+        botCountStepper.addTarget(self, action: #selector(botCountChanged), for: .valueChanged)
+        botCountStepper.translatesAutoresizingMaskIntoConstraints = false
+        botCountView.addSubview(botCountStepper)
         
         // Sprite mode toggle button
         spriteModeButton = createSpriteModeButton()
@@ -206,36 +242,52 @@ class LobbyUI {
     
     private func setupConstraints(titleLabel: UILabel, tankEmojiLabel: UILabel) {
         NSLayoutConstraint.activate([
-            tankEmojiLabel.topAnchor.constraint(equalTo: lobbyView.safeAreaLayoutGuide.topAnchor, constant: 60),
+            tankEmojiLabel.topAnchor.constraint(equalTo: lobbyView.safeAreaLayoutGuide.topAnchor, constant: 40),
             tankEmojiLabel.centerXAnchor.constraint(equalTo: lobbyView.centerXAnchor),
             
-            titleLabel.topAnchor.constraint(equalTo: tankEmojiLabel.bottomAnchor, constant: 16),
+            titleLabel.topAnchor.constraint(equalTo: tankEmojiLabel.bottomAnchor, constant: 12),
             titleLabel.centerXAnchor.constraint(equalTo: lobbyView.centerXAnchor),
             
-            statusLabel.topAnchor.constraint(equalTo: titleLabel.bottomAnchor, constant: 16),
+            statusLabel.topAnchor.constraint(equalTo: titleLabel.bottomAnchor, constant: 12),
             statusLabel.leadingAnchor.constraint(equalTo: lobbyView.leadingAnchor, constant: 30),
             statusLabel.trailingAnchor.constraint(equalTo: lobbyView.trailingAnchor, constant: -30),
             
-            instructionsLabel.topAnchor.constraint(equalTo: statusLabel.bottomAnchor, constant: 12),
+            instructionsLabel.topAnchor.constraint(equalTo: statusLabel.bottomAnchor, constant: 8),
             instructionsLabel.leadingAnchor.constraint(equalTo: lobbyView.leadingAnchor, constant: 30),
             instructionsLabel.trailingAnchor.constraint(equalTo: lobbyView.trailingAnchor, constant: -30),
             
-            hostButton.topAnchor.constraint(equalTo: instructionsLabel.bottomAnchor, constant: 50),
+            singlePlayerButton.topAnchor.constraint(equalTo: instructionsLabel.bottomAnchor, constant: 30),
+            singlePlayerButton.centerXAnchor.constraint(equalTo: lobbyView.centerXAnchor),
+            singlePlayerButton.widthAnchor.constraint(equalToConstant: 240),
+            singlePlayerButton.heightAnchor.constraint(equalToConstant: 56),
+            
+            hostButton.topAnchor.constraint(equalTo: singlePlayerButton.bottomAnchor, constant: 16),
             hostButton.centerXAnchor.constraint(equalTo: lobbyView.centerXAnchor),
             hostButton.widthAnchor.constraint(equalToConstant: 240),
             hostButton.heightAnchor.constraint(equalToConstant: 56),
             
-            joinButton.topAnchor.constraint(equalTo: hostButton.bottomAnchor, constant: 20),
+            joinButton.topAnchor.constraint(equalTo: hostButton.bottomAnchor, constant: 16),
             joinButton.centerXAnchor.constraint(equalTo: lobbyView.centerXAnchor),
             joinButton.widthAnchor.constraint(equalToConstant: 240),
             joinButton.heightAnchor.constraint(equalToConstant: 56),
             
-            spriteModeButton.topAnchor.constraint(equalTo: joinButton.bottomAnchor, constant: 20),
+            spriteModeButton.topAnchor.constraint(equalTo: joinButton.bottomAnchor, constant: 16),
             spriteModeButton.centerXAnchor.constraint(equalTo: lobbyView.centerXAnchor),
             spriteModeButton.widthAnchor.constraint(equalToConstant: 200),
             spriteModeButton.heightAnchor.constraint(equalToConstant: 44),
             
-            cancelButton.topAnchor.constraint(equalTo: spriteModeButton.bottomAnchor, constant: 20),
+            botCountView.topAnchor.constraint(equalTo: spriteModeButton.bottomAnchor, constant: 16),
+            botCountView.centerXAnchor.constraint(equalTo: lobbyView.centerXAnchor),
+            botCountView.widthAnchor.constraint(equalToConstant: 200),
+            botCountView.heightAnchor.constraint(equalToConstant: 50),
+            
+            botCountLabel.leadingAnchor.constraint(equalTo: botCountView.leadingAnchor, constant: 16),
+            botCountLabel.centerYAnchor.constraint(equalTo: botCountView.centerYAnchor),
+            
+            botCountStepper.trailingAnchor.constraint(equalTo: botCountView.trailingAnchor, constant: -16),
+            botCountStepper.centerYAnchor.constraint(equalTo: botCountView.centerYAnchor),
+            
+            cancelButton.topAnchor.constraint(equalTo: botCountView.bottomAnchor, constant: 16),
             cancelButton.centerXAnchor.constraint(equalTo: lobbyView.centerXAnchor),
             
             connectedPlayersView.topAnchor.constraint(equalTo: cancelButton.bottomAnchor, constant: 20),
@@ -275,6 +327,10 @@ class LobbyUI {
         onJoinTapped?()
     }
     
+    @objc private func singlePlayerButtonTapped() {
+        onSinglePlayerTapped?()
+    }
+    
     @objc private func cancelButtonTapped() {
         onCancelTapped?()
     }
@@ -289,6 +345,11 @@ class LobbyUI {
         let newMode: SpriteMode = (currentMode == .tank) ? .dolphin : .tank
         GameSettings.shared.spriteMode = newMode
         updateSpriteModeButton()
+    }
+    
+    @objc private func botCountChanged() {
+        botCount = Int(botCountStepper.value)
+        botCountLabel.text = "AI Bots: \(botCount)"
     }
     
     /// Create sprite mode toggle button
@@ -318,12 +379,26 @@ class LobbyUI {
         updateSpriteModeButtonTitle(spriteModeButton)
     }
     
+    /// Show single player mode UI
+    func showSinglePlayerMode() {
+        singlePlayerButton.isHidden = true
+        hostButton.isHidden = true
+        joinButton.isHidden = true
+        instructionsLabel.isHidden = true
+        botCountView.isHidden = false
+        cancelButton.isHidden = false
+        startGameButton.isHidden = false
+        statusLabel.text = "Single Player Mode\nSelect number of AI opponents"
+    }
+    
     /// Reset lobby to initial state
     func reset() {
+        singlePlayerButton.isHidden = false
         hostButton.isHidden = false
         joinButton.isHidden = false
         instructionsLabel.isHidden = false
         spriteModeButton.isHidden = false
+        botCountView.isHidden = true
         cancelButton.isHidden = true
         startGameButton.isHidden = true
         connectedPlayersView.isHidden = true

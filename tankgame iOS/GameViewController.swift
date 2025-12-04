@@ -26,6 +26,9 @@ class GameViewController: UIViewController {
     var gameScene: GameScene?
     var gameState: GameState?
     var skView: SKView?
+    
+    // Single player mode flag
+    var isSinglePlayerMode: Bool = false
 
     override func viewDidLoad() {
         super.viewDidLoad()
@@ -54,6 +57,10 @@ class GameViewController: UIViewController {
         
         lobbyUI.onJoinTapped = { [weak self] in
             self?.handleJoinTapped()
+        }
+        
+        lobbyUI.onSinglePlayerTapped = { [weak self] in
+            self?.handleSinglePlayerTapped()
         }
         
         lobbyUI.onCancelTapped = { [weak self] in
