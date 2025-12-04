@@ -37,8 +37,16 @@ extension GameViewController: MultiplayerManagerDelegate {
             // Update connected players UI when a new player joins
             updateConnectedPlayersUI()
         } else {
-            lobbyUI.statusLabel.text = "Connected! Waiting for host to start game..."
+            // Client connected to host - update UI to show waiting state
+            lobbyUI.statusLabel.text = "Connected to \(peerID.displayName)!\nWaiting for host to start game..."
             print("[GameViewController] Client: Connected to host, waiting for game start")
+            
+            // Hide the peer table since we're connected
+            lobbyUI.peerTableView.isHidden = true
+            lobbyUI.emptyStateLabel.isHidden = true
+            
+            // Show activity indicator to indicate waiting
+            lobbyUI.activityIndicator.startAnimating()
         }
     }
     
