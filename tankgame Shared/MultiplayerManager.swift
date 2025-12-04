@@ -170,6 +170,18 @@ class MultiplayerManager: NSObject {
     }
     
     func invitePeer(_ peerID: MCPeerID) {
+        // Guard against inviting already connected peers
+        if session.connectedPeers.contains(where: { $0.displayName == peerID.displayName }) {
+            print("Peer \(peerID.displayName) is already connected, skipping invitation")
+            return
+        }
+        
+        // Guard against duplicate pending invitations
+        if invitationRetryManager.hasPendingInvitation(for: peerID) {
+            print("Invitation to \(peerID.displayName) is already pending, skipping duplicate")
+            return
+        }
+        
         print("Inviting peer: \(peerID.displayName) to session")
         connectionState = .connecting(peerName: peerID.displayName)
         browser?.invitePeer(peerID, to: session, withContext: nil, timeout: 30)
@@ -364,10 +376,17 @@ extension MultiplayerManager: MCSessionDelegate {
 
 extension MultiplayerManager: MCNearbyServiceAdvertiserDelegate {
     func advertiser(_ advertiser: MCNearbyServiceAdvertiser, didReceiveInvitationFromPeer peerID: MCPeerID, withContext context: Data?, invitationHandler: @escaping (Bool, MCSession?) -> Void) {
-        // Accept invitations if we have room (max 4 players total)
         let currentPeerCount = session.connectedPeers.count
         print("Received invitation from peer: \(peerID.displayName), current peers: \(currentPeerCount), max: \(maxPlayers)")
         
+        // Check if this peer is already connected
+        if session.connectedPeers.contains(where: { $0.displayName == peerID.displayName }) {
+            print("Rejecting invitation from \(peerID.displayName) - peer already connected")
+            invitationHandler(false, nil)
+            return
+        }
+        
+        // Accept invitations if we have room (max 4 players total)
         if currentPeerCount < maxPlayers - 1 {
             print("Accepting invitation from \(peerID.displayName)")
             invitationHandler(true, session)
