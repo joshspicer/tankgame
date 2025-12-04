@@ -18,6 +18,8 @@
 			membershipExceptions = (
 				Actions.sks,
 				Assets.xcassets,
+				AIBotManager.swift,
+				AIBotTank.swift,
 				ConnectionHealthMonitor.swift,
 				ConnectionState.swift,
 				CrashReporter.swift,
@@ -64,6 +66,8 @@
 			membershipExceptions = (
 				Actions.sks,
 				Assets.xcassets,
+				AIBotManager.swift,
+				AIBotTank.swift,
 				ConnectionHealthMonitor.swift,
 				ConnectionState.swift,
 				CrashReporter.swift,
@@ -110,6 +114,8 @@
 			membershipExceptions = (
 				Actions.sks,
 				Assets.xcassets,
+				AIBotManager.swift,
+				AIBotTank.swift,
 				ConnectionHealthMonitor.swift,
 				ConnectionState.swift,
 				CrashReporter.swift,

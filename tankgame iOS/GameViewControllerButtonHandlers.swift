@@ -12,9 +12,11 @@ import MultipeerConnectivity
 extension GameViewController {
     
     func handleHostTapped() {
+        isSinglePlayerMode = false
         multiplayerManager.isHost = true
         lobbyUI.hostButton.isHidden = true
         lobbyUI.joinButton.isHidden = true
+        lobbyUI.singlePlayerButton.isHidden = true
         lobbyUI.instructionsLabel.isHidden = true
         lobbyUI.cancelButton.isHidden = false
         lobbyUI.connectedPlayersView.isHidden = false
@@ -27,8 +29,10 @@ extension GameViewController {
     }
     
     func handleJoinTapped() {
+        isSinglePlayerMode = false
         lobbyUI.hostButton.isHidden = true
         lobbyUI.joinButton.isHidden = true
+        lobbyUI.singlePlayerButton.isHidden = true
         lobbyUI.instructionsLabel.isHidden = true
         lobbyUI.cancelButton.isHidden = false
         lobbyUI.activityIndicator.startAnimating()
@@ -39,7 +43,13 @@ extension GameViewController {
         multiplayerManager.startBrowsing()
     }
     
+    func handleSinglePlayerTapped() {
+        isSinglePlayerMode = true
+        lobbyUI.showSinglePlayerMode()
+    }
+    
     func handleCancelTapped() {
+        isSinglePlayerMode = false
         multiplayerManager.stopHosting()
         multiplayerManager.stopBrowsing()
         multiplayerCoordinator.clearAll()
@@ -49,20 +59,35 @@ extension GameViewController {
     }
     
     func handleStartGameTapped() {
-        let playerCount = multiplayerCoordinator.playerCount
-        
-        if playerCount < 2 {
-            let alert = UIAlertController(
-                title: "Not Enough Players",
-                message: "You need at least 2 players to start the game.",
-                preferredStyle: .alert
-            )
-            alert.addAction(UIAlertAction(title: "OK", style: .default))
-            present(alert, animated: true)
-            return
+        if isSinglePlayerMode {
+            // Start single player game with AI bots
+            let botCount = lobbyUI.botCount
+            let totalPlayers = 1 + botCount // Player + bots
+            
+            // Bot indices start from 1 (player is 0)
+            var botIndices: [Int] = []
+            for i in 1...botCount {
+                botIndices.append(i)
+            }
+            
+            startGameWithBots(playerCount: totalPlayers, localPlayerIndex: 0, botIndices: botIndices)
+        } else {
+            // Multiplayer mode
+            let playerCount = multiplayerCoordinator.playerCount
+            
+            if playerCount < 2 {
+                let alert = UIAlertController(
+                    title: "Not Enough Players",
+                    message: "You need at least 2 players to start the game.",
+                    preferredStyle: .alert
+                )
+                alert.addAction(UIAlertAction(title: "OK", style: .default))
+                present(alert, animated: true)
+                return
+            }
+            
+            let playerAssignments = multiplayerCoordinator.assignPlayerIndices()
+            startGame(playerCount: playerCount, localPlayerIndex: 0, playerAssignments: playerAssignments)
         }
-        
-        let playerAssignments = multiplayerCoordinator.assignPlayerIndices()
-        startGame(playerCount: playerCount, localPlayerIndex: 0, playerAssignments: playerAssignments)
     }
 }

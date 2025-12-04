@@ -37,8 +37,8 @@ class LizardSpawner {
             guard !isNearSpawnPoint(row: row, col: col, spawnPositions: spawnPositions) else { continue }
             guard !isOccupiedByLizard(row: row, col: col, lizards: newLizards) else { continue }
             
-            // Create lizard with random direction using the static constant from Lizard
-            let direction = Lizard.cardinalDirections.randomElement() ?? .right
+            // Create lizard with random direction using the static constant from Direction
+            let direction = Direction.cardinalDirections.randomElement() ?? .right
             
             newLizards.append(Lizard(row: row, col: col, direction: direction))
         }

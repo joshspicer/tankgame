@@ -16,6 +16,12 @@ final class GameState {
     var wins: [Int] // Wins for each player
     var localPlayerIndex: Int // Index of the local player in tanks array
     
+    /// AI bot manager for controlling bot tanks
+    var botManager: AIBotManager = AIBotManager()
+    
+    /// Indices of tanks controlled by AI bots
+    var botTankIndices: Set<Int> = []
+    
     /// Whether lizards are enabled for this game
     var lizardsEnabled: Bool = true
     
@@ -30,9 +36,10 @@ final class GameState {
         (7, 0, .up)         // Player 3: bottom-left
     ]
     
-    init(seed: UInt32, playerCount: Int, localPlayerIndex: Int) {
+    init(seed: UInt32, playerCount: Int, localPlayerIndex: Int, botIndices: [Int] = []) {
         self.grid = GridGenerator.generate(seed: seed)
         self.localPlayerIndex = localPlayerIndex
+        self.botTankIndices = Set(botIndices)
         
         // Initialize tanks for all players
         var initialTanks: [Tank] = []
@@ -44,6 +51,9 @@ final class GameState {
         
         // Initialize wins array
         self.wins = Array(repeating: 0, count: playerCount)
+        
+        // Initialize bot manager
+        botManager.initialize(botIndices: botIndices)
         
         // Initialize lizards
         spawnLizards(seed: seed)
@@ -58,6 +68,9 @@ final class GameState {
             let spawn = GameState.spawnPositions[i]
             tanks[i] = Tank(row: spawn.row, col: spawn.col, direction: spawn.direction)
         }
+        
+        // Reset bot manager
+        botManager.reset()
         
         // Reset lizards
         spawnLizards(seed: seed)

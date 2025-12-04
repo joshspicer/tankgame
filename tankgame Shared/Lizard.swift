@@ -19,9 +19,6 @@ struct Lizard: Codable {
     /// The interval between lizard movements (in update ticks)
     static let moveInterval: Int = 15
     
-    /// Cardinal directions for lizard movement
-    static let cardinalDirections: [Direction] = [.up, .down, .left, .right]
-    
     init(row: Int, col: Int, direction: Direction = .right) {
         self.row = row
         self.col = col
@@ -71,7 +68,7 @@ struct Lizard: Codable {
         }
         
         // If blocked, try a random new direction
-        let shuffledDirections = Lizard.cardinalDirections.shuffled()
+        let shuffledDirections = Direction.cardinalDirections.shuffled()
         
         for newDirection in shuffledDirections {
             direction = newDirection
@@ -85,6 +82,6 @@ struct Lizard: Codable {
     
     /// Change direction randomly
     mutating func changeDirection() {
-        direction = Lizard.cardinalDirections.randomElement() ?? .right
+        direction = Direction.cardinalDirections.randomElement() ?? .right
     }
 }
