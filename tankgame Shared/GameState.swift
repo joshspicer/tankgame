@@ -16,6 +16,9 @@ final class GameState {
     var wins: [Int] // Wins for each player
     var localPlayerIndex: Int // Index of the local player in tanks array
     
+    /// AI bot manager for controlling AI tanks
+    var aiBotManager: AIBotManager = AIBotManager()
+    
     /// Whether lizards are enabled for this game
     var lizardsEnabled: Bool = true
     
@@ -61,6 +64,9 @@ final class GameState {
         
         // Reset lizards
         spawnLizards(seed: seed)
+        
+        // Reset AI bots
+        aiBotManager.reset()
     }
     
     /// Spawn lizards at random empty positions
@@ -186,6 +192,11 @@ final class GameState {
                 _ = lizards[i].update(grid: obstacleGrid)
             }
         }
+    }
+    
+    /// Update all AI bots' behavior
+    func updateAIBots() {
+        aiBotManager.update(tanks: &tanks, grid: grid, projectiles: &projectiles)
     }
     
     func isRoundOver() -> Bool {

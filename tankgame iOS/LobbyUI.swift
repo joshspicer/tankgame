@@ -15,6 +15,7 @@ class LobbyUI {
     private(set) var lobbyView: UIView!
     private(set) var hostButton: UIButton!
     private(set) var joinButton: UIButton!
+    private(set) var singlePlayerButton: UIButton!
     private(set) var cancelButton: UIButton!
     private(set) var startGameButton: UIButton!
     private(set) var spriteModeButton: UIButton!
@@ -29,6 +30,7 @@ class LobbyUI {
     // Callbacks
     var onHostTapped: (() -> Void)?
     var onJoinTapped: (() -> Void)?
+    var onSinglePlayerTapped: (() -> Void)?
     var onCancelTapped: (() -> Void)?
     var onStartGameTapped: (() -> Void)?
     
@@ -78,7 +80,7 @@ class LobbyUI {
         
         // Instructions label
         instructionsLabel = UILabel()
-        instructionsLabel.text = "Battle with 2-4 players on the same network!\nMove with the joystick, tap FIRE to shoot."
+        instructionsLabel.text = "Play solo vs AI bots or battle with friends!\nMove with the joystick, tap FIRE to shoot."
         instructionsLabel.font = .systemFont(ofSize: 15, weight: .regular)
         instructionsLabel.textAlignment = .center
         instructionsLabel.numberOfLines = 0
@@ -95,6 +97,11 @@ class LobbyUI {
         joinButton = createButton(title: "Join Game", backgroundColor: .systemGreen, icon: "🔍")
         joinButton.addTarget(self, action: #selector(joinButtonTapped), for: .touchUpInside)
         lobbyView.addSubview(joinButton)
+        
+        // Single Player button
+        singlePlayerButton = createButton(title: "Single Player", backgroundColor: .systemOrange, icon: "🤖")
+        singlePlayerButton.addTarget(self, action: #selector(singlePlayerButtonTapped), for: .touchUpInside)
+        lobbyView.addSubview(singlePlayerButton)
         
         // Sprite mode toggle button
         spriteModeButton = createSpriteModeButton()
@@ -230,7 +237,12 @@ class LobbyUI {
             joinButton.widthAnchor.constraint(equalToConstant: 240),
             joinButton.heightAnchor.constraint(equalToConstant: 56),
             
-            spriteModeButton.topAnchor.constraint(equalTo: joinButton.bottomAnchor, constant: 20),
+            singlePlayerButton.topAnchor.constraint(equalTo: joinButton.bottomAnchor, constant: 20),
+            singlePlayerButton.centerXAnchor.constraint(equalTo: lobbyView.centerXAnchor),
+            singlePlayerButton.widthAnchor.constraint(equalToConstant: 240),
+            singlePlayerButton.heightAnchor.constraint(equalToConstant: 56),
+            
+            spriteModeButton.topAnchor.constraint(equalTo: singlePlayerButton.bottomAnchor, constant: 20),
             spriteModeButton.centerXAnchor.constraint(equalTo: lobbyView.centerXAnchor),
             spriteModeButton.widthAnchor.constraint(equalToConstant: 200),
             spriteModeButton.heightAnchor.constraint(equalToConstant: 44),
@@ -273,6 +285,10 @@ class LobbyUI {
     
     @objc private func joinButtonTapped() {
         onJoinTapped?()
+    }
+    
+    @objc private func singlePlayerButtonTapped() {
+        onSinglePlayerTapped?()
     }
     
     @objc private func cancelButtonTapped() {
@@ -322,6 +338,7 @@ class LobbyUI {
     func reset() {
         hostButton.isHidden = false
         joinButton.isHidden = false
+        singlePlayerButton.isHidden = false
         instructionsLabel.isHidden = false
         spriteModeButton.isHidden = false
         cancelButton.isHidden = true

@@ -64,6 +64,10 @@ class GameViewController: UIViewController {
             self?.handleStartGameTapped()
         }
         
+        lobbyUI.onSinglePlayerTapped = { [weak self] in
+            self?.handleSinglePlayerTapped()
+        }
+        
         // Setup table view
         lobbyUI.peerTableView.delegate = self
         lobbyUI.peerTableView.dataSource = self

@@ -14,6 +14,7 @@ class GameSceneUpdateLoop {
     var lastUpdateTime: TimeInterval = 0
     var lastMoveTime: TimeInterval = 0
     var lastLizardUpdateTime: TimeInterval = 0
+    var lastAIBotUpdateTime: TimeInterval = 0
     
     init(scene: GameScene) {
         self.scene = scene
@@ -40,6 +41,12 @@ class GameSceneUpdateLoop {
         if currentTime - lastLizardUpdateTime > 0.1 { // ~10 FPS for lizard updates
             updateLizards(state: state)
             lastLizardUpdateTime = currentTime
+        }
+        
+        // Update AI bots
+        if currentTime - lastAIBotUpdateTime > 0.05 { // ~20 FPS for AI bot updates
+            updateAIBots(state: state)
+            lastAIBotUpdateTime = currentTime
         }
     }
     
@@ -111,6 +118,19 @@ class GameSceneUpdateLoop {
         
         // Render lizards with smooth animation
         scene.renderLizardsWithSmoothing()
+    }
+    
+    private func updateAIBots(state: GameState) {
+        guard let scene = scene else { return }
+        
+        // Update AI bots
+        state.updateAIBots()
+        
+        // Render tanks with smooth animation if any bots moved
+        if state.aiBotManager.isEnabled {
+            scene.renderTanksWithSmoothing()
+            scene.renderProjectiles()
+        }
     }
     
     private func triggerTankExplosion(tankIndex: Int, position: CGPoint) {

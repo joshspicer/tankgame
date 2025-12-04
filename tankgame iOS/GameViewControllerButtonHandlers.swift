@@ -15,6 +15,7 @@ extension GameViewController {
         multiplayerManager.isHost = true
         lobbyUI.hostButton.isHidden = true
         lobbyUI.joinButton.isHidden = true
+        lobbyUI.singlePlayerButton.isHidden = true
         lobbyUI.instructionsLabel.isHidden = true
         lobbyUI.cancelButton.isHidden = false
         lobbyUI.connectedPlayersView.isHidden = false
@@ -29,6 +30,7 @@ extension GameViewController {
     func handleJoinTapped() {
         lobbyUI.hostButton.isHidden = true
         lobbyUI.joinButton.isHidden = true
+        lobbyUI.singlePlayerButton.isHidden = true
         lobbyUI.instructionsLabel.isHidden = true
         lobbyUI.cancelButton.isHidden = false
         lobbyUI.activityIndicator.startAnimating()
@@ -37,6 +39,11 @@ extension GameViewController {
         updatePeerListUI()
         
         multiplayerManager.startBrowsing()
+    }
+    
+    func handleSinglePlayerTapped() {
+        // Start a single player game with AI bots
+        startSinglePlayerGame()
     }
     
     func handleCancelTapped() {
