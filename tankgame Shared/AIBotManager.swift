@@ -44,12 +44,14 @@ class AIBotManager {
     ///   - grid: The game grid
     ///   - projectiles: Current projectiles
     func update(tanks: inout [Tank], grid: [[GridCell]], projectiles: [Projectile]) {
-        for i in 0..<bots.count {
+        for i in bots.indices {
             let tankIndex = bots[i].tankIndex
             guard tankIndex < tanks.count && tanks[tankIndex].isAlive else { continue }
             
-            // Get movement decision from bot
-            if let direction = bots[i].update(tank: tanks[tankIndex], grid: grid, allTanks: tanks, projectiles: projectiles) {
+            // Get movement decision from bot (mutating call)
+            let direction = bots[i].update(tank: tanks[tankIndex], grid: grid, allTanks: tanks, projectiles: projectiles)
+            
+            if let direction = direction {
                 // Try to move the tank
                 if tanks[tankIndex].move(in: direction, grid: grid) {
                     onBotMove?(tankIndex, tanks[tankIndex].row, tanks[tankIndex].col, tanks[tankIndex].direction)
