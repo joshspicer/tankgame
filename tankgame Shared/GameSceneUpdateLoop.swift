@@ -15,8 +15,11 @@ class GameSceneUpdateLoop {
     var lastMoveTime: TimeInterval = 0
     var lastLizardUpdateTime: TimeInterval = 0
     
+    private var explosionHandler: ExplosionHandler?
+    
     init(scene: GameScene) {
         self.scene = scene
+        self.explosionHandler = ExplosionHandler(scene: scene)
     }
     
     func update(_ currentTime: TimeInterval) {
@@ -78,19 +81,9 @@ class GameSceneUpdateLoop {
         state.updateProjectiles()
         scene.renderProjectiles()
         
-        // Check which tanks were hit and trigger explosions
-        for i in 0..<state.tanks.count {
-            if wasAlive[i] && !state.tanks[i].isAlive {
-                triggerTankExplosion(tankIndex: i, position: tankPositions[i])
-            }
-        }
-        
-        // Check which lizards were hit and trigger explosions
-        for i in 0..<state.lizards.count {
-            if lizardWasAlive[i] && !state.lizards[i].isAlive {
-                triggerLizardExplosion(position: lizardPositions[i])
-            }
-        }
+        // Check which tanks and lizards were hit and trigger explosions using handler
+        explosionHandler?.checkAndTriggerTankExplosions(wasAlive: wasAlive, tanks: state.tanks, tankPositions: tankPositions)
+        explosionHandler?.checkAndTriggerLizardExplosions(wasAlive: lizardWasAlive, lizards: state.lizards, lizardPositions: lizardPositions)
         
         // Re-render lizards if any were destroyed
         if lizardWasAlive != state.lizards.map({ $0.isAlive }) {
@@ -111,25 +104,6 @@ class GameSceneUpdateLoop {
         
         // Render lizards with smooth animation
         scene.renderLizardsWithSmoothing()
-    }
-    
-    private func triggerTankExplosion(tankIndex: Int, position: CGPoint) {
-        guard let scene = scene, let tankNode = scene.tankNodes[tankIndex] else { return }
-        
-        scene.soundManager.playSound("hit.wav")
-        let color = scene.renderer.tankColors[tankIndex]
-        scene.explosionEffects.createExplosion(at: position, color: color, in: tankNode) { [weak scene] in
-            scene?.tankExploding[tankIndex] = false
-        }
-        scene.tankExploding[tankIndex] = true
-    }
-    
-    private func triggerLizardExplosion(position: CGPoint) {
-        guard let scene = scene, let lizardNode = scene.lizardNode else { return }
-        
-        scene.soundManager.playSound("hit.wav")
-        let color = SKColor.systemGreen
-        scene.explosionEffects.createExplosion(at: position, color: color, in: lizardNode) { }
     }
     
     private func handleRoundEnd() {
