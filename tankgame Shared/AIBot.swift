@@ -296,8 +296,12 @@ struct AIBot: Codable {
             return [.left, .right].shuffled()
         case .left, .right:
             return [.up, .down].shuffled()
-        default:
-            return AIBot.cardinalDirections.shuffled()
+        case .upRight, .downLeft:
+            // Diagonal from upper-right to lower-left - dodge perpendicular
+            return [.up, .left, .down, .right].shuffled()
+        case .upLeft, .downRight:
+            // Diagonal from upper-left to lower-right - dodge perpendicular
+            return [.up, .right, .down, .left].shuffled()
         }
     }
     
@@ -312,8 +316,14 @@ struct AIBot: Codable {
             return [.up, .down, .right].shuffled()
         case .right:
             return [.up, .down, .left].shuffled()
-        default:
-            return AIBot.cardinalDirections.shuffled()
+        case .upRight:
+            return [.up, .right, .down, .left].shuffled()
+        case .upLeft:
+            return [.up, .left, .down, .right].shuffled()
+        case .downRight:
+            return [.down, .right, .up, .left].shuffled()
+        case .downLeft:
+            return [.down, .left, .up, .right].shuffled()
         }
     }
 }

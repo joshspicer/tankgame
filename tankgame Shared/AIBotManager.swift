@@ -78,7 +78,7 @@ class AIBotManager {
                     }
                     
                 case .shoot:
-                    // Execute shoot - face direction then shoot
+                    // Execute shoot (bot only returns shoot action when facing target)
                     let projectile = tanks[playerIndex].shoot()
                     projectiles.append(projectile)
                     onBotShoot?(playerIndex, projectile)

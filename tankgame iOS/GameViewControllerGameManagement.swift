@@ -46,7 +46,8 @@ extension GameViewController {
     }
     
     /// Start a single player game with AI bots
-    func startSinglePlayerGame() {
+    /// - Parameter botCount: Number of AI opponents (default: 1, max: 3)
+    func startSinglePlayerGame(botCount: Int = 1) {
         lobbyUI.lobbyView.isHidden = true
         GameViewController.isSinglePlayerGame = true
         
@@ -59,12 +60,15 @@ extension GameViewController {
         }
         
         let seed = UInt32.random(in: 0...UInt32.max)
-        let playerCount = 2 // Player vs 1 AI bot (can be extended to support more)
+        let clampedBotCount = min(max(botCount, 1), 3) // Ensure 1-3 bots
+        let playerCount = clampedBotCount + 1 // Player + AI bots
         
         gameState = GameState(seed: seed, playerCount: playerCount, localPlayerIndex: 0)
         
-        // Add AI bot for player 1
-        gameState?.aiBotManager.addBot(playerIndex: 1, difficulty: .medium)
+        // Add AI bots for each bot slot
+        for i in 1...clampedBotCount {
+            gameState?.aiBotManager.addBot(playerIndex: i, difficulty: .medium)
+        }
         
         let scene = GameScene.newGameScene()
         scene.startGame(with: gameState!)
