@@ -59,7 +59,14 @@ class MultiplayerCoordinator {
     func removeConnectedPeer(_ peerID: MCPeerID) {
         print("[MultiplayerCoordinator] Removing connected peer: \(peerID.displayName)")
         connectedPeers.removeAll { $0.displayName == peerID.displayName }
-        peerToPlayerIndex.removeValue(forKey: peerID)
+        
+        // Remove from peerToPlayerIndex using displayName comparison
+        // since MCPeerID object identity may not match
+        let keysToRemove = peerToPlayerIndex.keys.filter { $0.displayName == peerID.displayName }
+        for key in keysToRemove {
+            peerToPlayerIndex.removeValue(forKey: key)
+        }
+        
         onPeersUpdated?()
     }
     
