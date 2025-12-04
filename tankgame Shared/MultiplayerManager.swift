@@ -414,7 +414,7 @@ extension MultiplayerManager: MCNearbyServiceBrowserDelegate {
     }
     
     func browser(_ browser: MCNearbyServiceBrowser, didNotStartBrowsingForPeers error: Error) {
-        print("Error starting browsing: \(error.localizedDescription)")
+        print("[MultiplayerManager] Error starting browsing: \(error.localizedDescription)")
         connectionState = .disconnected
         DispatchQueue.main.async { [weak self] in
             guard let self = self else { return }
