@@ -11,7 +11,9 @@ import MultipeerConnectivity
 /// Handles table view delegate and datasource for GameViewController
 extension GameViewController: UITableViewDelegate, UITableViewDataSource {
     func tableView(_ tableView: UITableView, numberOfRowsInSection section: Int) -> Int {
-        return multiplayerCoordinator.discoveredPeers.count
+        let count = multiplayerCoordinator.discoveredPeers.count
+        print("[GameViewController] tableView numberOfRows: \(count)")
+        return count
     }
     
     func tableView(_ tableView: UITableView, cellForRowAt indexPath: IndexPath) -> UITableViewCell {
@@ -25,6 +27,7 @@ extension GameViewController: UITableViewDelegate, UITableViewDataSource {
     
     func tableView(_ tableView: UITableView, didSelectRowAt indexPath: IndexPath) {
         let peer = multiplayerCoordinator.discoveredPeers[indexPath.row]
+        print("[GameViewController] User selected peer: \(peer.displayName) at index \(indexPath.row)")
         multiplayerManager.invitePeer(peer)
         lobbyUI.statusLabel.text = "Connecting to \(peer.displayName)..."
         lobbyUI.activityIndicator.startAnimating()

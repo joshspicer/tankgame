@@ -30,6 +30,7 @@ extension GameViewController {
     
     func handleJoinTapped() {
         isSinglePlayerMode = false
+        multiplayerManager.isHost = false  // Explicitly mark as client
         lobbyUI.hostButton.isHidden = true
         lobbyUI.joinButton.isHidden = true
         lobbyUI.singlePlayerButton.isHidden = true

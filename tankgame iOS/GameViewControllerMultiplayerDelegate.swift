@@ -34,6 +34,8 @@ extension GameViewController: MultiplayerManagerDelegate {
         if multiplayerManager.isHost {
             lobbyUI.statusLabel.text = "Player joined: \(peerID.displayName)"
             print("[GameViewController] Host: Player joined, current connected peers in coordinator: \(multiplayerCoordinator.connectedPeers.map { $0.displayName })")
+            // Update connected players UI when a new player joins
+            updateConnectedPlayersUI()
         } else {
             lobbyUI.statusLabel.text = "Connected! Waiting for host to start game..."
             print("[GameViewController] Client: Connected to host, waiting for game start")

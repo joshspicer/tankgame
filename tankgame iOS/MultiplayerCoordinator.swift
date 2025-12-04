@@ -29,26 +29,36 @@ class MultiplayerCoordinator {
     // MARK: - Peer Management
     
     func addDiscoveredPeer(_ peerID: MCPeerID) {
-        if !discoveredPeers.contains(peerID) {
+        // Use displayName for comparison to avoid issues with MCPeerID object identity
+        if !discoveredPeers.contains(where: { $0.displayName == peerID.displayName }) {
+            print("[MultiplayerCoordinator] Adding discovered peer: \(peerID.displayName)")
             discoveredPeers.append(peerID)
             onPeersUpdated?()
+        } else {
+            print("[MultiplayerCoordinator] Discovered peer already exists: \(peerID.displayName)")
         }
     }
     
     func removeDiscoveredPeer(_ peerID: MCPeerID) {
-        discoveredPeers.removeAll { $0 == peerID }
+        print("[MultiplayerCoordinator] Removing discovered peer: \(peerID.displayName)")
+        discoveredPeers.removeAll { $0.displayName == peerID.displayName }
         onPeersUpdated?()
     }
     
     func addConnectedPeer(_ peerID: MCPeerID) {
-        if !connectedPeers.contains(peerID) {
+        // Use displayName for comparison to avoid issues with MCPeerID object identity
+        if !connectedPeers.contains(where: { $0.displayName == peerID.displayName }) {
+            print("[MultiplayerCoordinator] Adding connected peer: \(peerID.displayName)")
             connectedPeers.append(peerID)
             onPeersUpdated?()
+        } else {
+            print("[MultiplayerCoordinator] Connected peer already exists: \(peerID.displayName)")
         }
     }
     
     func removeConnectedPeer(_ peerID: MCPeerID) {
-        connectedPeers.removeAll { $0 == peerID }
+        print("[MultiplayerCoordinator] Removing connected peer: \(peerID.displayName)")
+        connectedPeers.removeAll { $0.displayName == peerID.displayName }
         peerToPlayerIndex.removeValue(forKey: peerID)
         onPeersUpdated?()
     }
@@ -69,15 +79,19 @@ class MultiplayerCoordinator {
         var playerAssignments: [String: Int] = [:]
         
         // Host is always player 0
-        playerAssignments[multiplayerManager.session.myPeerID.displayName] = 0
+        let hostName = multiplayerManager.session.myPeerID.displayName
+        playerAssignments[hostName] = 0
+        print("[MultiplayerCoordinator] assignPlayerIndices: Host '\(hostName)' = player 0")
         
         // Assign indices to connected peers
         for (index, peer) in connectedPeers.enumerated() {
             let playerIndex = index + 1
             peerToPlayerIndex[peer] = playerIndex
             playerAssignments[peer.displayName] = playerIndex
+            print("[MultiplayerCoordinator] assignPlayerIndices: '\(peer.displayName)' = player \(playerIndex)")
         }
         
+        print("[MultiplayerCoordinator] Final player assignments: \(playerAssignments)")
         return playerAssignments
     }
     
