@@ -33,6 +33,9 @@ extension GameViewController {
     }
     
     func updatePeerListUI() {
+        let peerCount = multiplayerCoordinator.discoveredPeers.count
+        print("[GameViewController] updatePeerListUI - discovered peers count: \(peerCount)")
+        
         if multiplayerCoordinator.discoveredPeers.isEmpty {
             lobbyUI.peerTableView.isHidden = true
             lobbyUI.emptyStateLabel.isHidden = false
