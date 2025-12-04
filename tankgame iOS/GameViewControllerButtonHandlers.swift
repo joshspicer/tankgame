@@ -74,6 +74,9 @@ extension GameViewController {
         } else {
             // Multiplayer mode
             let playerCount = multiplayerCoordinator.playerCount
+            print("[GameViewController] handleStartGameTapped - playerCount: \(playerCount)")
+            print("[GameViewController] Connected peers in coordinator: \(multiplayerCoordinator.connectedPeers.map { $0.displayName })")
+            print("[GameViewController] Connected peers in session: \(multiplayerManager.session.connectedPeers.map { $0.displayName })")
             
             if playerCount < 2 {
                 let alert = UIAlertController(
@@ -87,6 +90,7 @@ extension GameViewController {
             }
             
             let playerAssignments = multiplayerCoordinator.assignPlayerIndices()
+            print("[GameViewController] Starting game with assignments: \(playerAssignments)")
             startGame(playerCount: playerCount, localPlayerIndex: 0, playerAssignments: playerAssignments)
         }
     }

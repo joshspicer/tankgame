@@ -13,6 +13,10 @@ import MultipeerConnectivity
 extension GameViewController {
     
     func startGame(playerCount: Int, localPlayerIndex: Int, playerAssignments: [String: Int]) {
+        print("[GameViewController] startGame called - playerCount: \(playerCount), localPlayerIndex: \(localPlayerIndex)")
+        print("[GameViewController] playerAssignments: \(playerAssignments)")
+        print("[GameViewController] Connected peers: \(multiplayerManager.session.connectedPeers.map { $0.displayName })")
+        
         lobbyUI.lobbyView.isHidden = true
         
         // Create SKView if needed
@@ -26,6 +30,7 @@ extension GameViewController {
         let seed = UInt32.random(in: 0...UInt32.max)
         gameState = GameState(seed: seed, playerCount: playerCount, localPlayerIndex: localPlayerIndex)
         
+        print("[GameViewController] Sending roundStart message to peers")
         multiplayerManager.sendMessage(.roundStart(seed: seed, playerCount: playerCount, hostPlayerIndex: localPlayerIndex, playerAssignments: playerAssignments))
         
         let scene = GameScene.newGameScene()
@@ -40,6 +45,7 @@ extension GameViewController {
         skView?.ignoresSiblingOrder = true
         skView?.showsFPS = true
         skView?.showsNodeCount = true
+        print("[GameViewController] Host game scene presented")
     }
     
     func startGameWithBots(playerCount: Int, localPlayerIndex: Int, botIndices: [Int]) {

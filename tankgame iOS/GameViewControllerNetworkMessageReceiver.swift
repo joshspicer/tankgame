@@ -13,8 +13,11 @@ import MultipeerConnectivity
 extension GameViewController {
     
     func handleReceivedMessage(_ message: GameMessage, from peerID: MCPeerID) {
+        print("[GameViewController] Received message from '\(peerID.displayName)': \(message)")
+        
         switch message {
         case .roundStart(let seed, let playerCount, let hostPlayerIndex, let playerAssignments):
+            print("[GameViewController] Processing roundStart - seed: \(seed), playerCount: \(playerCount), assignments: \(playerAssignments)")
             handleRoundStartMessage(seed: seed, playerCount: playerCount, hostPlayerIndex: hostPlayerIndex, playerAssignments: playerAssignments)
             
         case .playerMove(let playerIndex, let row, let col, let direction):
@@ -33,15 +36,19 @@ extension GameViewController {
     }
     
     private func handleRoundStartMessage(seed: UInt32, playerCount: Int, hostPlayerIndex: Int, playerAssignments: [String: Int]) {
+        print("[GameViewController] handleRoundStartMessage called - gameState is \(gameState == nil ? "nil" : "not nil")")
+        
         if gameState == nil {
             let myName = multiplayerManager.session.myPeerID.displayName
             let localPlayerIndex = playerAssignments[myName] ?? 1
+            print("[GameViewController] My name: '\(myName)', assigned player index: \(localPlayerIndex)")
             
             gameState = GameState(seed: seed, playerCount: playerCount, localPlayerIndex: localPlayerIndex)
             
             DispatchQueue.main.async { [weak self] in
                 guard let self = self, let state = self.gameState else { return }
                 
+                print("[GameViewController] Starting game scene for client")
                 self.lobbyUI.lobbyView.isHidden = true
                 
                 if self.skView == nil {
@@ -62,9 +69,11 @@ extension GameViewController {
                 self.skView?.ignoresSiblingOrder = true
                 self.skView?.showsFPS = true
                 self.skView?.showsNodeCount = true
+                print("[GameViewController] Game scene presented")
             }
         } else {
             guard let state = gameState else { return }
+            print("[GameViewController] Resetting existing game state for new round")
             state.reset(seed: seed)
             gameScene?.startGame(with: state)
         }

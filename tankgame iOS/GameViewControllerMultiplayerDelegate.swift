@@ -11,11 +11,13 @@ import MultipeerConnectivity
 /// Handles multiplayer delegate callbacks for GameViewController
 extension GameViewController: MultiplayerManagerDelegate {
     func multiplayerManager(_ manager: MultiplayerManager, didFindPeer peerID: MCPeerID) {
+        print("[GameViewController] Found peer: \(peerID.displayName)")
         multiplayerCoordinator.addDiscoveredPeer(peerID)
         lobbyUI.statusLabel.text = "Found \(multiplayerCoordinator.discoveredPeers.count) game\(multiplayerCoordinator.discoveredPeers.count == 1 ? "" : "s"). Tap to join."
     }
     
     func multiplayerManager(_ manager: MultiplayerManager, didLosePeer peerID: MCPeerID) {
+        print("[GameViewController] Lost peer: \(peerID.displayName)")
         multiplayerCoordinator.removeDiscoveredPeer(peerID)
         if multiplayerCoordinator.discoveredPeers.isEmpty {
             lobbyUI.statusLabel.text = "Searching for nearby games..."
@@ -25,17 +27,21 @@ extension GameViewController: MultiplayerManagerDelegate {
     }
     
     func multiplayerManager(_ manager: MultiplayerManager, didConnectToPeer peerID: MCPeerID) {
+        print("[GameViewController] Connected to peer: \(peerID.displayName), isHost: \(multiplayerManager.isHost)")
         multiplayerCoordinator.addConnectedPeer(peerID)
         lobbyUI.activityIndicator.stopAnimating()
         
         if multiplayerManager.isHost {
             lobbyUI.statusLabel.text = "Player joined: \(peerID.displayName)"
+            print("[GameViewController] Host: Player joined, current connected peers in coordinator: \(multiplayerCoordinator.connectedPeers.map { $0.displayName })")
         } else {
             lobbyUI.statusLabel.text = "Connected! Waiting for host to start game..."
+            print("[GameViewController] Client: Connected to host, waiting for game start")
         }
     }
     
     func multiplayerManager(_ manager: MultiplayerManager, didDisconnectFromPeer peerID: MCPeerID) {
+        print("[GameViewController] Disconnected from peer: \(peerID.displayName)")
         multiplayerCoordinator.removeConnectedPeer(peerID)
         
         // During game - show reconnection status if auto-reconnect is active
@@ -46,11 +52,13 @@ extension GameViewController: MultiplayerManagerDelegate {
     }
     
     func multiplayerManager(_ manager: MultiplayerManager, isConnectingToPeer peerID: MCPeerID) {
+        print("[GameViewController] Connecting to peer: \(peerID.displayName)")
         lobbyUI.statusLabel.text = "Connecting to \(peerID.displayName)..."
         lobbyUI.activityIndicator.startAnimating()
     }
     
     func multiplayerManager(_ manager: MultiplayerManager, didReceiveMessage message: GameMessage, from peerID: MCPeerID) {
+        print("[GameViewController] didReceiveMessage called from: \(peerID.displayName)")
         handleReceivedMessage(message, from: peerID)
     }
     

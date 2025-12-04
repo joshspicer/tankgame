@@ -168,6 +168,7 @@ class MultiplayerManager: NSObject {
     }
     
     func invitePeer(_ peerID: MCPeerID) {
+        print("[MultiplayerManager] Inviting peer: \(peerID.displayName)")
         connectionState = .connecting(peerName: peerID.displayName)
         browser?.invitePeer(peerID, to: session, withContext: nil, timeout: 30)
         
@@ -186,14 +187,18 @@ class MultiplayerManager: NSObject {
     // MARK: - Messaging
     
     func sendMessage(_ message: GameMessage, reliability: MessageReliability = .reliable) {
-        guard !session.connectedPeers.isEmpty else { return }
+        guard !session.connectedPeers.isEmpty else {
+            print("[MultiplayerManager] Cannot send message - no connected peers. Message: \(message)")
+            return
+        }
         
         do {
             let data = try JSONEncoder().encode(message)
             let mode: MCSessionSendDataMode = reliability == .reliable ? .reliable : .unreliable
+            print("[MultiplayerManager] Sending message to \(session.connectedPeers.count) peer(s): \(message)")
             try session.send(data, toPeers: session.connectedPeers, with: mode)
         } catch {
-            print("Error sending message: \(error.localizedDescription)")
+            print("[MultiplayerManager] Error sending message: \(error.localizedDescription)")
             delegate?.multiplayerManager(self, didEncounterError: error)
         }
     }
@@ -240,11 +245,16 @@ class MultiplayerManager: NSObject {
 
 extension MultiplayerManager: MCSessionDelegate {
     func session(_ session: MCSession, peer peerID: MCPeerID, didChange state: MCSessionState) {
+        print("[MultiplayerManager] Session state changed for peer '\(peerID.displayName)': \(state.rawValue) (\(state == .notConnected ? "notConnected" : state == .connecting ? "connecting" : "connected"))")
+        print("[MultiplayerManager] Current connected peers: \(session.connectedPeers.map { $0.displayName })")
+        
         DispatchQueue.main.async { [weak self] in
             guard let self = self else { return }
             
             switch state {
             case .connected:
+                print("[MultiplayerManager] Successfully connected to peer: \(peerID.displayName)")
+                
                 // Mark peer as known for future reconnection
                 self.reconnectionManager.markPeerAsKnown(peerID)
                 
@@ -263,6 +273,8 @@ extension MultiplayerManager: MCSessionDelegate {
                 self.delegate?.multiplayerManager(self, didConnectToPeer: peerID)
                 
             case .notConnected:
+                print("[MultiplayerManager] Disconnected from peer: \(peerID.displayName)")
+                
                 // Stop tracking health for this peer
                 self.connectionHealthMonitor.peerDisconnected(peerID)
                 
@@ -279,10 +291,12 @@ extension MultiplayerManager: MCSessionDelegate {
                 self.delegate?.multiplayerManager(self, didDisconnectFromPeer: peerID)
                 
             case .connecting:
+                print("[MultiplayerManager] Connecting to peer: \(peerID.displayName)")
                 self.connectionState = .connecting(peerName: peerID.displayName)
                 self.delegate?.multiplayerManager(self, isConnectingToPeer: peerID)
                 
             @unknown default:
+                print("[MultiplayerManager] Unknown state for peer: \(peerID.displayName)")
                 break
             }
         }
@@ -313,12 +327,13 @@ extension MultiplayerManager: MCSessionDelegate {
         
         do {
             let message = try JSONDecoder().decode(GameMessage.self, from: data)
+            print("[MultiplayerManager] Received message from '\(peerID.displayName)': \(message)")
             DispatchQueue.main.async { [weak self] in
                 guard let self = self else { return }
                 self.delegate?.multiplayerManager(self, didReceiveMessage: message, from: peerID)
             }
         } catch {
-            print("Error decoding message: \(error.localizedDescription)")
+            print("[MultiplayerManager] Error decoding message: \(error.localizedDescription)")
         }
     }
     
@@ -339,16 +354,21 @@ extension MultiplayerManager: MCSessionDelegate {
 
 extension MultiplayerManager: MCNearbyServiceAdvertiserDelegate {
     func advertiser(_ advertiser: MCNearbyServiceAdvertiser, didReceiveInvitationFromPeer peerID: MCPeerID, withContext context: Data?, invitationHandler: @escaping (Bool, MCSession?) -> Void) {
+        print("[MultiplayerManager] Received invitation from peer: \(peerID.displayName)")
+        print("[MultiplayerManager] Current connected peers count: \(session.connectedPeers.count), max allowed: \(maxPlayers - 1)")
+        
         // Accept invitations if we have room (max 4 players total)
         if session.connectedPeers.count < maxPlayers - 1 {
+            print("[MultiplayerManager] Accepting invitation from: \(peerID.displayName)")
             invitationHandler(true, session)
         } else {
+            print("[MultiplayerManager] Rejecting invitation from \(peerID.displayName) - room is full")
             invitationHandler(false, nil)
         }
     }
     
     func advertiser(_ advertiser: MCNearbyServiceAdvertiser, didNotStartAdvertisingPeer error: Error) {
-        print("Error starting advertising: \(error.localizedDescription)")
+        print("[MultiplayerManager] Error starting advertising: \(error.localizedDescription)")
         connectionState = .disconnected
         DispatchQueue.main.async { [weak self] in
             guard let self = self else { return }
@@ -361,6 +381,8 @@ extension MultiplayerManager: MCNearbyServiceAdvertiserDelegate {
 
 extension MultiplayerManager: MCNearbyServiceBrowserDelegate {
     func browser(_ browser: MCNearbyServiceBrowser, foundPeer peerID: MCPeerID, withDiscoveryInfo info: [String : String]?) {
+        print("[MultiplayerManager] Found peer: \(peerID.displayName)")
+        
         // Track discovered peers for reconnection
         if !discoveredPeers.contains(where: { $0.displayName == peerID.displayName }) {
             discoveredPeers.append(peerID)
