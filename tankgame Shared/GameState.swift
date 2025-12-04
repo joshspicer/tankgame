@@ -63,55 +63,19 @@ final class GameState {
         spawnLizards(seed: seed)
     }
     
-    /// Spawn lizards at random empty positions
+    /// Spawn lizards at random empty positions using the LizardSpawner
     private func spawnLizards(seed: UInt32) {
         guard lizardsEnabled else {
             lizards = []
             return
         }
         
-        // Use seed for deterministic placement
-        srand48(Int(seed) + 1000) // Offset seed to get different positions from grid
-        
-        var newLizards: [Lizard] = []
-        var attempts = 0
-        let maxAttempts = 100
-        
-        while newLizards.count < GameState.lizardCount && attempts < maxAttempts {
-            attempts += 1
-            
-            // Generate random position
-            let row = Int(drand48() * Double(grid.count))
-            let col = Int(drand48() * Double(grid[0].count))
-            
-            // Check if position is valid (empty and not near spawn points)
-            guard grid[row][col] == .empty else { continue }
-            guard !isNearSpawnPoint(row: row, col: col) else { continue }
-            guard !isOccupiedByLizard(row: row, col: col, lizards: newLizards) else { continue }
-            
-            // Create lizard with random direction using the static constant from Lizard
-            let direction = Lizard.cardinalDirections.randomElement() ?? .right
-            
-            newLizards.append(Lizard(row: row, col: col, direction: direction))
-        }
-        
-        lizards = newLizards
-    }
-    
-    /// Check if a position is near any spawn point
-    private func isNearSpawnPoint(row: Int, col: Int) -> Bool {
-        for spawn in GameState.spawnPositions {
-            let distance = abs(spawn.row - row) + abs(spawn.col - col)
-            if distance < 2 {
-                return true
-            }
-        }
-        return false
-    }
-    
-    /// Check if a position is occupied by another lizard
-    private func isOccupiedByLizard(row: Int, col: Int, lizards: [Lizard]) -> Bool {
-        return lizards.contains { $0.row == row && $0.col == col }
+        lizards = LizardSpawner.spawnLizards(
+            seed: seed,
+            grid: grid,
+            count: GameState.lizardCount,
+            spawnPositions: GameState.spawnPositions
+        )
     }
     
     var localTank: Tank {

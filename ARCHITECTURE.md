@@ -1,10 +1,10 @@
-# Tank Game - Refactored Architecture (v2)
+# Tank Game - Refactored Architecture (v3)
 
 This document describes the refactored codebase structure after further modularization for maximum parallelization and minimal merge conflicts.
 
 ## Overview
 
-The codebase has been reorganized from 2 large monolithic files into **34 focused, single-purpose files**. This improves:
+The codebase has been reorganized from 2 large monolithic files into **37+ focused, single-purpose files**. This improves:
 - **Readability**: Smaller files are easier to understand
 - **Maintainability**: Changes are localized to specific files
 - **Testability**: Components can be tested in isolation
@@ -19,22 +19,29 @@ Simple data structures representing game objects:
 - `Projectile.swift` - Projectile entity with collision detection
 - `Direction.swift` - Cardinal direction enum
 - `GridCell.swift` - Grid cell types (empty, wall)
+- `Lizard.swift` - Lizard creature entity with AI behavior
 
 ### 2. Game Logic Layer
 Business logic and state management:
 - `GameState.swift` - Game state management (tanks, projectiles, scoring)
 - `GridGenerator.swift` - Procedural grid generation with seeding
 - `GameMessages.swift` - Network message protocol definitions
+- `LizardSpawner.swift` - Lizard spawning logic (extracted from GameState)
+- `CollisionDetection.swift` - Collision detection utilities
 
 ### 3. Rendering & Visual Layer
-All rendering and visual effects (now highly modular):
+All rendering and visual effects (highly modular):
 - `GameSceneRenderer.swift` - Main rendering coordinator (delegates to specialized renderers)
 - `GridRenderer.swift` - Grid rendering logic
 - `TankRenderer.swift` - Tank rendering and animations
 - `ProjectileRenderer.swift` - Projectile rendering and effects
-- `TankSpriteRenderer.swift` - Tank sprite creation
-- `RainbowAnimationHelper.swift` - Rainbow color animations
+- `TankSpriteRenderer.swift` - Tank sprite creation (uses shared RainbowAnimationHelper)
+- `DolphinSpriteRenderer.swift` - Dolphin sprite creation (alternative skin)
+- `LizardRenderer.swift` - Lizard rendering and animations
+- `LizardSpriteRenderer.swift` - Lizard sprite creation
+- `RainbowAnimationHelper.swift` - Shared rainbow color animation utilities
 - `ExplosionEffects.swift` - Explosion particle animations
+- `ExplosionHandler.swift` - Explosion triggering logic (extracted from GameSceneUpdateLoop)
 - `GameSceneUI.swift` - Status and score labels
 - `FireButton.swift` - Fire button UI component
 
@@ -48,15 +55,19 @@ Sound management:
 - `SoundManager.swift` - Sound playback and control
 
 ### 6. Game Coordination Layer
-Main game loop and coordination (now split):
-- `GameScene.swift` - Central coordinator (reduced from 291 to 154 lines)
+Main game loop and coordination:
+- `GameScene.swift` - Central coordinator
 - `GameSceneSetup.swift` - Scene initialization and setup
-- `GameSceneUpdateLoop.swift` - Game loop and update logic
+- `GameSceneUpdateLoop.swift` - Game loop and update logic (uses ExplosionHandler)
 
 ### 7. Networking Layer
 Multiplayer communication:
 - `MultiplayerManager.swift` - Low-level MultipeerConnectivity wrapper
 - `MultiplayerCoordinator.swift` - High-level session and player management
+- `ReconnectionManager.swift` - Auto-reconnection logic
+- `InvitationRetryManager.swift` - Invitation retry logic
+- `ConnectionHealthMonitor.swift` - Connection health monitoring
+- `ConnectionState.swift` - Connection state enum
 
 ### 8. UI Layer (iOS)
 User interface components:
@@ -64,8 +75,8 @@ User interface components:
 - `PermissionManager.swift` - iOS permission request handling
 
 ### 9. Application Layer (iOS)
-Top-level coordination (now highly modular):
-- `GameViewController.swift` - Main view controller (reduced from 423 to 93 lines)
+Top-level coordination (highly modular):
+- `GameViewController.swift` - Main view controller
 - `GameViewControllerButtonHandlers.swift` - Button event handlers
 - `GameViewControllerUIUpdates.swift` - UI state management
 - `GameViewControllerGameManagement.swift` - Game lifecycle management
@@ -73,6 +84,9 @@ Top-level coordination (now highly modular):
 - `GameViewControllerMultiplayerDelegate.swift` - Multiplayer delegate callbacks
 - `GameViewControllerNetworkMessageReceiver.swift` - Incoming network message parsing
 - `GameViewControllerTableView.swift` - Table view delegate/datasource
+
+### 10. Settings & Configuration
+- `SpriteMode.swift` - Sprite mode enum and GameSettings singleton
 
 ## File Size Comparison
 
