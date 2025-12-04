@@ -62,9 +62,8 @@ class MultiplayerCoordinator {
         
         // Remove from peerToPlayerIndex using displayName comparison
         // since MCPeerID object identity may not match
-        let keysToRemove = peerToPlayerIndex.keys.filter { $0.displayName == peerID.displayName }
-        for key in keysToRemove {
-            peerToPlayerIndex.removeValue(forKey: key)
+        if let keyToRemove = peerToPlayerIndex.keys.first(where: { $0.displayName == peerID.displayName }) {
+            peerToPlayerIndex.removeValue(forKey: keyToRemove)
         }
         
         onPeersUpdated?()
