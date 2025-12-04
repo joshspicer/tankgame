@@ -40,7 +40,8 @@ class RainbowAnimationHelper {
         for i in 0...numberOfColors {
             let hue = (CGFloat(i) / CGFloat(numberOfColors) + phaseOffset).truncatingRemainder(dividingBy: 1.0)
             let color = SKColor(hue: hue, saturation: 0.9, brightness: 0.9, alpha: 0.9)
-            let colorAction = SKAction.run { [weak shape] in
+            // Capture color explicitly to avoid reference issues with loop variable
+            let colorAction = SKAction.run { [weak shape, color] in
                 shape?.fillColor = color
                 shape?.strokeColor = color.withAlphaComponent(0.5)
             }

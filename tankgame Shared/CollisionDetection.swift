@@ -28,10 +28,12 @@ class CollisionDetection {
     /// - Parameters:
     ///   - row: Row position
     ///   - col: Column position
-    ///   - gridSize: Size of the grid
+    ///   - rowCount: Number of rows in the grid
+    ///   - colCount: Number of columns in the grid (defaults to rowCount for square grids)
     /// - Returns: True if position is out of bounds
-    static func isOutOfBounds(row: Int, col: Int, gridSize: Int) -> Bool {
-        return row < 0 || row >= gridSize || col < 0 || col >= gridSize
+    static func isOutOfBounds(row: Int, col: Int, rowCount: Int, colCount: Int? = nil) -> Bool {
+        let columns = colCount ?? rowCount
+        return row < 0 || row >= rowCount || col < 0 || col >= columns
     }
     
     /// Check if two positions match (same row and column)
