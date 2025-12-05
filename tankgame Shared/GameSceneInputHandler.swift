@@ -12,6 +12,11 @@ import SpriteKit
 class GameSceneInputHandler {
     weak var scene: GameScene?
     
+    // Feature flag for modern UI
+    private var useModernUI: Bool {
+        return scene?.modernJoystick != nil
+    }
+    
     init(scene: GameScene) {
         self.scene = scene
     }
@@ -22,14 +27,25 @@ class GameSceneInputHandler {
         for touch in touches {
             let location = touch.location(in: scene)
             
-            // Check if touching fire button
-            if scene.fireButton.handleTouch(at: location) {
-                continue
-            }
-            
-            // Check if touching joystick area
-            if scene.joystickController.handleTouchBegan(touch, in: scene) {
-                continue
+            // Check if touching fire button (modern or legacy)
+            if useModernUI {
+                if scene.modernFireButton.handleTouch(at: location) {
+                    continue
+                }
+                
+                // Check if touching modern joystick area
+                if scene.modernJoystick.handleTouchBegan(touch, in: scene) {
+                    continue
+                }
+            } else {
+                if scene.fireButton.handleTouch(at: location) {
+                    continue
+                }
+                
+                // Check if touching joystick area
+                if scene.joystickController.handleTouchBegan(touch, in: scene) {
+                    continue
+                }
             }
         }
     }
@@ -37,14 +53,32 @@ class GameSceneInputHandler {
     func handleTouchesMoved(_ touches: Set<UITouch>) {
         guard let scene = scene else { return }
         for touch in touches {
-            scene.joystickController.handleTouchMoved(touch, in: scene)
+            if useModernUI {
+                scene.modernJoystick.handleTouchMoved(touch, in: scene)
+            } else {
+                scene.joystickController.handleTouchMoved(touch, in: scene)
+            }
         }
     }
     
     func handleTouchesEnded(_ touches: Set<UITouch>) {
         guard let scene = scene else { return }
         for touch in touches {
-            scene.joystickController.handleTouchEnded(touch)
+            if useModernUI {
+                scene.modernJoystick.handleTouchEnded(touch)
+            } else {
+                scene.joystickController.handleTouchEnded(touch)
+            }
+        }
+    }
+    
+    /// Get current direction from joystick (modern or legacy)
+    var currentDirection: Direction? {
+        guard let scene = scene else { return nil }
+        if useModernUI {
+            return scene.modernJoystick.currentDirection
+        } else {
+            return scene.joystickController.currentDirection
         }
     }
     

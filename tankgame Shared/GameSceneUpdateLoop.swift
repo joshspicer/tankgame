@@ -56,7 +56,15 @@ class GameSceneUpdateLoop {
     private func handleJoystickMovement(_ currentTime: TimeInterval, state: GameState) {
         guard let scene = scene else { return }
         
-        if let direction = scene.joystickController.currentDirection, !state.isRoundOver() {
+        // Get direction from modern or legacy joystick
+        let direction: Direction?
+        if scene.modernJoystick != nil {
+            direction = scene.modernJoystick.currentDirection
+        } else {
+            direction = scene.joystickController.currentDirection
+        }
+        
+        if let direction = direction, !state.isRoundOver() {
             // Diagonal movement is slightly slower to maintain game balance
             let moveInterval = direction.isDiagonal ? 0.15 : 0.10
             

@@ -9,7 +9,7 @@ import UIKit
 import MultipeerConnectivity
 import QuartzCore
 
-/// Manages the lobby user interface
+/// Manages the lobby user interface with modern styling
 class LobbyUI {
     // UI Elements
     private(set) var lobbyView: UIView!
@@ -30,6 +30,11 @@ class LobbyUI {
     private(set) var emptyStateLabel: UILabel!
     private(set) var activityIndicator: UIActivityIndicatorView!
     
+    // Animation layers
+    private var particleLayer: CAEmitterLayer?
+    private var titleLabel: UILabel?
+    private var tankEmojiLabel: UILabel?
+    
     /// Number of AI bots to add
     var botCount: Int = 1
     
@@ -43,83 +48,99 @@ class LobbyUI {
     func setup(in parentView: UIView) {
         // Create lobby view
         lobbyView = UIView(frame: parentView.bounds)
-        lobbyView.backgroundColor = .systemBackground
+        lobbyView.backgroundColor = UIColor(red: 0.05, green: 0.05, blue: 0.1, alpha: 1.0)
         parentView.addSubview(lobbyView)
         
-        // Add gradient background
+        // Add modern gradient background
         let gradientLayer = CAGradientLayer()
         gradientLayer.frame = parentView.bounds
         gradientLayer.colors = [
-            UIColor.systemBlue.withAlphaComponent(0.1).cgColor,
-            UIColor.systemBackground.cgColor,
-            UIColor.systemGreen.withAlphaComponent(0.05).cgColor
+            UIColor(red: 0.08, green: 0.08, blue: 0.15, alpha: 1.0).cgColor,
+            UIColor(red: 0.05, green: 0.05, blue: 0.1, alpha: 1.0).cgColor,
+            UIColor(red: 0.02, green: 0.05, blue: 0.12, alpha: 1.0).cgColor
         ]
         gradientLayer.locations = [0.0, 0.5, 1.0]
         lobbyView.layer.insertSublayer(gradientLayer, at: 0)
         
-        // Title label
-        let titleLabel = UILabel()
-        titleLabel.text = "TANK GAME"
-        titleLabel.font = .systemFont(ofSize: 48, weight: .black)
-        titleLabel.textAlignment = .center
-        titleLabel.textColor = .label
-        titleLabel.translatesAutoresizingMaskIntoConstraints = false
-        lobbyView.addSubview(titleLabel)
+        // Add animated particle background
+        let particles = LobbyAnimations.createParticleLayer(in: lobbyView)
+        lobbyView.layer.insertSublayer(particles, at: 1)
+        particleLayer = particles
         
-        // Tank emoji below title
-        let tankEmojiLabel = UILabel()
-        tankEmojiLabel.text = "🎯"
-        tankEmojiLabel.font = .systemFont(ofSize: 60)
-        tankEmojiLabel.textAlignment = .center
-        tankEmojiLabel.translatesAutoresizingMaskIntoConstraints = false
-        lobbyView.addSubview(tankEmojiLabel)
+        // Title label with modern styling
+        let titleLbl = UILabel()
+        titleLbl.text = "TANK GAME"
+        titleLbl.font = UIFont.systemFont(ofSize: 52, weight: .black)
+        titleLbl.textAlignment = .center
+        titleLbl.textColor = .white
+        titleLbl.translatesAutoresizingMaskIntoConstraints = false
+        lobbyView.addSubview(titleLbl)
+        titleLabel = titleLbl
         
-        // Status label
+        // Add glow effect to title
+        LobbyAnimations.addGlowAnimation(to: titleLbl)
+        
+        // Tank emoji below title with animation
+        let emojiLabel = UILabel()
+        emojiLabel.text = "🎯"
+        emojiLabel.font = .systemFont(ofSize: 70)
+        emojiLabel.textAlignment = .center
+        emojiLabel.translatesAutoresizingMaskIntoConstraints = false
+        lobbyView.addSubview(emojiLabel)
+        tankEmojiLabel = emojiLabel
+        
+        // Add floating animation to emoji
+        LobbyAnimations.addFloatingAnimation(to: emojiLabel)
+        
+        // Status label with modern styling
         statusLabel = UILabel()
         statusLabel.text = "Choose an option to start"
-        statusLabel.font = .systemFont(ofSize: 17, weight: .regular)
+        statusLabel.font = .systemFont(ofSize: 18, weight: .medium)
         statusLabel.textAlignment = .center
         statusLabel.numberOfLines = 0
-        statusLabel.textColor = .secondaryLabel
+        statusLabel.textColor = UIColor.white.withAlphaComponent(0.7)
         statusLabel.translatesAutoresizingMaskIntoConstraints = false
         lobbyView.addSubview(statusLabel)
         
-        // Instructions label
+        // Instructions label with modern styling
         instructionsLabel = UILabel()
         instructionsLabel.text = "Battle with 2-4 players on the same network!\nMove with the joystick, tap FIRE to shoot."
         instructionsLabel.font = .systemFont(ofSize: 15, weight: .regular)
         instructionsLabel.textAlignment = .center
         instructionsLabel.numberOfLines = 0
-        instructionsLabel.textColor = .tertiaryLabel
+        instructionsLabel.textColor = UIColor.white.withAlphaComponent(0.5)
         instructionsLabel.translatesAutoresizingMaskIntoConstraints = false
         lobbyView.addSubview(instructionsLabel)
         
-        // Single Player button (with AI bots)
-        singlePlayerButton = createButton(title: "Single Player", backgroundColor: .systemOrange, icon: "🤖")
+        // Single Player button (with AI bots) - modern gradient
+        singlePlayerButton = createModernButton(title: "Single Player", gradientColors: [UIColor.systemOrange, UIColor(red: 1.0, green: 0.4, blue: 0.2, alpha: 1.0)], icon: "🤖")
         singlePlayerButton.addTarget(self, action: #selector(singlePlayerButtonTapped), for: .touchUpInside)
         lobbyView.addSubview(singlePlayerButton)
         
-        // Host button
-        hostButton = createButton(title: "Host Game", backgroundColor: .systemBlue, icon: "🎯")
+        // Host button - modern gradient
+        hostButton = createModernButton(title: "Host Game", gradientColors: [UIColor.systemBlue, UIColor(red: 0.2, green: 0.4, blue: 0.9, alpha: 1.0)], icon: "🎯")
         hostButton.addTarget(self, action: #selector(hostButtonTapped), for: .touchUpInside)
         lobbyView.addSubview(hostButton)
         
-        // Join button
-        joinButton = createButton(title: "Join Game", backgroundColor: .systemGreen, icon: "🔍")
+        // Join button - modern gradient
+        joinButton = createModernButton(title: "Join Game", gradientColors: [UIColor.systemGreen, UIColor(red: 0.2, green: 0.7, blue: 0.4, alpha: 1.0)], icon: "🔍")
         joinButton.addTarget(self, action: #selector(joinButtonTapped), for: .touchUpInside)
         lobbyView.addSubview(joinButton)
         
-        // Bot count selection view (for single player mode)
+        // Bot count selection view (for single player mode) - modernized
         botCountView = UIView()
-        botCountView.backgroundColor = .secondarySystemBackground
-        botCountView.layer.cornerRadius = 12
+        botCountView.backgroundColor = UIColor.white.withAlphaComponent(0.08)
+        botCountView.layer.cornerRadius = 16
+        botCountView.layer.borderWidth = 1
+        botCountView.layer.borderColor = UIColor.white.withAlphaComponent(0.1).cgColor
         botCountView.isHidden = true
         botCountView.translatesAutoresizingMaskIntoConstraints = false
         lobbyView.addSubview(botCountView)
         
         botCountLabel = UILabel()
         botCountLabel.text = "AI Bots: 1"
-        botCountLabel.font = .systemFont(ofSize: 16, weight: .medium)
+        botCountLabel.font = .systemFont(ofSize: 16, weight: .semibold)
+        botCountLabel.textColor = .white
         botCountLabel.textAlignment = .center
         botCountLabel.translatesAutoresizingMaskIntoConstraints = false
         botCountView.addSubview(botCountLabel)
@@ -132,31 +153,36 @@ class LobbyUI {
         botCountStepper.translatesAutoresizingMaskIntoConstraints = false
         botCountView.addSubview(botCountStepper)
         
-        // Sprite mode toggle button
-        spriteModeButton = createSpriteModeButton()
+        // Sprite mode toggle button - modernized
+        spriteModeButton = createModernSpriteModeButton()
         spriteModeButton.addTarget(self, action: #selector(spriteModeButtonTapped), for: .touchUpInside)
         lobbyView.addSubview(spriteModeButton)
         
-        // Cancel button
+        // Cancel button - modernized
         cancelButton = UIButton(type: .system)
-        cancelButton.setTitle("Cancel", for: .normal)
-        cancelButton.titleLabel?.font = .systemFont(ofSize: 18, weight: .medium)
-        cancelButton.setTitleColor(.systemRed, for: .normal)
+        cancelButton.setTitle("✕ Cancel", for: .normal)
+        cancelButton.titleLabel?.font = .systemFont(ofSize: 18, weight: .semibold)
+        cancelButton.setTitleColor(UIColor.systemRed, for: .normal)
+        cancelButton.backgroundColor = UIColor.systemRed.withAlphaComponent(0.15)
+        cancelButton.layer.cornerRadius = 12
         cancelButton.isHidden = true
         cancelButton.translatesAutoresizingMaskIntoConstraints = false
         cancelButton.addTarget(self, action: #selector(cancelButtonTapped), for: .touchUpInside)
         lobbyView.addSubview(cancelButton)
         
-        // Start Game button (for host)
-        startGameButton = createButton(title: "Start Game", backgroundColor: .systemGreen, icon: "🚀")
+        // Start Game button (for host) - modern gradient
+        startGameButton = createModernButton(title: "Start Game", gradientColors: [UIColor(red: 0.2, green: 0.8, blue: 0.4, alpha: 1.0), UIColor.systemGreen], icon: "🚀")
         startGameButton.isHidden = true
         startGameButton.addTarget(self, action: #selector(startGameButtonTapped), for: .touchUpInside)
         lobbyView.addSubview(startGameButton)
+        LobbyAnimations.addPulseAnimation(to: startGameButton)
         
-        // Connected players view
+        // Connected players view - modernized
         connectedPlayersView = UIView()
-        connectedPlayersView.backgroundColor = .secondarySystemBackground
-        connectedPlayersView.layer.cornerRadius = 12
+        connectedPlayersView.backgroundColor = UIColor.white.withAlphaComponent(0.08)
+        connectedPlayersView.layer.cornerRadius = 16
+        connectedPlayersView.layer.borderWidth = 1
+        connectedPlayersView.layer.borderColor = UIColor.systemBlue.withAlphaComponent(0.3).cgColor
         connectedPlayersView.isHidden = true
         connectedPlayersView.translatesAutoresizingMaskIntoConstraints = false
         lobbyView.addSubview(connectedPlayersView)
@@ -164,44 +190,48 @@ class LobbyUI {
         connectedPlayersLabel = UILabel()
         connectedPlayersLabel.text = "Connected: 1/4"
         connectedPlayersLabel.font = .systemFont(ofSize: 16, weight: .medium)
+        connectedPlayersLabel.textColor = .white
         connectedPlayersLabel.textAlignment = .center
         connectedPlayersLabel.numberOfLines = 0
         connectedPlayersLabel.translatesAutoresizingMaskIntoConstraints = false
         connectedPlayersView.addSubview(connectedPlayersLabel)
         
-        // Activity indicator
+        // Activity indicator - modernized
         activityIndicator = UIActivityIndicatorView(style: .large)
-        activityIndicator.color = .systemBlue
+        activityIndicator.color = .systemCyan
         activityIndicator.hidesWhenStopped = true
         activityIndicator.translatesAutoresizingMaskIntoConstraints = false
         lobbyView.addSubview(activityIndicator)
         
-        // Peer table view
+        // Peer table view - modernized
         peerTableView = UITableView()
         peerTableView.isHidden = true
-        peerTableView.layer.cornerRadius = 12
+        peerTableView.backgroundColor = UIColor.white.withAlphaComponent(0.05)
+        peerTableView.layer.cornerRadius = 16
         peerTableView.layer.borderWidth = 1
-        peerTableView.layer.borderColor = UIColor.separator.cgColor
+        peerTableView.layer.borderColor = UIColor.white.withAlphaComponent(0.1).cgColor
+        peerTableView.separatorColor = UIColor.white.withAlphaComponent(0.1)
         peerTableView.register(UITableViewCell.self, forCellReuseIdentifier: "PeerCell")
         peerTableView.translatesAutoresizingMaskIntoConstraints = false
         lobbyView.addSubview(peerTableView)
         
-        // Empty state label
+        // Empty state label - modernized
         emptyStateLabel = UILabel()
         emptyStateLabel.text = "No nearby games found.\nMake sure the other device is hosting."
-        emptyStateLabel.font = .systemFont(ofSize: 14)
+        emptyStateLabel.font = .systemFont(ofSize: 14, weight: .medium)
         emptyStateLabel.textAlignment = .center
         emptyStateLabel.numberOfLines = 0
-        emptyStateLabel.textColor = .secondaryLabel
+        emptyStateLabel.textColor = UIColor.white.withAlphaComponent(0.5)
         emptyStateLabel.isHidden = true
         emptyStateLabel.translatesAutoresizingMaskIntoConstraints = false
         lobbyView.addSubview(emptyStateLabel)
         
-        setupConstraints(titleLabel: titleLabel, tankEmojiLabel: tankEmojiLabel)
+        setupConstraints(titleLabel: titleLbl, tankEmojiLabel: emojiLabel)
     }
     
-    private func createButton(title: String, backgroundColor: UIColor, icon: String) -> UIButton {
-        let button = UIButton(type: .system)
+    /// Create a modern button with gradient background
+    private func createModernButton(title: String, gradientColors: [UIColor], icon: String) -> UIButton {
+        let button = UIButton(type: .custom)
         
         // Create stack view for icon and text
         let stackView = UIStackView()
@@ -213,31 +243,61 @@ class LobbyUI {
         
         let iconLabel = UILabel()
         iconLabel.text = icon
-        iconLabel.font = .systemFont(ofSize: 24)
+        iconLabel.font = .systemFont(ofSize: 26)
         
         let textLabel = UILabel()
         textLabel.text = title
-        textLabel.font = .systemFont(ofSize: 20, weight: .semibold)
+        textLabel.font = .systemFont(ofSize: 20, weight: .bold)
         textLabel.textColor = .white
         
         stackView.addArrangedSubview(iconLabel)
         stackView.addArrangedSubview(textLabel)
         
         button.addSubview(stackView)
-        button.backgroundColor = backgroundColor
-        button.layer.cornerRadius = 14
-        button.layer.shadowColor = UIColor.black.cgColor
-        button.layer.shadowOpacity = 0.15
-        button.layer.shadowOffset = CGSize(width: 0, height: 4)
-        button.layer.shadowRadius = 8
+        button.layer.cornerRadius = 16
+        button.layer.shadowColor = gradientColors[0].cgColor
+        button.layer.shadowOpacity = 0.4
+        button.layer.shadowOffset = CGSize(width: 0, height: 6)
+        button.layer.shadowRadius = 12
+        button.clipsToBounds = false
         button.translatesAutoresizingMaskIntoConstraints = false
+        
+        // Add gradient background
+        let gradientLayer = CAGradientLayer()
+        gradientLayer.colors = gradientColors.map { $0.cgColor }
+        gradientLayer.startPoint = CGPoint(x: 0, y: 0)
+        gradientLayer.endPoint = CGPoint(x: 1, y: 1)
+        gradientLayer.cornerRadius = 16
+        button.layer.insertSublayer(gradientLayer, at: 0)
+        
+        // Add highlight overlay
+        let highlightView = UIView()
+        highlightView.backgroundColor = UIColor.white.withAlphaComponent(0.15)
+        highlightView.layer.cornerRadius = 16
+        highlightView.layer.maskedCorners = [.layerMinXMinYCorner, .layerMaxXMinYCorner]
+        highlightView.isUserInteractionEnabled = false
+        highlightView.translatesAutoresizingMaskIntoConstraints = false
+        button.addSubview(highlightView)
         
         NSLayoutConstraint.activate([
             stackView.centerXAnchor.constraint(equalTo: button.centerXAnchor),
-            stackView.centerYAnchor.constraint(equalTo: button.centerYAnchor)
+            stackView.centerYAnchor.constraint(equalTo: button.centerYAnchor),
+            highlightView.topAnchor.constraint(equalTo: button.topAnchor),
+            highlightView.leadingAnchor.constraint(equalTo: button.leadingAnchor),
+            highlightView.trailingAnchor.constraint(equalTo: button.trailingAnchor),
+            highlightView.heightAnchor.constraint(equalTo: button.heightAnchor, multiplier: 0.5)
         ])
         
+        // Update gradient frame when button is laid out
+        button.layoutIfNeeded()
+        gradientLayer.frame = button.bounds
+        
         return button
+    }
+    
+    /// Old createButton method kept for compatibility
+    private func createButton(title: String, backgroundColor: UIColor, icon: String) -> UIButton {
+        return createModernButton(title: title, gradientColors: [backgroundColor, backgroundColor.withAlphaComponent(0.8)], icon: icon)
     }
     
     private func setupConstraints(titleLabel: UILabel, tankEmojiLabel: UILabel) {
@@ -289,6 +349,8 @@ class LobbyUI {
             
             cancelButton.topAnchor.constraint(equalTo: botCountView.bottomAnchor, constant: 16),
             cancelButton.centerXAnchor.constraint(equalTo: lobbyView.centerXAnchor),
+            cancelButton.widthAnchor.constraint(equalToConstant: 140),
+            cancelButton.heightAnchor.constraint(equalToConstant: 44),
             
             connectedPlayersView.topAnchor.constraint(equalTo: cancelButton.bottomAnchor, constant: 20),
             connectedPlayersView.centerXAnchor.constraint(equalTo: lobbyView.centerXAnchor),
@@ -320,15 +382,21 @@ class LobbyUI {
     }
     
     @objc private func hostButtonTapped() {
-        onHostTapped?()
+        LobbyAnimations.animateButtonTap(hostButton) { [weak self] in
+            self?.onHostTapped?()
+        }
     }
     
     @objc private func joinButtonTapped() {
-        onJoinTapped?()
+        LobbyAnimations.animateButtonTap(joinButton) { [weak self] in
+            self?.onJoinTapped?()
+        }
     }
     
     @objc private func singlePlayerButtonTapped() {
-        onSinglePlayerTapped?()
+        LobbyAnimations.animateButtonTap(singlePlayerButton) { [weak self] in
+            self?.onSinglePlayerTapped?()
+        }
     }
     
     @objc private func cancelButtonTapped() {
@@ -336,7 +404,9 @@ class LobbyUI {
     }
     
     @objc private func startGameButtonTapped() {
-        onStartGameTapped?()
+        LobbyAnimations.animateButtonTap(startGameButton) { [weak self] in
+            self?.onStartGameTapped?()
+        }
     }
     
     @objc private func spriteModeButtonTapped() {
@@ -345,6 +415,18 @@ class LobbyUI {
         let newMode: SpriteMode = (currentMode == .tank) ? .dolphin : .tank
         GameSettings.shared.spriteMode = newMode
         updateSpriteModeButton()
+        
+        // Animate the emoji change
+        if let emojiLabel = tankEmojiLabel {
+            UIView.animate(withDuration: 0.2, animations: {
+                emojiLabel.transform = CGAffineTransform(scaleX: 0.8, y: 0.8)
+            }) { _ in
+                emojiLabel.text = newMode.icon
+                UIView.animate(withDuration: 0.2) {
+                    emojiLabel.transform = .identity
+                }
+            }
+        }
     }
     
     @objc private func botCountChanged() {
@@ -352,13 +434,14 @@ class LobbyUI {
         botCountLabel.text = "AI Bots: \(botCount)"
     }
     
-    /// Create sprite mode toggle button
-    private func createSpriteModeButton() -> UIButton {
+    /// Create modern sprite mode toggle button
+    private func createModernSpriteModeButton() -> UIButton {
         let button = UIButton(type: .system)
-        button.backgroundColor = .secondarySystemBackground
-        button.layer.cornerRadius = 12
+        button.backgroundColor = UIColor.white.withAlphaComponent(0.08)
+        button.layer.cornerRadius = 14
         button.layer.borderWidth = 1
-        button.layer.borderColor = UIColor.separator.cgColor
+        button.layer.borderColor = UIColor.white.withAlphaComponent(0.15).cgColor
+        button.setTitleColor(.white, for: .normal)
         button.translatesAutoresizingMaskIntoConstraints = false
         
         updateSpriteModeButtonTitle(button)
@@ -366,12 +449,17 @@ class LobbyUI {
         return button
     }
     
+    /// Create sprite mode toggle button (legacy)
+    private func createSpriteModeButton() -> UIButton {
+        return createModernSpriteModeButton()
+    }
+    
     /// Update the sprite mode button title to reflect current mode
     private func updateSpriteModeButtonTitle(_ button: UIButton) {
         let mode = GameSettings.shared.spriteMode
         let title = "\(mode.icon) \(mode.displayName) Mode"
         button.setTitle(title, for: .normal)
-        button.titleLabel?.font = .systemFont(ofSize: 16, weight: .medium)
+        button.titleLabel?.font = .systemFont(ofSize: 16, weight: .semibold)
     }
     
     /// Update sprite mode button to reflect current state
@@ -379,7 +467,7 @@ class LobbyUI {
         updateSpriteModeButtonTitle(spriteModeButton)
     }
     
-    /// Show single player mode UI
+    /// Show single player mode UI with animation
     func showSinglePlayerMode() {
         singlePlayerButton.isHidden = true
         hostButton.isHidden = true

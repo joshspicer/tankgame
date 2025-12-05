@@ -18,14 +18,19 @@ class GameSceneRenderer {
     
     // Specialized renderers
     private let gridRenderer: GridRenderer
+    private let modernGridRenderer: ModernGridRenderer
     private let tankRenderer: TankRenderer
     private let projectileRenderer: ProjectileRenderer
     private let lizardRenderer: LizardRenderer
+    
+    // Feature flag for modern rendering
+    private let useModernRenderer: Bool = true
     
     init(tileSize: CGFloat, gridSize: Int) {
         self.tileSize = tileSize
         self.gridSize = gridSize
         self.gridRenderer = GridRenderer(tileSize: tileSize, gridSize: gridSize)
+        self.modernGridRenderer = ModernGridRenderer(tileSize: tileSize, gridSize: gridSize)
         self.tankRenderer = TankRenderer(tileSize: tileSize, gridSize: gridSize)
         self.projectileRenderer = ProjectileRenderer(tileSize: tileSize, gridSize: gridSize)
         self.lizardRenderer = LizardRenderer(tileSize: tileSize, gridSize: gridSize)
@@ -33,9 +38,13 @@ class GameSceneRenderer {
     
     // MARK: - Grid Rendering
     
-    /// Render the game grid
+    /// Render the game grid (uses modern or legacy renderer based on flag)
     func renderGrid(_ grid: [[GridCell]], in gridNode: SKNode) {
-        gridRenderer.renderGrid(grid, in: gridNode)
+        if useModernRenderer {
+            modernGridRenderer.renderGrid(grid, in: gridNode)
+        } else {
+            gridRenderer.renderGrid(grid, in: gridNode)
+        }
     }
     
     // MARK: - Tank Rendering
@@ -73,6 +82,10 @@ class GameSceneRenderer {
     
     /// Convert grid coordinates to scene position
     func gridPosition(row: Int, col: Int) -> CGPoint {
-        return gridRenderer.gridPosition(row: row, col: col)
+        if useModernRenderer {
+            return modernGridRenderer.gridPosition(row: row, col: col)
+        } else {
+            return gridRenderer.gridPosition(row: row, col: col)
+        }
     }
 }
