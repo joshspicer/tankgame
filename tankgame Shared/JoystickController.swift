@@ -99,10 +99,13 @@ class JoystickController {
     
     /// Create a small triangle path for indicators
     private func createTrianglePath(size: CGFloat) -> CGPath {
+        let triangleBaseRatio: CGFloat = 0.7
+        let triangleHeightRatio: CGFloat = 0.5
+        
         let path = CGMutablePath()
         path.move(to: CGPoint(x: 0, y: size))
-        path.addLine(to: CGPoint(x: -size * 0.7, y: -size * 0.5))
-        path.addLine(to: CGPoint(x: size * 0.7, y: -size * 0.5))
+        path.addLine(to: CGPoint(x: -size * triangleBaseRatio, y: -size * triangleHeightRatio))
+        path.addLine(to: CGPoint(x: size * triangleBaseRatio, y: -size * triangleHeightRatio))
         path.closeSubpath()
         return path
     }

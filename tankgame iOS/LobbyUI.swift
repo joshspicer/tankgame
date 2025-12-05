@@ -433,7 +433,6 @@ class LobbyUI {
         playersIcon: UILabel
     ) {
         let horizontalPadding: CGFloat = 24
-        let buttonWidth: CGFloat = UIScreen.main.bounds.width - (horizontalPadding * 2)
         
         NSLayoutConstraint.activate([
             // Scroll view

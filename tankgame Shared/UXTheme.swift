@@ -11,7 +11,8 @@ import SpriteKit
 import UIKit
 #endif
 
-/// Centralized UX theme for the game
+/// Centralized UX theme providing color palettes, styling constants, 
+/// and animation durations for consistent visual design across all game components
 struct UXTheme {
     
     // MARK: - Colors
@@ -119,6 +120,17 @@ struct UXTheme {
     static let spacingMedium: CGFloat = 16
     static let spacingLarge: CGFloat = 24
     static let spacingXLarge: CGFloat = 32
+    
+    // MARK: - Explosion Effect Configuration
+    
+    /// Number of primary explosion particles
+    static let explosionPrimaryParticleCount: Int = 16
+    
+    /// Number of spark particles
+    static let explosionSparkCount: Int = 24
+    
+    /// Number of smoke puffs
+    static let explosionSmokeCount: Int = 6
 }
 
 #if os(iOS) || os(tvOS)

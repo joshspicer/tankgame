@@ -81,20 +81,23 @@ class FireButton {
     private func createCrosshairIcon(in node: SKNode) {
         let color = SKColor.white
         let lineWidth: CGFloat = 3
-        let size: CGFloat = 16
+        let crosshairSize: CGFloat = 16
+        let crosshairVerticalOffset: CGFloat = 6
+        let crosshairGap: CGFloat = 4
+        let centerDotRadius: CGFloat = 3
         
         // Center dot
-        let centerDot = SKShapeNode(circleOfRadius: 3)
+        let centerDot = SKShapeNode(circleOfRadius: centerDotRadius)
         centerDot.fillColor = color
         centerDot.strokeColor = .clear
-        centerDot.position = CGPoint(x: 0, y: 6)
+        centerDot.position = CGPoint(x: 0, y: crosshairVerticalOffset)
         node.addChild(centerDot)
         
         // Crosshair lines
         let directions: [(CGFloat, CGFloat)] = [(0, 1), (0, -1), (-1, 0), (1, 0)]
         for (dx, dy) in directions {
-            let line = SKSpriteNode(color: color, size: CGSize(width: lineWidth, height: size * 0.5))
-            line.position = CGPoint(x: dx * (size * 0.5 + 4), y: dy * (size * 0.5 + 4) + 6)
+            let line = SKSpriteNode(color: color, size: CGSize(width: lineWidth, height: crosshairSize * 0.5))
+            line.position = CGPoint(x: dx * (crosshairSize * 0.5 + crosshairGap), y: dy * (crosshairSize * 0.5 + crosshairGap) + crosshairVerticalOffset)
             line.zRotation = atan2(dy, dx) - .pi / 2
             node.addChild(line)
         }

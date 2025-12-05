@@ -62,7 +62,7 @@ class ExplosionEffects {
     
     /// Create primary colored explosion particles
     private func createPrimaryParticles(at position: CGPoint, color: SKColor, in parentNode: SKNode) {
-        let particleCount = 16
+        let particleCount = UXTheme.explosionPrimaryParticleCount
         for i in 0..<particleCount {
             let particle = SKShapeNode(circleOfRadius: CGFloat.random(in: 6...10))
             particle.fillColor = color
@@ -97,7 +97,7 @@ class ExplosionEffects {
     
     /// Create secondary spark particles
     private func createSparkParticles(at position: CGPoint, in parentNode: SKNode) {
-        let sparkCount = 24
+        let sparkCount = UXTheme.explosionSparkCount
         for _ in 0..<sparkCount {
             let spark = SKShapeNode(circleOfRadius: CGFloat.random(in: 2...4))
             spark.fillColor = SKColor.yellow
@@ -129,7 +129,7 @@ class ExplosionEffects {
     
     /// Create smoke puff effects
     private func createSmokePuffs(at position: CGPoint, in parentNode: SKNode) {
-        let puffCount = 6
+        let puffCount = UXTheme.explosionSmokeCount
         for i in 0..<puffCount {
             let puff = SKShapeNode(circleOfRadius: CGFloat.random(in: 12...20))
             puff.fillColor = SKColor(white: 0.3, alpha: 0.5)
