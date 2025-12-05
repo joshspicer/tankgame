@@ -31,8 +31,8 @@ struct Tank: Codable {
             return false
         }
         
-        // Check if cell is empty
-        guard grid[newRow][newCol] == .empty else {
+        // Check if cell is passable (empty or goo)
+        guard grid[newRow][newCol] == .empty || grid[newRow][newCol] == .goo else {
             return false
         }
         

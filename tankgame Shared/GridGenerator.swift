@@ -35,12 +35,20 @@ struct GridGenerator {
         // Generate random wall density between 15% and 30%
         let wallDensity = 0.15 + (rng.nextDouble() * 0.15)
         
-        // Add random walls with variable density only to interior cells
+        // Generate random goo density between 5% and 15%
+        let gooDensity = 0.05 + (rng.nextDouble() * 0.10)
+        
+        // Add random walls and goo with variable density only to interior cells
         for row in 0..<8 {
             for col in 0..<8 {
                 let key = "\(row),\(col)"
-                if !protectedCells.contains(key) && !borderCells.contains(key) && rng.nextDouble() < wallDensity {
-                    grid[row][col] = .wall
+                if !protectedCells.contains(key) && !borderCells.contains(key) {
+                    let roll = rng.nextDouble()
+                    if roll < wallDensity {
+                        grid[row][col] = .wall
+                    } else if roll < wallDensity + gooDensity {
+                        grid[row][col] = .goo
+                    }
                 }
             }
         }

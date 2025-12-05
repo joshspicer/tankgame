@@ -24,7 +24,16 @@ class GridRenderer {
         for row in 0..<gridSize {
             for col in 0..<gridSize {
                 let cell = grid[row][col]
-                let tile = SKSpriteNode(color: cell == .wall ? .black : .white, size: CGSize(width: tileSize - 2, height: tileSize - 2))
+                let color: SKColor
+                switch cell {
+                case .wall:
+                    color = .black
+                case .goo:
+                    color = SKColor(red: 0.2, green: 0.8, blue: 0.2, alpha: 1.0)
+                case .empty:
+                    color = .white
+                }
+                let tile = SKSpriteNode(color: color, size: CGSize(width: tileSize - 2, height: tileSize - 2))
                 tile.position = gridPosition(row: row, col: col)
                 gridNode.addChild(tile)
             }
