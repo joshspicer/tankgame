@@ -25,8 +25,11 @@ class GridRenderer {
         let gridWidth = CGFloat(gridSize) * tileSize
         let gridHeight = CGFloat(gridSize) * tileSize
         
+        let glowPadding = GameTheme.Dimensions.gridBorderGlowPadding
+        let borderPadding = GameTheme.Dimensions.gridBorderPadding
+        
         // Outer border glow
-        let outerGlow = SKShapeNode(rectOf: CGSize(width: gridWidth + 12, height: gridHeight + 12), cornerRadius: 6)
+        let outerGlow = SKShapeNode(rectOf: CGSize(width: gridWidth + glowPadding * 2, height: gridHeight + glowPadding * 2), cornerRadius: glowPadding)
         outerGlow.fillColor = GameTheme.Colors.primary.withAlphaComponent(0.1)
         outerGlow.strokeColor = GameTheme.Colors.primary.withAlphaComponent(0.3)
         outerGlow.lineWidth = 2
@@ -35,7 +38,7 @@ class GridRenderer {
         gridNode.addChild(outerGlow)
         
         // Grid background
-        let background = SKShapeNode(rectOf: CGSize(width: gridWidth + 4, height: gridHeight + 4), cornerRadius: 4)
+        let background = SKShapeNode(rectOf: CGSize(width: gridWidth + borderPadding * 2, height: gridHeight + borderPadding * 2), cornerRadius: borderPadding * 2)
         background.fillColor = GameTheme.Colors.backgroundDark
         background.strokeColor = GameTheme.Colors.gridBorder
         background.lineWidth = 2

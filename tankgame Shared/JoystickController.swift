@@ -256,7 +256,7 @@ class JoystickController {
             highlightDirection(direction)
             
             // Update joystick handle position with smooth movement
-            let maxDistance: CGFloat = 35
+            let maxDistance = GameTheme.Dimensions.joystickMaxHandleDistance
             let clampedDistance = min(distance, maxDistance)
             handle.position = CGPoint(
                 x: cos(angle) * clampedDistance,

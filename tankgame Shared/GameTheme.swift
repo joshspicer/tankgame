@@ -72,10 +72,15 @@ class GameTheme {
         static let joystickBaseRadius: CGFloat = 55
         static let joystickHandleRadius: CGFloat = 28
         static let joystickGlowRadius: CGFloat = 65
+        static let joystickMaxHandleDistance: CGFloat = 35
         
         // Fire button
         static let fireButtonRadius: CGFloat = 45
         static let fireButtonGlowRadius: CGFloat = 55
+        
+        // Grid decorations
+        static let gridBorderGlowPadding: CGFloat = 6
+        static let gridBorderPadding: CGFloat = 2
         
         // UI element spacing
         static let standardMargin: CGFloat = 16

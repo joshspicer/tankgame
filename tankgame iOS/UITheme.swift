@@ -60,7 +60,7 @@ struct UITheme {
             ]
             gradient.startPoint = CGPoint(x: 0, y: 0)
             gradient.endPoint = CGPoint(x: 0, y: 1)
-            gradient.cornerRadius = 16
+            gradient.cornerRadius = Dimensions.buttonCornerRadius
             return gradient
         }
         
@@ -72,7 +72,7 @@ struct UITheme {
             ]
             gradient.startPoint = CGPoint(x: 0, y: 0)
             gradient.endPoint = CGPoint(x: 0, y: 1)
-            gradient.cornerRadius = 16
+            gradient.cornerRadius = Dimensions.buttonCornerRadius
             return gradient
         }
         
@@ -84,7 +84,7 @@ struct UITheme {
             ]
             gradient.startPoint = CGPoint(x: 0, y: 0)
             gradient.endPoint = CGPoint(x: 0, y: 1)
-            gradient.cornerRadius = 16
+            gradient.cornerRadius = Dimensions.buttonCornerRadius
             return gradient
         }
     }
