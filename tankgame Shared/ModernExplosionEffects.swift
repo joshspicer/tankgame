@@ -175,11 +175,11 @@ class ModernExplosionEffects {
                     completion()
                 }
             }
-            
-            // Call completion on last particle if the count is 0
-            if debrisCount == 0 {
-                completion()
-            }
+        }
+        
+        // Handle edge case where debris count is 0
+        if debrisCount == 0 {
+            completion()
         }
     }
     

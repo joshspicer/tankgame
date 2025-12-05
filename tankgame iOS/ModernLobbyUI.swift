@@ -40,6 +40,9 @@ class ModernLobbyUI {
     // Particle emitter for background
     private var particleEmitter: CAEmitterLayer?
     
+    // Gradient layers for buttons (stored separately to avoid using KVO)
+    private var buttonGradientLayers: [UIButton: CAGradientLayer] = [:]
+    
     /// Number of AI bots to add
     var botCount: Int = 1
     
@@ -253,8 +256,8 @@ class ModernLobbyUI {
         gradientLayer.cornerRadius = UXTheme.Dimensions.buttonCornerRadius
         button.layer.insertSublayer(gradientLayer, at: 0)
         
-        // Store gradient layer reference for layout updates
-        button.layer.setValue(gradientLayer, forKey: "gradientLayer")
+        // Store gradient layer reference in dictionary
+        buttonGradientLayers[button] = gradientLayer
         
         // Content stack
         let stackView = UIStackView()
@@ -499,13 +502,11 @@ class ModernLobbyUI {
     
     private func createCircleImage() -> UIImage? {
         let size = CGSize(width: 20, height: 20)
-        UIGraphicsBeginImageContextWithOptions(size, false, 0)
-        let context = UIGraphicsGetCurrentContext()
-        context?.setFillColor(UIColor.white.cgColor)
-        context?.fillEllipse(in: CGRect(origin: .zero, size: size))
-        let image = UIGraphicsGetImageFromCurrentImageContext()
-        UIGraphicsEndImageContext()
-        return image
+        let renderer = UIGraphicsImageRenderer(size: size)
+        return renderer.image { context in
+            UIColor.white.setFill()
+            context.cgContext.fillEllipse(in: CGRect(origin: .zero, size: size))
+        }
     }
     
     // MARK: - Animations
@@ -661,11 +662,12 @@ class ModernLobbyUI {
     // MARK: - Layout Updates
     
     func updateLayout(for bounds: CGRect) {
-        // Update gradient layer frames for buttons
+        // Update gradient layer frames for buttons using stored references
         let buttons = [singlePlayerButton, hostButton, joinButton, startGameButton]
         for button in buttons {
-            if let gradientLayer = button?.layer.value(forKey: "gradientLayer") as? CAGradientLayer {
-                gradientLayer.frame = button?.bounds ?? .zero
+            guard let btn = button else { continue }
+            if let gradientLayer = buttonGradientLayers[btn] {
+                gradientLayer.frame = btn.bounds
             }
         }
         
