@@ -96,6 +96,7 @@ class GameScene: SKScene {
         
         renderGrid()
         renderTanks()
+        renderProjectiles()
         renderLizards()
         updateScore()
         ui.updateStatus("Fight!")
