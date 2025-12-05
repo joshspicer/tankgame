@@ -47,7 +47,7 @@ class GameScene: SKScene {
     }
     
     override func didMove(to view: SKView) {
-        backgroundColor = .darkGray
+        backgroundColor = SKColor(red: 0.08, green: 0.08, blue: 0.12, alpha: 1.0)
         setupComponents()
         setupScene()
         
@@ -86,7 +86,7 @@ class GameScene: SKScene {
         renderTanks()
         renderLizards()
         updateScore()
-        ui.updateStatus("Fight!")
+        ui.updateStatus("⚔️ BATTLE! ⚔️")
     }
     
     func renderGrid() {
