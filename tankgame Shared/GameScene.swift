@@ -27,7 +27,7 @@ class GameScene: SKScene {
     // Components
     var renderer: GameSceneRenderer!
     var soundManager: SoundManager!
-    var explosionEffects: ExplosionEffects!
+    var explosionEffects: ModernExplosionEffects!
     var joystickController: ModernJoystickController!
     var fireButton: ModernFireButton!
     var ui: ModernGameSceneUI!
@@ -66,7 +66,7 @@ class GameScene: SKScene {
     private func setupComponents() {
         renderer = GameSceneRenderer(tileSize: tileSize, gridSize: gridSize)
         soundManager = SoundManager(scene: self)
-        explosionEffects = ExplosionEffects(tileSize: tileSize)
+        explosionEffects = ModernExplosionEffects(tileSize: tileSize)
         joystickController = ModernJoystickController()
         fireButton = ModernFireButton()
         ui = ModernGameSceneUI()

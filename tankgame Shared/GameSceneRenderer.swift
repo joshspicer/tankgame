@@ -24,7 +24,7 @@ class GameSceneRenderer {
     // Specialized renderers
     private let gridRenderer: ModernGridRenderer
     private let tankRenderer: TankRenderer
-    private let projectileRenderer: ProjectileRenderer
+    private let projectileRenderer: ModernProjectileRenderer
     private let lizardRenderer: LizardRenderer
     
     init(tileSize: CGFloat, gridSize: Int) {
@@ -32,7 +32,7 @@ class GameSceneRenderer {
         self.gridSize = gridSize
         self.gridRenderer = ModernGridRenderer(tileSize: tileSize, gridSize: gridSize)
         self.tankRenderer = TankRenderer(tileSize: tileSize, gridSize: gridSize)
-        self.projectileRenderer = ProjectileRenderer(tileSize: tileSize, gridSize: gridSize)
+        self.projectileRenderer = ModernProjectileRenderer(tileSize: tileSize, gridSize: gridSize)
         self.lizardRenderer = LizardRenderer(tileSize: tileSize, gridSize: gridSize)
     }
     
