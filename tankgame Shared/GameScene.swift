@@ -47,7 +47,7 @@ class GameScene: SKScene {
     }
     
     override func didMove(to view: SKView) {
-        backgroundColor = .darkGray
+        setupBackground()
         setupComponents()
         setupScene()
         
@@ -60,6 +60,60 @@ class GameScene: SKScene {
             renderLizards()
             updateScore()
         }
+    }
+    
+    /// Setup modern gradient background
+    private func setupBackground() {
+        // Base background color
+        backgroundColor = SKColor(red: 0.12, green: 0.12, blue: 0.18, alpha: 1.0)
+        
+        // Create gradient background
+        let gradientSize = self.size
+        let gradientNode = SKSpriteNode(color: .clear, size: gradientSize)
+        gradientNode.position = CGPoint(x: size.width / 2, y: size.height / 2)
+        gradientNode.zPosition = -100
+        
+        // Add subtle texture pattern
+        for _ in 0..<30 {
+            let star = SKShapeNode(circleOfRadius: CGFloat.random(in: 1...2))
+            star.fillColor = SKColor.white.withAlphaComponent(CGFloat.random(in: 0.05...0.15))
+            star.strokeColor = .clear
+            star.position = CGPoint(
+                x: CGFloat.random(in: 0...size.width) - size.width / 2,
+                y: CGFloat.random(in: 0...size.height) - size.height / 2
+            )
+            gradientNode.addChild(star)
+            
+            // Add twinkling animation
+            let fadeIn = SKAction.fadeAlpha(to: CGFloat.random(in: 0.1...0.3), duration: Double.random(in: 1...3))
+            let fadeOut = SKAction.fadeAlpha(to: CGFloat.random(in: 0.02...0.1), duration: Double.random(in: 1...3))
+            let twinkle = SKAction.sequence([fadeIn, fadeOut])
+            star.run(SKAction.repeatForever(twinkle))
+        }
+        
+        addChild(gradientNode)
+        
+        // Add ambient corner glow effects
+        addCornerGlow(at: CGPoint(x: 0, y: size.height), color: SKColor(red: 0.3, green: 0.5, blue: 1.0, alpha: 0.15))
+        addCornerGlow(at: CGPoint(x: size.width, y: 0), color: SKColor(red: 0.3, green: 0.8, blue: 0.5, alpha: 0.1))
+    }
+    
+    /// Add corner glow effect
+    private func addCornerGlow(at position: CGPoint, color: SKColor) {
+        let glow = SKShapeNode(circleOfRadius: 200)
+        glow.fillColor = color
+        glow.strokeColor = .clear
+        glow.position = position
+        glow.zPosition = -99
+        glow.alpha = 0.5
+        
+        // Subtle breathing animation
+        let scaleUp = SKAction.scale(to: 1.2, duration: 3.0)
+        let scaleDown = SKAction.scale(to: 0.9, duration: 3.0)
+        let breathe = SKAction.sequence([scaleUp, scaleDown])
+        glow.run(SKAction.repeatForever(breathe))
+        
+        addChild(glow)
     }
     
     private func setupComponents() {

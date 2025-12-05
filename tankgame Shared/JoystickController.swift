@@ -7,12 +7,14 @@
 
 import SpriteKit
 
-/// Manages the virtual joystick UI and input processing
+/// Manages the virtual joystick UI with modern styling and input processing
 class JoystickController {
     // Nodes
     private var joystickNode: SKNode?
     private var joystickBase: SKShapeNode?
     private var joystickHandle: SKShapeNode?
+    private var handleInnerGlow: SKShapeNode?
+    private var directionIndicators: [SKShapeNode] = []
     
     // State
     private(set) var isActive = false
@@ -21,32 +23,126 @@ class JoystickController {
     
     init() {}
     
-    /// Setup the joystick UI
+    /// Setup the joystick UI with modern styling
     func setup(in scene: SKScene, at position: CGPoint) {
         let newJoystickNode = SKNode()
         newJoystickNode.position = position
+        newJoystickNode.zPosition = 200
         scene.addChild(newJoystickNode)
         joystickNode = newJoystickNode
         
+        // Create outer ring with gradient effect
+        let outerRing = SKShapeNode(circleOfRadius: 56)
+        outerRing.fillColor = .clear
+        outerRing.strokeColor = SKColor.white.withAlphaComponent(0.3)
+        outerRing.lineWidth = 2
+        newJoystickNode.addChild(outerRing)
+        
+        // Create joystick base with modern styling
         let newJoystickBase = SKShapeNode(circleOfRadius: 50)
-        newJoystickBase.fillColor = .gray
-        newJoystickBase.strokeColor = .white
-        newJoystickBase.lineWidth = 2
-        newJoystickBase.alpha = 0.5
+        newJoystickBase.fillColor = SKColor(white: 0.2, alpha: 0.7)
+        newJoystickBase.strokeColor = SKColor.white.withAlphaComponent(0.4)
+        newJoystickBase.lineWidth = 3
         newJoystickNode.addChild(newJoystickBase)
         joystickBase = newJoystickBase
         
-        let newJoystickHandle = SKShapeNode(circleOfRadius: 25)
-        newJoystickHandle.fillColor = .white
-        newJoystickHandle.strokeColor = .white
-        newJoystickHandle.alpha = 0.8
+        // Add direction indicator dots
+        createDirectionIndicators(in: newJoystickNode)
+        
+        // Create joystick handle with modern styling
+        let newJoystickHandle = SKShapeNode(circleOfRadius: 28)
+        newJoystickHandle.fillColor = SKColor(red: 0.3, green: 0.5, blue: 1.0, alpha: 0.9)
+        newJoystickHandle.strokeColor = SKColor.white.withAlphaComponent(0.8)
+        newJoystickHandle.lineWidth = 3
+        newJoystickHandle.zPosition = 1
         newJoystickNode.addChild(newJoystickHandle)
         joystickHandle = newJoystickHandle
+        
+        // Add inner glow to handle
+        let innerGlow = SKShapeNode(circleOfRadius: 20)
+        innerGlow.fillColor = SKColor(red: 0.5, green: 0.7, blue: 1.0, alpha: 0.6)
+        innerGlow.strokeColor = .clear
+        newJoystickHandle.addChild(innerGlow)
+        handleInnerGlow = innerGlow
+        
+        // Add subtle pulse animation to handle
+        let scaleUp = SKAction.scale(to: 1.05, duration: 0.8)
+        let scaleDown = SKAction.scale(to: 0.95, duration: 0.8)
+        let pulse = SKAction.sequence([scaleUp, scaleDown])
+        innerGlow.run(SKAction.repeatForever(pulse))
+        
+        // Add arrow icon to handle
+        let arrowIcon = createArrowIcon()
+        arrowIcon.zPosition = 2
+        newJoystickHandle.addChild(arrowIcon)
+    }
+    
+    /// Create direction indicator dots around the joystick
+    private func createDirectionIndicators(in parent: SKNode) {
+        let radius: CGFloat = 42
+        let dotRadius: CGFloat = 4
+        
+        // 8 directions
+        for i in 0..<8 {
+            let angle = CGFloat(i) * .pi / 4
+            let dot = SKShapeNode(circleOfRadius: dotRadius)
+            dot.fillColor = SKColor.white.withAlphaComponent(0.3)
+            dot.strokeColor = .clear
+            dot.position = CGPoint(x: cos(angle) * radius, y: sin(angle) * radius)
+            parent.addChild(dot)
+            directionIndicators.append(dot)
+        }
+    }
+    
+    /// Create arrow icon for handle
+    private func createArrowIcon() -> SKNode {
+        let arrowNode = SKNode()
+        
+        // Create four small arrows pointing outward
+        for i in 0..<4 {
+            let angle = CGFloat(i) * .pi / 2
+            let arrow = SKSpriteNode(color: SKColor.white.withAlphaComponent(0.7), size: CGSize(width: 2, height: 10))
+            arrow.position = CGPoint(x: cos(angle) * 8, y: sin(angle) * 8)
+            arrow.zRotation = angle - .pi / 2
+            arrowNode.addChild(arrow)
+        }
+        
+        return arrowNode
     }
     
     /// Get the joystick's center position
     var position: CGPoint {
         return joystickNode?.position ?? .zero
+    }
+    
+    /// Update visual feedback when direction changes
+    private func updateDirectionVisuals() {
+        // Reset all indicators
+        for (index, dot) in directionIndicators.enumerated() {
+            dot.fillColor = SKColor.white.withAlphaComponent(0.3)
+            dot.run(SKAction.scale(to: 1.0, duration: 0.1))
+        }
+        
+        // Highlight active direction
+        if let direction = currentDirection {
+            let directionIndex: Int
+            switch direction {
+            case .right: directionIndex = 0
+            case .upRight: directionIndex = 1
+            case .up: directionIndex = 2
+            case .upLeft: directionIndex = 3
+            case .left: directionIndex = 4
+            case .downLeft: directionIndex = 5
+            case .down: directionIndex = 6
+            case .downRight: directionIndex = 7
+            }
+            
+            if directionIndex < directionIndicators.count {
+                let dot = directionIndicators[directionIndex]
+                dot.fillColor = SKColor(red: 0.3, green: 0.8, blue: 1.0, alpha: 1.0)
+                dot.run(SKAction.scale(to: 1.5, duration: 0.1))
+            }
+        }
     }
     
     #if os(iOS) || os(tvOS)
@@ -65,6 +161,11 @@ class JoystickController {
         if distance < 150 {
             isActive = true
             touchID = touch
+            
+            // Activate visual feedback
+            joystickBase?.fillColor = SKColor(white: 0.25, alpha: 0.8)
+            joystickHandle?.strokeColor = SKColor.white
+            
             // Process initial direction
             processTouchLocation(touch.location(in: joystick))
             return true
@@ -88,7 +189,17 @@ class JoystickController {
         isActive = false
         touchID = nil
         currentDirection = nil
-        joystickHandle?.position = .zero
+        
+        // Reset handle position with animation
+        let resetAction = SKAction.move(to: .zero, duration: 0.15)
+        resetAction.timingMode = .easeOut
+        joystickHandle?.run(resetAction)
+        
+        // Reset visual feedback
+        joystickBase?.fillColor = SKColor(white: 0.2, alpha: 0.7)
+        joystickHandle?.strokeColor = SKColor.white.withAlphaComponent(0.8)
+        
+        updateDirectionVisuals()
     }
     
     /// Process touch location and update joystick state
@@ -125,18 +236,28 @@ class JoystickController {
                 direction = .downRight
             }
             
-            currentDirection = direction
+            // Only update visuals when direction changes
+            if currentDirection != direction {
+                currentDirection = direction
+                updateDirectionVisuals()
+            }
             
-            // Update joystick handle position
-            let maxDistance: CGFloat = 30
+            // Update joystick handle position with smooth movement
+            let maxDistance: CGFloat = 32
             let clampedDistance = min(distance, maxDistance)
-            handle.position = CGPoint(
+            let targetPosition = CGPoint(
                 x: cos(angle) * clampedDistance,
                 y: sin(angle) * clampedDistance
             )
+            
+            let moveAction = SKAction.move(to: targetPosition, duration: 0.05)
+            moveAction.timingMode = .easeOut
+            handle.run(moveAction)
         } else {
             currentDirection = nil
-            handle.position = .zero
+            let resetAction = SKAction.move(to: .zero, duration: 0.1)
+            handle.run(resetAction)
+            updateDirectionVisuals()
         }
     }
     #endif
