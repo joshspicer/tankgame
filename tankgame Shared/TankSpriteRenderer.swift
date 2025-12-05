@@ -47,7 +47,7 @@ class TankSpriteRenderer {
         tankNode.addChild(barrel)
         
         // Barrel muzzle (gun tip) - classic dark color
-        let muzzle = SKSpriteNode(color: SKColor(white: 0.25, alpha: 1.0), size: CGSize(width: tileSize * 0.18, height: tileSize * 0.12))
+        let muzzle = SKSpriteNode(color: RetroColors.muzzle, size: CGSize(width: tileSize * 0.18, height: tileSize * 0.12))
         muzzle.position = CGPoint(x: 0, y: tileSize * 0.56)
         tankNode.addChild(muzzle)
         

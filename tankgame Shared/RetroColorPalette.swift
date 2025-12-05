@@ -70,6 +70,9 @@ enum RetroColors {
     // MARK: - Explosion
     static let explosionCore = SKColor.white
     static let explosionOuter = SKColor(red: 1.0, green: 0.6, blue: 0.2, alpha: 1.0)
+    
+    // MARK: - Tank Components
+    static let muzzle = SKColor(white: 0.25, alpha: 1.0)
 }
 
 /// Retro font configuration
@@ -77,13 +80,4 @@ enum RetroFonts {
     static let title = "Courier-Bold"
     static let label = "Courier"
     static let button = "Courier-Bold"
-    
-    // Fallback to system monospace if Courier not available
-    static func titleFont(size: CGFloat) -> String {
-        return "Courier-Bold"
-    }
-    
-    static func labelFont(size: CGFloat) -> String {
-        return "Courier"
-    }
 }
