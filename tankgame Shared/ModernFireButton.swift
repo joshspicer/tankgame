@@ -262,32 +262,29 @@ class ModernFireButton {
         button.run(sequence)
     }
     
-    /// Create expanding ripple effect
+    /// Create expanding ripple effect using SKAction for better synchronization
     private func createRippleEffect() {
         guard let container = rippleContainer else { return }
         
-        // Create multiple ripples
+        // Create multiple ripples with SKAction timing
         for i in 0..<3 {
-            let delay = Double(i) * 0.1
+            let ripple = SKShapeNode(circleOfRadius: self.buttonRadius * 0.5)
+            ripple.fillColor = .clear
+            ripple.strokeColor = self.highlightColor.withAlphaComponent(0.8)
+            ripple.lineWidth = 3
+            ripple.alpha = 0  // Start invisible
+            container.addChild(ripple)
             
-            DispatchQueue.main.asyncAfter(deadline: .now() + delay) { [weak self] in
-                guard let self = self else { return }
-                
-                let ripple = SKShapeNode(circleOfRadius: self.buttonRadius * 0.5)
-                ripple.fillColor = .clear
-                ripple.strokeColor = self.highlightColor.withAlphaComponent(0.8)
-                ripple.lineWidth = 3
-                container.addChild(ripple)
-                
-                // Expand and fade
-                let expand = SKAction.scale(to: 3.0, duration: 0.5)
-                let fade = SKAction.fadeOut(withDuration: 0.5)
-                let group = SKAction.group([expand, fade])
-                let remove = SKAction.removeFromParent()
-                let sequence = SKAction.sequence([group, remove])
-                
-                ripple.run(sequence)
-            }
+            // Create staggered animation using SKAction
+            let delay = SKAction.wait(forDuration: Double(i) * 0.1)
+            let fadeIn = SKAction.fadeIn(withDuration: 0.05)
+            let expand = SKAction.scale(to: 3.0, duration: 0.5)
+            let fadeOut = SKAction.fadeOut(withDuration: 0.5)
+            let group = SKAction.group([expand, fadeOut])
+            let remove = SKAction.removeFromParent()
+            let sequence = SKAction.sequence([delay, fadeIn, group, remove])
+            
+            ripple.run(sequence)
         }
     }
     #endif

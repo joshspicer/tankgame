@@ -40,5 +40,8 @@ class GameSettings {
     /// Current sprite mode
     var spriteMode: SpriteMode = .tank
     
+    /// Whether to use modern UI styling
+    var useModernUI: Bool = true
+    
     private init() {}
 }

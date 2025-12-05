@@ -18,6 +18,9 @@ class ModernGridRenderer {
     private let gridLineColor: SKColor = SKColor(white: 0.25, alpha: 0.5)
     private let accentColor: SKColor = .systemCyan
     
+    // Floor detail constants
+    private let floorDetailProbability: Int = 5  // 1 in N chance for detail
+    
     init(tileSize: CGFloat, gridSize: Int) {
         self.tileSize = tileSize
         self.gridSize = gridSize
@@ -161,7 +164,7 @@ class ModernGridRenderer {
         container.addChild(innerShadow)
         
         // Random subtle detail (occasional dot pattern)
-        if Int.random(in: 0...5) == 0 {
+        if Int.random(in: 0...floorDetailProbability) == 0 {
             let dot = SKShapeNode(circleOfRadius: 2)
             dot.fillColor = SKColor.white.withAlphaComponent(0.05)
             dot.strokeColor = .clear

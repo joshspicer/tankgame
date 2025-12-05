@@ -36,8 +36,10 @@ class GameScene: SKScene {
     var ui: GameSceneUI!
     var modernUI: ModernGameSceneUI!
     
-    // Feature flag for modern UI (set to true to use modern styling)
-    private let useModernUI: Bool = true
+    // Feature flag for modern UI - reads from GameSettings
+    private var useModernUI: Bool {
+        return GameSettings.shared.useModernUI
+    }
     
     #if os(iOS) || os(tvOS)
     var inputHandler: GameSceneInputHandler!

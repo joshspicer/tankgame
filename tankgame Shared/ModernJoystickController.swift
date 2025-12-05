@@ -28,6 +28,10 @@ class ModernJoystickController {
     private let glowColor: SKColor = .cyan
     private let activeColor: SKColor = .systemBlue
     
+    // Input constants
+    private let deadZoneThreshold: CGFloat = 15  // Minimum distance to register direction
+    private let maxHandleDistance: CGFloat = 35  // Maximum handle travel distance
+    
     init() {}
     
     /// Setup the joystick UI with modern styling
@@ -262,8 +266,8 @@ class ModernJoystickController {
         let dy = location.y
         let distance = sqrt(dx * dx + dy * dy)
         
-        // Improved dead zone - requires 15 points minimum movement
-        if distance > 15 {
+        // Dead zone - requires minimum movement to register direction
+        if distance > deadZoneThreshold {
             let angle = atan2(dy, dx)
             
             // Snap to 8 directions (cardinal + diagonal)
@@ -291,8 +295,7 @@ class ModernJoystickController {
             currentDirection = direction
             
             // Update joystick handle position with smooth movement
-            let maxDistance: CGFloat = 35
-            let clampedDistance = min(distance, maxDistance)
+            let clampedDistance = min(distance, maxHandleDistance)
             let targetPosition = CGPoint(
                 x: cos(angle) * clampedDistance,
                 y: sin(angle) * clampedDistance

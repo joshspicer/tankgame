@@ -50,33 +50,32 @@ class LobbyAnimations {
     /// Create a particle image for the emitter
     private static func createParticleImage() -> UIImage? {
         let size = CGSize(width: 60, height: 60)
-        UIGraphicsBeginImageContextWithOptions(size, false, 0)
-        guard let context = UIGraphicsGetCurrentContext() else { return nil }
+        let renderer = UIGraphicsImageRenderer(size: size)
         
-        // Draw a tank-like shape
-        context.setFillColor(UIColor.white.cgColor)
-        
-        // Main body
-        let bodyRect = CGRect(x: 15, y: 20, width: 30, height: 25)
-        context.fill(bodyRect)
-        
-        // Turret
-        let turretRect = CGRect(x: 22, y: 10, width: 16, height: 15)
-        context.fill(turretRect)
-        
-        // Barrel
-        let barrelRect = CGRect(x: 27, y: 0, width: 6, height: 15)
-        context.fill(barrelRect)
-        
-        // Treads
-        let leftTread = CGRect(x: 10, y: 22, width: 8, height: 22)
-        let rightTread = CGRect(x: 42, y: 22, width: 8, height: 22)
-        context.fill(leftTread)
-        context.fill(rightTread)
-        
-        let image = UIGraphicsGetImageFromCurrentImageContext()
-        UIGraphicsEndImageContext()
-        return image
+        return renderer.image { context in
+            let cgContext = context.cgContext
+            
+            // Draw a tank-like shape
+            cgContext.setFillColor(UIColor.white.cgColor)
+            
+            // Main body
+            let bodyRect = CGRect(x: 15, y: 20, width: 30, height: 25)
+            cgContext.fill(bodyRect)
+            
+            // Turret
+            let turretRect = CGRect(x: 22, y: 10, width: 16, height: 15)
+            cgContext.fill(turretRect)
+            
+            // Barrel
+            let barrelRect = CGRect(x: 27, y: 0, width: 6, height: 15)
+            cgContext.fill(barrelRect)
+            
+            // Treads
+            let leftTread = CGRect(x: 10, y: 22, width: 8, height: 22)
+            let rightTread = CGRect(x: 42, y: 22, width: 8, height: 22)
+            cgContext.fill(leftTread)
+            cgContext.fill(rightTread)
+        }
     }
     
     // MARK: - Title Animations

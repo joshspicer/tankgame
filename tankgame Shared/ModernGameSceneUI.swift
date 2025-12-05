@@ -19,6 +19,11 @@ class ModernGameSceneUI {
     private let primaryColor: SKColor = .systemBlue
     private let accentColor: SKColor = .systemYellow
     
+    // Timing constants
+    private let nextRoundDelay: TimeInterval = 3.0
+    private let statusFadeDuration: TimeInterval = 0.15
+    private let scoreAnimationDuration: TimeInterval = 0.1
+    
     init() {}
     
     /// Setup UI elements with modern styling
@@ -135,9 +140,9 @@ class ModernGameSceneUI {
         guard let label = statusLabel else { return }
         
         // Fade out, change text, fade in
-        let fadeOut = SKAction.fadeOut(withDuration: 0.15)
+        let fadeOut = SKAction.fadeOut(withDuration: statusFadeDuration)
         let changeText = SKAction.run { label.text = text }
-        let fadeIn = SKAction.fadeIn(withDuration: 0.15)
+        let fadeIn = SKAction.fadeIn(withDuration: statusFadeDuration)
         let sequence = SKAction.sequence([fadeOut, changeText, fadeIn])
         label.run(sequence)
         
@@ -173,7 +178,7 @@ class ModernGameSceneUI {
     
     /// Animate a score change
     private func animateScoreChange(_ label: SKLabelNode, newScore: Int) {
-        let scaleUp = SKAction.scale(to: 1.3, duration: 0.1)
+        let scaleUp = SKAction.scale(to: 1.3, duration: scoreAnimationDuration)
         let changeText = SKAction.run { label.text = "\(newScore)" }
         let colorFlash = SKAction.run { label.fontColor = .yellow }
         let wait = SKAction.wait(forDuration: 0.2)
@@ -228,7 +233,7 @@ class ModernGameSceneUI {
         bg.run(SKAction.sequence([scaleUp, updateLabel, wait, repeatPulse, scaleDown, resetStyle]))
         
         // Show "next round" message after delay
-        DispatchQueue.main.asyncAfter(deadline: .now() + 3) { [weak self] in
+        DispatchQueue.main.asyncAfter(deadline: .now() + nextRoundDelay) { [weak self] in
             self?.updateStatus("Next round starting...")
         }
     }

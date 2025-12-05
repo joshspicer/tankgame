@@ -288,9 +288,17 @@ class LobbyUI {
             highlightView.heightAnchor.constraint(equalTo: button.heightAnchor, multiplier: 0.5)
         ])
         
-        // Update gradient frame when button is laid out
-        button.layoutIfNeeded()
-        gradientLayer.frame = button.bounds
+        // Store gradient layer reference for later update
+        // The gradient frame will be set properly when the button's bounds are known
+        button.tag = gradientColors.hashValue  // Tag to identify gradient buttons
+        
+        // Use CATransaction to update gradient frame after layout
+        CATransaction.begin()
+        CATransaction.setDisableActions(true)
+        DispatchQueue.main.async {
+            gradientLayer.frame = button.bounds
+        }
+        CATransaction.commit()
         
         return button
     }

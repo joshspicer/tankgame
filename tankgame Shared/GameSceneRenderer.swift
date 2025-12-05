@@ -23,8 +23,10 @@ class GameSceneRenderer {
     private let projectileRenderer: ProjectileRenderer
     private let lizardRenderer: LizardRenderer
     
-    // Feature flag for modern rendering
-    private let useModernRenderer: Bool = true
+    // Feature flag for modern rendering - reads from GameSettings
+    private var useModernRenderer: Bool {
+        return GameSettings.shared.useModernUI
+    }
     
     init(tileSize: CGFloat, gridSize: Int) {
         self.tileSize = tileSize
