@@ -212,11 +212,6 @@ class LobbyUI {
         return button
     }
     
-    private func createButton(title: String, backgroundColor: UIColor, icon: String) -> UIButton {
-        // Use classic button style instead
-        return createClassicButton(title: title, backgroundColor: backgroundColor)
-    }
-    
     private func setupConstraints(titleLabel: UILabel, tankEmojiLabel: UILabel) {
         NSLayoutConstraint.activate([
             tankEmojiLabel.topAnchor.constraint(equalTo: lobbyView.safeAreaLayoutGuide.topAnchor, constant: 40),
