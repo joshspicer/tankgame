@@ -44,14 +44,27 @@ class GameSceneSetup {
             scene.tankNodes[i] = tankNode
         }
         
-        // Setup UI components
-        scene.joystickController.setup(in: scene, at: CGPoint(x: 80, y: 100))
-        scene.fireButton.setup(in: scene, at: CGPoint(x: scene.size.width - 80, y: 100))
-        scene.ui.setup(in: scene, sceneSize: scene.size)
-        
-        // Setup fire button callback
-        scene.fireButton.onTap = { [weak scene] in
-            scene?.inputHandler.handleShoot()
+        // Setup UI components based on modern UI flag
+        if scene.useModernUI {
+            // Setup modern joystick and fire button
+            scene.modernJoystickController.setup(in: scene, at: CGPoint(x: 90, y: 110))
+            scene.modernFireButton.setup(in: scene, at: CGPoint(x: scene.size.width - 90, y: 110))
+            scene.modernUI.setup(in: scene, sceneSize: scene.size)
+            
+            // Setup modern fire button callback
+            scene.modernFireButton.onTap = { [weak scene] in
+                scene?.inputHandler.handleShoot()
+            }
+        } else {
+            // Setup classic joystick and fire button
+            scene.joystickController.setup(in: scene, at: CGPoint(x: 80, y: 100))
+            scene.fireButton.setup(in: scene, at: CGPoint(x: scene.size.width - 80, y: 100))
+            scene.ui.setup(in: scene, sceneSize: scene.size)
+            
+            // Setup fire button callback
+            scene.fireButton.onTap = { [weak scene] in
+                scene?.inputHandler.handleShoot()
+            }
         }
     }
 }

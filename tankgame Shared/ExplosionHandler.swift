@@ -24,8 +24,16 @@ class ExplosionHandler {
         
         scene.soundManager.playSound("hit.wav")
         let color = scene.renderer.tankColors[tankIndex]
-        scene.explosionEffects.createExplosion(at: position, color: color, in: tankNode) { [weak scene] in
-            scene?.tankExploding[tankIndex] = false
+        
+        // Use modern or classic explosion effects based on setting
+        if scene.useModernUI {
+            scene.modernExplosionEffects.createExplosion(at: position, color: color, in: tankNode) { [weak scene] in
+                scene?.tankExploding[tankIndex] = false
+            }
+        } else {
+            scene.explosionEffects.createExplosion(at: position, color: color, in: tankNode) { [weak scene] in
+                scene?.tankExploding[tankIndex] = false
+            }
         }
         scene.tankExploding[tankIndex] = true
     }
@@ -37,7 +45,13 @@ class ExplosionHandler {
         
         scene.soundManager.playSound("hit.wav")
         let color = SKColor.systemGreen
-        scene.explosionEffects.createExplosion(at: position, color: color, in: lizardNode) { }
+        
+        // Use modern or classic explosion effects based on setting
+        if scene.useModernUI {
+            scene.modernExplosionEffects.createExplosion(at: position, color: color, in: lizardNode) { }
+        } else {
+            scene.explosionEffects.createExplosion(at: position, color: color, in: lizardNode) { }
+        }
     }
     
     /// Check for destroyed tanks and trigger explosions
