@@ -7,64 +7,50 @@
 
 import SpriteKit
 
-/// Handles tank sprite creation and rendering
+/// Handles tank sprite creation and rendering - Classic retro style
 class TankSpriteRenderer {
     let tileSize: CGFloat
-    private let animationHelper: RainbowAnimationHelper
     
     init(tileSize: CGFloat) {
         self.tileSize = tileSize
-        self.animationHelper = RainbowAnimationHelper()
     }
     
-    /// Create a tank sprite node with improved visual details
+    /// Create a classic retro tank sprite with clean, simple design
     func createTankNode(color: SKColor, direction: Direction) -> SKNode {
         let tankNode = SKNode()
         
-        // Tank treads (left side)
-        let leftTread = SKSpriteNode(color: color.withAlphaComponent(0.6), size: CGSize(width: tileSize * 0.15, height: tileSize * 0.75))
-        leftTread.position = CGPoint(x: -tileSize * 0.3, y: 0)
+        // Darker shade for treads
+        let darkColor = darkenColor(color, by: 0.3)
+        
+        // Tank treads (left side) - solid color
+        let leftTread = SKSpriteNode(color: darkColor, size: CGSize(width: tileSize * 0.12, height: tileSize * 0.7))
+        leftTread.position = CGPoint(x: -tileSize * 0.28, y: 0)
         tankNode.addChild(leftTread)
         
-        // Tank treads (right side)
-        let rightTread = SKSpriteNode(color: color.withAlphaComponent(0.6), size: CGSize(width: tileSize * 0.15, height: tileSize * 0.75))
-        rightTread.position = CGPoint(x: tileSize * 0.3, y: 0)
+        // Tank treads (right side) - solid color
+        let rightTread = SKSpriteNode(color: darkColor, size: CGSize(width: tileSize * 0.12, height: tileSize * 0.7))
+        rightTread.position = CGPoint(x: tileSize * 0.28, y: 0)
         tankNode.addChild(rightTread)
         
-        // Tank body (main hull)
-        let body = SKSpriteNode(color: color, size: CGSize(width: tileSize * 0.55, height: tileSize * 0.65))
+        // Tank body (main hull) - solid color
+        let body = SKSpriteNode(color: color, size: CGSize(width: tileSize * 0.5, height: tileSize * 0.55))
         tankNode.addChild(body)
         
-        // Turret base (circular platform)
-        let turretBase = SKShapeNode(circleOfRadius: tileSize * 0.25)
-        turretBase.fillColor = color.withAlphaComponent(0.9)
-        turretBase.strokeColor = color.withAlphaComponent(0.5)
-        turretBase.lineWidth = 2
-        turretBase.position = CGPoint(x: 0, y: 0)
-        tankNode.addChild(turretBase)
-        
-        // Tank barrel (main gun)
-        let barrel = SKSpriteNode(color: color.withAlphaComponent(0.8), size: CGSize(width: tileSize * 0.15, height: tileSize * 0.5))
+        // Tank barrel (main gun) - simple rectangle
+        let barrel = SKSpriteNode(color: darkColor, size: CGSize(width: tileSize * 0.12, height: tileSize * 0.45))
         barrel.position = CGPoint(x: 0, y: tileSize * 0.35)
         tankNode.addChild(barrel)
-        
-        // Barrel muzzle (gun tip)
-        let muzzle = SKSpriteNode(color: .darkGray, size: CGSize(width: tileSize * 0.18, height: tileSize * 0.12))
-        muzzle.position = CGPoint(x: 0, y: tileSize * 0.56)
-        tankNode.addChild(muzzle)
-        
-        // Add rainbow animation to all colored parts using shared helper
-        animationHelper.addRainbowAnimation(to: leftTread, phaseOffset: 0)
-        animationHelper.addRainbowAnimation(to: rightTread, phaseOffset: 0)
-        animationHelper.addRainbowAnimation(to: body, phaseOffset: 0.1)
-        animationHelper.addRainbowAnimation(to: barrel, phaseOffset: 0.2)
-        
-        // Add rainbow animation to turret base using shared helper
-        animationHelper.addRainbowAnimationToShape(turretBase, phaseOffset: 0.15)
         
         // Rotate based on direction
         tankNode.zRotation = CGFloat(direction.angle)
         
         return tankNode
+    }
+    
+    /// Darken a color by a percentage
+    private func darkenColor(_ color: SKColor, by amount: CGFloat) -> SKColor {
+        var r: CGFloat = 0, g: CGFloat = 0, b: CGFloat = 0, a: CGFloat = 0
+        color.getRed(&r, green: &g, blue: &b, alpha: &a)
+        return SKColor(red: max(0, r - amount), green: max(0, g - amount), blue: max(0, b - amount), alpha: a)
     }
 }

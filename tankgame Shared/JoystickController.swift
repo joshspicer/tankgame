@@ -21,25 +21,26 @@ class JoystickController {
     
     init() {}
     
-    /// Setup the joystick UI
+    /// Setup the joystick UI with classic clean styling
     func setup(in scene: SKScene, at position: CGPoint) {
         let newJoystickNode = SKNode()
         newJoystickNode.position = position
         scene.addChild(newJoystickNode)
         joystickNode = newJoystickNode
         
+        // Classic simple joystick base - dark circle
         let newJoystickBase = SKShapeNode(circleOfRadius: 50)
-        newJoystickBase.fillColor = .gray
-        newJoystickBase.strokeColor = .white
+        newJoystickBase.fillColor = SKColor(white: 0.2, alpha: 1.0)
+        newJoystickBase.strokeColor = SKColor(white: 0.4, alpha: 1.0)
         newJoystickBase.lineWidth = 2
-        newJoystickBase.alpha = 0.5
         newJoystickNode.addChild(newJoystickBase)
         joystickBase = newJoystickBase
         
-        let newJoystickHandle = SKShapeNode(circleOfRadius: 25)
-        newJoystickHandle.fillColor = .white
-        newJoystickHandle.strokeColor = .white
-        newJoystickHandle.alpha = 0.8
+        // Classic simple joystick handle - light circle
+        let newJoystickHandle = SKShapeNode(circleOfRadius: 20)
+        newJoystickHandle.fillColor = SKColor(white: 0.7, alpha: 1.0)
+        newJoystickHandle.strokeColor = SKColor(white: 0.9, alpha: 1.0)
+        newJoystickHandle.lineWidth = 1
         newJoystickNode.addChild(newJoystickHandle)
         joystickHandle = newJoystickHandle
     }

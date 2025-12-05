@@ -47,7 +47,8 @@ class GameScene: SKScene {
     }
     
     override func didMove(to view: SKView) {
-        backgroundColor = .darkGray
+        // Classic retro dark background
+        backgroundColor = SKColor(white: 0.1, alpha: 1.0)
         setupComponents()
         setupScene()
         
