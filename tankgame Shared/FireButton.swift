@@ -14,21 +14,21 @@ class FireButton {
     
     init() {}
     
-    /// Setup the fire button
+    /// Setup the fire button with classic clean styling
     func setup(in scene: SKScene, at position: CGPoint) {
-        let newFireButton = SKShapeNode(circleOfRadius: 40)
+        // Classic simple fire button - clean solid design
+        let newFireButton = SKShapeNode(circleOfRadius: 35)
         newFireButton.position = position
-        newFireButton.fillColor = .red
-        newFireButton.strokeColor = .white
+        newFireButton.fillColor = SKColor(red: 0.8, green: 0.2, blue: 0.2, alpha: 1.0)
+        newFireButton.strokeColor = SKColor(white: 0.9, alpha: 1.0)
         newFireButton.lineWidth = 3
-        newFireButton.alpha = 0.7
         scene.addChild(newFireButton)
         buttonNode = newFireButton
         
-        // Add fire label
-        let fireLabel = SKLabelNode(fontNamed: "Arial-BoldMT")
+        // Simple fire label - clean retro font
+        let fireLabel = SKLabelNode(fontNamed: "Courier-Bold")
         fireLabel.text = "FIRE"
-        fireLabel.fontSize = 14
+        fireLabel.fontSize = 12
         fireLabel.fontColor = .white
         fireLabel.verticalAlignmentMode = .center
         newFireButton.addChild(fireLabel)

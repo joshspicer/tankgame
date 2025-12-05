@@ -17,14 +17,18 @@ class GridRenderer {
         self.gridSize = gridSize
     }
     
-    /// Render the game grid
+    /// Render the game grid with classic retro styling
     func renderGrid(_ grid: [[GridCell]], in gridNode: SKNode) {
         gridNode.removeAllChildren()
         
         for row in 0..<gridSize {
             for col in 0..<gridSize {
                 let cell = grid[row][col]
-                let tile = SKSpriteNode(color: cell == .wall ? .black : .white, size: CGSize(width: tileSize - 2, height: tileSize - 2))
+                // Classic colors: dark gray walls, light tan/beige floor
+                let cellColor: SKColor = cell == .wall ? 
+                    SKColor(white: 0.15, alpha: 1.0) : 
+                    SKColor(red: 0.85, green: 0.8, blue: 0.7, alpha: 1.0)
+                let tile = SKSpriteNode(color: cellColor, size: CGSize(width: tileSize - 2, height: tileSize - 2))
                 tile.position = gridPosition(row: row, col: col)
                 gridNode.addChild(tile)
             }

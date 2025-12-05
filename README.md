@@ -8,6 +8,6 @@ See how copilot and I built it on the VS Code livestream. ([1](https://www.youtu
 
 - 🎮 Multiplayer gameplay via Bluetooth (MultipeerConnectivity)
 - 💥 Crash reporting with automatic GitHub issue creation (see [CRASH_REPORTING.md](CRASH_REPORTING.md))
-- 🎨 Modern visual styling
+- 🎨 Classic retro visual styling
 - 🔊 Sound effects
 
