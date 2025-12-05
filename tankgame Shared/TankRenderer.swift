@@ -12,8 +12,8 @@ class TankRenderer {
     let tileSize: CGFloat
     let gridSize: Int
     
-    // Tank colors for up to 4 players
-    let tankColors: [SKColor] = [.blue, .red, .green, .orange]
+    // Enhanced tank colors using theme
+    let tankColors: [SKColor] = UXTheme.playerColors
     
     // Sprite renderers
     private let tankSpriteRenderer: TankSpriteRenderer

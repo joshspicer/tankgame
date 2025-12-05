@@ -7,12 +7,13 @@
 
 import SpriteKit
 
-/// Manages the virtual joystick UI and input processing
+/// Manages the virtual joystick UI and input processing with modern glass-morphism styling
 class JoystickController {
     // Nodes
     private var joystickNode: SKNode?
     private var joystickBase: SKShapeNode?
     private var joystickHandle: SKShapeNode?
+    private var joystickGlow: SKShapeNode?
     
     // State
     private(set) var isActive = false
@@ -21,27 +22,89 @@ class JoystickController {
     
     init() {}
     
-    /// Setup the joystick UI
+    /// Setup the joystick UI with modern styling
     func setup(in scene: SKScene, at position: CGPoint) {
         let newJoystickNode = SKNode()
         newJoystickNode.position = position
+        newJoystickNode.zPosition = 100
         scene.addChild(newJoystickNode)
         joystickNode = newJoystickNode
         
-        let newJoystickBase = SKShapeNode(circleOfRadius: 50)
-        newJoystickBase.fillColor = .gray
-        newJoystickBase.strokeColor = .white
+        // Outer glow effect
+        let glow = SKShapeNode(circleOfRadius: 58)
+        glow.fillColor = UXTheme.primaryColor.withAlphaComponent(0.08)
+        glow.strokeColor = .clear
+        glow.zPosition = -1
+        newJoystickNode.addChild(glow)
+        joystickGlow = glow
+        
+        // Base with glass-morphism effect
+        let newJoystickBase = SKShapeNode(circleOfRadius: 52)
+        newJoystickBase.fillColor = UXTheme.joystickBase
+        newJoystickBase.strokeColor = SKColor.white.withAlphaComponent(0.15)
         newJoystickBase.lineWidth = 2
-        newJoystickBase.alpha = 0.5
+        newJoystickBase.glowWidth = 0
         newJoystickNode.addChild(newJoystickBase)
         joystickBase = newJoystickBase
         
-        let newJoystickHandle = SKShapeNode(circleOfRadius: 25)
-        newJoystickHandle.fillColor = .white
-        newJoystickHandle.strokeColor = .white
-        newJoystickHandle.alpha = 0.8
+        // Inner ring decoration
+        let innerRing = SKShapeNode(circleOfRadius: 35)
+        innerRing.fillColor = .clear
+        innerRing.strokeColor = SKColor.white.withAlphaComponent(0.08)
+        innerRing.lineWidth = 1
+        newJoystickNode.addChild(innerRing)
+        
+        // Directional indicators
+        addDirectionIndicators(to: newJoystickNode)
+        
+        // Handle with gradient-like appearance
+        let newJoystickHandle = SKShapeNode(circleOfRadius: 22)
+        newJoystickHandle.fillColor = UXTheme.joystickHandle
+        newJoystickHandle.strokeColor = SKColor.white.withAlphaComponent(0.3)
+        newJoystickHandle.lineWidth = 2
+        newJoystickHandle.glowWidth = 2
         newJoystickNode.addChild(newJoystickHandle)
         joystickHandle = newJoystickHandle
+        
+        // Handle highlight (gives 3D appearance)
+        let handleHighlight = SKShapeNode(circleOfRadius: 14)
+        handleHighlight.fillColor = SKColor.white.withAlphaComponent(0.1)
+        handleHighlight.strokeColor = .clear
+        handleHighlight.position = CGPoint(x: -3, y: 3)
+        newJoystickHandle.addChild(handleHighlight)
+    }
+    
+    /// Add subtle directional indicators
+    private func addDirectionIndicators(to node: SKNode) {
+        let indicatorColor = SKColor.white.withAlphaComponent(0.15)
+        let distance: CGFloat = 42
+        
+        // Create small triangles pointing outward
+        let directions: [(CGFloat, CGFloat)] = [
+            (0, 1),    // Up
+            (0, -1),   // Down
+            (-1, 0),   // Left
+            (1, 0)     // Right
+        ]
+        
+        for (dx, dy) in directions {
+            let indicator = SKShapeNode(path: createTrianglePath(size: 6))
+            indicator.fillColor = indicatorColor
+            indicator.strokeColor = .clear
+            indicator.position = CGPoint(x: dx * distance, y: dy * distance)
+            indicator.zRotation = atan2(dy, dx) - .pi / 2
+            node.addChild(indicator)
+        }
+    }
+    
+    /// Create a small triangle path for indicators
+    private func createTrianglePath(size: CGFloat) -> CGPath {
+        let path = CGMutablePath()
+        path.move(to: CGPoint(x: 0, y: size))
+        path.addLine(to: CGPoint(x: -size * 0.7, y: -size * 0.5))
+        path.addLine(to: CGPoint(x: size * 0.7, y: -size * 0.5))
+        path.closeSubpath()
+        return path
     }
     
     /// Get the joystick's center position
@@ -65,6 +128,14 @@ class JoystickController {
         if distance < 150 {
             isActive = true
             touchID = touch
+            
+            // Visual feedback - scale up slightly
+            let scaleUp = SKAction.scale(to: 1.05, duration: 0.1)
+            joystickNode?.run(scaleUp)
+            
+            // Glow effect
+            joystickGlow?.run(SKAction.fadeAlpha(to: 0.2, duration: 0.1))
+            
             // Process initial direction
             processTouchLocation(touch.location(in: joystick))
             return true
@@ -88,7 +159,18 @@ class JoystickController {
         isActive = false
         touchID = nil
         currentDirection = nil
-        joystickHandle?.position = .zero
+        
+        // Animate handle back to center
+        let returnAction = SKAction.move(to: .zero, duration: 0.15)
+        returnAction.timingMode = .easeOut
+        joystickHandle?.run(returnAction)
+        
+        // Visual feedback - scale back
+        let scaleDown = SKAction.scale(to: 1.0, duration: 0.15)
+        joystickNode?.run(scaleDown)
+        
+        // Reduce glow
+        joystickGlow?.run(SKAction.fadeAlpha(to: 0.08, duration: 0.15))
     }
     
     /// Process touch location and update joystick state
@@ -127,16 +209,23 @@ class JoystickController {
             
             currentDirection = direction
             
-            // Update joystick handle position
+            // Update joystick handle position with smooth animation
             let maxDistance: CGFloat = 30
             let clampedDistance = min(distance, maxDistance)
-            handle.position = CGPoint(
+            let targetPosition = CGPoint(
                 x: cos(angle) * clampedDistance,
                 y: sin(angle) * clampedDistance
             )
+            
+            // Smooth movement
+            let moveAction = SKAction.move(to: targetPosition, duration: 0.05)
+            moveAction.timingMode = .easeOut
+            handle.run(moveAction)
         } else {
             currentDirection = nil
-            handle.position = .zero
+            let returnAction = SKAction.move(to: .zero, duration: 0.1)
+            returnAction.timingMode = .easeOut
+            handle.run(returnAction)
         }
     }
     #endif
