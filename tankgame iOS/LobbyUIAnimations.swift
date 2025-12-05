@@ -178,17 +178,15 @@ class LobbyUIAnimations {
         cell.alphaSpeed = -0.02
         cell.color = UIColor.white.withAlphaComponent(0.4).cgColor
         
-        // Create a simple circular particle
+        // Create a simple circular particle using UIGraphicsImageRenderer
         let particleSize: CGFloat = 20
-        UIGraphicsBeginImageContextWithOptions(CGSize(width: particleSize, height: particleSize), false, 0)
-        if let context = UIGraphicsGetCurrentContext() {
-            context.setFillColor(UIColor.white.cgColor)
-            context.fillEllipse(in: CGRect(x: 0, y: 0, width: particleSize, height: particleSize))
+        let renderer = UIGraphicsImageRenderer(size: CGSize(width: particleSize, height: particleSize))
+        let particleImage = renderer.image { context in
+            UIColor.white.setFill()
+            context.cgContext.fillEllipse(in: CGRect(x: 0, y: 0, width: particleSize, height: particleSize))
         }
-        let particleImage = UIGraphicsGetImageFromCurrentImageContext()
-        UIGraphicsEndImageContext()
         
-        cell.contents = particleImage?.cgImage
+        cell.contents = particleImage.cgImage
         
         particleEmitter.emitterCells = [cell]
         view.layer.insertSublayer(particleEmitter, at: 1)

@@ -94,7 +94,7 @@ class ModernButtonFactory {
         ])
         
         // Add touch highlight
-        addTouchHandling(to: button, gradientLayer: gradientLayer)
+        addTouchHandling(to: button)
         
         return button
     }
@@ -178,27 +178,27 @@ class ModernButtonFactory {
         }
     }
     
-    private static func addTouchHandling(to button: UIButton, gradientLayer: CAGradientLayer) {
-        button.addTarget(self, action: #selector(buttonTouchDown(_:)), for: .touchDown)
-        button.addTarget(self, action: #selector(buttonTouchUp(_:)), for: [.touchUpInside, .touchUpOutside, .touchCancel])
-    }
-    
-    @objc private static func buttonTouchDown(_ sender: UIButton) {
-        UIView.animate(withDuration: 0.1) {
-            sender.transform = CGAffineTransform(scaleX: 0.96, y: 0.96)
-            sender.alpha = 0.9
-        }
-    }
-    
-    @objc private static func buttonTouchUp(_ sender: UIButton) {
-        UIView.animate(
-            withDuration: 0.3,
-            delay: 0,
-            usingSpringWithDamping: 0.5,
-            initialSpringVelocity: 0.5
-        ) {
-            sender.transform = .identity
-            sender.alpha = 1.0
-        }
+    private static func addTouchHandling(to button: UIButton) {
+        // Use closure-based touch handling for button animations
+        button.addAction(UIAction { action in
+            guard let btn = action.sender as? UIButton else { return }
+            UIView.animate(withDuration: 0.1) {
+                btn.transform = CGAffineTransform(scaleX: 0.96, y: 0.96)
+                btn.alpha = 0.9
+            }
+        }, for: .touchDown)
+        
+        button.addAction(UIAction { action in
+            guard let btn = action.sender as? UIButton else { return }
+            UIView.animate(
+                withDuration: 0.3,
+                delay: 0,
+                usingSpringWithDamping: 0.5,
+                initialSpringVelocity: 0.5
+            ) {
+                btn.transform = .identity
+                btn.alpha = 1.0
+            }
+        }, for: [.touchUpInside, .touchUpOutside, .touchCancel])
     }
 }

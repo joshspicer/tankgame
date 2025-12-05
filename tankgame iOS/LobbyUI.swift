@@ -210,46 +210,6 @@ class LobbyUI {
         LobbyUIAnimations.animateEntrance(for: joinButton, delay: 0.4)
     }
     
-    private func createButton(title: String, backgroundColor: UIColor, icon: String) -> UIButton {
-        let button = UIButton(type: .system)
-        
-        // Create stack view for icon and text
-        let stackView = UIStackView()
-        stackView.axis = .horizontal
-        stackView.spacing = 12
-        stackView.alignment = .center
-        stackView.isUserInteractionEnabled = false
-        stackView.translatesAutoresizingMaskIntoConstraints = false
-        
-        let iconLabel = UILabel()
-        iconLabel.text = icon
-        iconLabel.font = .systemFont(ofSize: 24)
-        
-        let textLabel = UILabel()
-        textLabel.text = title
-        textLabel.font = .systemFont(ofSize: 20, weight: .semibold)
-        textLabel.textColor = .white
-        
-        stackView.addArrangedSubview(iconLabel)
-        stackView.addArrangedSubview(textLabel)
-        
-        button.addSubview(stackView)
-        button.backgroundColor = backgroundColor
-        button.layer.cornerRadius = 14
-        button.layer.shadowColor = UIColor.black.cgColor
-        button.layer.shadowOpacity = 0.15
-        button.layer.shadowOffset = CGSize(width: 0, height: 4)
-        button.layer.shadowRadius = 8
-        button.translatesAutoresizingMaskIntoConstraints = false
-        
-        NSLayoutConstraint.activate([
-            stackView.centerXAnchor.constraint(equalTo: button.centerXAnchor),
-            stackView.centerYAnchor.constraint(equalTo: button.centerYAnchor)
-        ])
-        
-        return button
-    }
-    
     private func setupConstraints(titleLabel: UILabel, tankEmojiLabel: UILabel) {
         NSLayoutConstraint.activate([
             tankEmojiLabel.topAnchor.constraint(equalTo: lobbyView.safeAreaLayoutGuide.topAnchor, constant: 40),
