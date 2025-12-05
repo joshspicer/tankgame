@@ -14,24 +14,50 @@ class FireButton {
     
     init() {}
     
-    /// Setup the fire button
+    /// Setup the fire button with modern styling
     func setup(in scene: SKScene, at position: CGPoint) {
-        let newFireButton = SKShapeNode(circleOfRadius: 40)
+        // Modern styled fire button
+        let newFireButton = SKShapeNode(circleOfRadius: 45)
         newFireButton.position = position
-        newFireButton.fillColor = .red
-        newFireButton.strokeColor = .white
+        newFireButton.fillColor = SKColor(red: 0.85, green: 0.18, blue: 0.18, alpha: 0.95)
+        newFireButton.strokeColor = SKColor(red: 1.0, green: 0.35, blue: 0.35, alpha: 0.95)
         newFireButton.lineWidth = 3
-        newFireButton.alpha = 0.7
+        newFireButton.glowWidth = 8
         scene.addChild(newFireButton)
         buttonNode = newFireButton
         
-        // Add fire label
-        let fireLabel = SKLabelNode(fontNamed: "Arial-BoldMT")
+        // Inner glow ring
+        let innerRing = SKShapeNode(circleOfRadius: 32)
+        innerRing.fillColor = .clear
+        innerRing.strokeColor = SKColor(red: 1.0, green: 0.55, blue: 0.55, alpha: 0.5)
+        innerRing.lineWidth = 2
+        newFireButton.addChild(innerRing)
+        
+        // Crosshair decoration
+        let crosshairSize: CGFloat = 18
+        let verticalLine = SKSpriteNode(color: SKColor(white: 1, alpha: 0.5), size: CGSize(width: 2, height: crosshairSize * 2))
+        let horizontalLine = SKSpriteNode(color: SKColor(white: 1, alpha: 0.5), size: CGSize(width: crosshairSize * 2, height: 2))
+        verticalLine.position = CGPoint(x: 0, y: 5)
+        horizontalLine.position = CGPoint(x: 0, y: 5)
+        newFireButton.addChild(verticalLine)
+        newFireButton.addChild(horizontalLine)
+        
+        // Fire label with modern font
+        let fireLabel = SKLabelNode(fontNamed: "AvenirNext-Heavy")
         fireLabel.text = "FIRE"
-        fireLabel.fontSize = 14
+        fireLabel.fontSize = 12
         fireLabel.fontColor = .white
         fireLabel.verticalAlignmentMode = .center
+        fireLabel.position = CGPoint(x: 0, y: -20)
         newFireButton.addChild(fireLabel)
+        
+        // Add pulsing animation
+        let scaleUp = SKAction.scale(to: 1.06, duration: 0.6)
+        let scaleDown = SKAction.scale(to: 1.0, duration: 0.6)
+        scaleUp.timingMode = .easeInEaseOut
+        scaleDown.timingMode = .easeInEaseOut
+        let pulse = SKAction.sequence([scaleUp, scaleDown])
+        newFireButton.run(SKAction.repeatForever(pulse))
     }
     
     /// Get the button's position

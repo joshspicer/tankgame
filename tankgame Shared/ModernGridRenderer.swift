@@ -1,14 +1,14 @@
 //
-//  GridRenderer.swift
+//  ModernGridRenderer.swift
 //  tankgame Shared
 //
-//  Grid rendering logic extracted from GameSceneRenderer
+//  Enhanced grid rendering with modern visual styling
 //
 
 import SpriteKit
 
-/// Handles rendering of the game grid with modern styling
-class GridRenderer {
+/// Enhanced grid rendering with modern visual styling
+class ModernGridRenderer {
     let tileSize: CGFloat
     let gridSize: Int
     
@@ -17,7 +17,7 @@ class GridRenderer {
         self.gridSize = gridSize
     }
     
-    /// Render the game grid with modern visual styling
+    /// Render the game grid with modern styling
     func renderGrid(_ grid: [[GridCell]], in gridNode: SKNode) {
         gridNode.removeAllChildren()
         
@@ -25,8 +25,8 @@ class GridRenderer {
         let gridWidth = CGFloat(gridSize) * tileSize
         let gridHeight = CGFloat(gridSize) * tileSize
         let backgroundGlow = SKShapeNode(rectOf: CGSize(width: gridWidth + 20, height: gridHeight + 20), cornerRadius: 8)
-        backgroundGlow.fillColor = SKColor(red: 0.12, green: 0.15, blue: 0.25, alpha: 0.6)
-        backgroundGlow.strokeColor = SKColor(red: 0.25, green: 0.35, blue: 0.55, alpha: 0.7)
+        backgroundGlow.fillColor = SKColor(red: 0.15, green: 0.2, blue: 0.35, alpha: 0.5)
+        backgroundGlow.strokeColor = SKColor(red: 0.3, green: 0.4, blue: 0.6, alpha: 0.6)
         backgroundGlow.lineWidth = 2
         backgroundGlow.glowWidth = 4
         backgroundGlow.position = CGPoint(x: gridWidth / 2, y: gridHeight / 2)
@@ -49,13 +49,14 @@ class GridRenderer {
     /// Create a modern styled tile
     private func createModernTile(for cell: GridCell) -> SKNode {
         let tileNode = SKNode()
+        
         let size = CGSize(width: tileSize - 2, height: tileSize - 2)
         
         if cell == .wall {
             // Wall tile - darker with depth effect
             let tile = SKShapeNode(rectOf: size, cornerRadius: 4)
-            tile.fillColor = SKColor(red: 0.06, green: 0.08, blue: 0.12, alpha: 1.0)
-            tile.strokeColor = SKColor(red: 0.12, green: 0.15, blue: 0.22, alpha: 0.8)
+            tile.fillColor = SKColor(red: 0.08, green: 0.1, blue: 0.15, alpha: 1.0)
+            tile.strokeColor = SKColor(red: 0.15, green: 0.18, blue: 0.25, alpha: 0.8)
             tile.lineWidth = 1
             tileNode.addChild(tile)
             
@@ -68,21 +69,21 @@ class GridRenderer {
             
             // Add top highlight
             let highlight = SKShapeNode(rectOf: CGSize(width: size.width - 8, height: 4), cornerRadius: 2)
-            highlight.fillColor = SKColor(white: 1, alpha: 0.08)
+            highlight.fillColor = SKColor(white: 1, alpha: 0.1)
             highlight.strokeColor = .clear
             highlight.position = CGPoint(x: 0, y: size.height / 2 - 6)
             tileNode.addChild(highlight)
         } else {
-            // Empty tile - lighter with subtle style
+            // Empty tile - lighter with subtle pattern
             let tile = SKShapeNode(rectOf: size, cornerRadius: 2)
-            tile.fillColor = SKColor(red: 0.18, green: 0.22, blue: 0.32, alpha: 1.0)
-            tile.strokeColor = SKColor(red: 0.25, green: 0.3, blue: 0.42, alpha: 0.5)
+            tile.fillColor = SKColor(red: 0.22, green: 0.27, blue: 0.38, alpha: 1.0)
+            tile.strokeColor = SKColor(red: 0.28, green: 0.33, blue: 0.45, alpha: 0.6)
             tile.lineWidth = 0.5
             tileNode.addChild(tile)
             
             // Add subtle inner highlight
             let innerHighlight = SKShapeNode(rectOf: CGSize(width: size.width - 4, height: size.height / 2 - 2), cornerRadius: 1)
-            innerHighlight.fillColor = SKColor(white: 1, alpha: 0.025)
+            innerHighlight.fillColor = SKColor(white: 1, alpha: 0.03)
             innerHighlight.strokeColor = .clear
             innerHighlight.position = CGPoint(x: 0, y: size.height / 4 - 1)
             tileNode.addChild(innerHighlight)
@@ -93,7 +94,7 @@ class GridRenderer {
     
     /// Add subtle grid lines
     private func addGridLines(to gridNode: SKNode) {
-        let lineColor = SKColor(white: 1, alpha: 0.06)
+        let lineColor = SKColor(white: 1, alpha: 0.08)
         
         // Vertical lines
         for col in 0...gridSize {

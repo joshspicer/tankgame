@@ -47,9 +47,11 @@ class GameScene: SKScene {
     }
     
     override func didMove(to view: SKView) {
-        backgroundColor = .darkGray
+        // Modern dark background
+        backgroundColor = SKColor(red: 0.08, green: 0.1, blue: 0.16, alpha: 1.0)
         setupComponents()
         setupScene()
+        setupBackgroundEffects()
         
         // If startGame was called before didMove (e.g., for clients receiving roundStart),
         // render the grid now that the scene has been set up
@@ -73,6 +75,27 @@ class GameScene: SKScene {
         inputHandler = GameSceneInputHandler(scene: self)
         #endif
         updateLoop = GameSceneUpdateLoop(scene: self)
+    }
+    
+    /// Setup subtle background visual effects
+    private func setupBackgroundEffects() {
+        // Add subtle vignette effect
+        let vignetteNode = SKShapeNode(rectOf: size)
+        vignetteNode.position = CGPoint(x: size.width / 2, y: size.height / 2)
+        vignetteNode.fillColor = .clear
+        vignetteNode.strokeColor = SKColor(white: 0, alpha: 0.3)
+        vignetteNode.lineWidth = 80
+        vignetteNode.glowWidth = 40
+        vignetteNode.zPosition = -10
+        addChild(vignetteNode)
+        
+        // Add subtle background gradient simulation with shapes
+        let gradientTop = SKShapeNode(rectOf: CGSize(width: size.width, height: size.height / 3))
+        gradientTop.position = CGPoint(x: size.width / 2, y: size.height - size.height / 6)
+        gradientTop.fillColor = SKColor(red: 0.1, green: 0.15, blue: 0.25, alpha: 0.3)
+        gradientTop.strokeColor = .clear
+        gradientTop.zPosition = -11
+        addChild(gradientTop)
     }
     
     func setupScene() {
