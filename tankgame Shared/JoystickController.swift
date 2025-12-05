@@ -7,7 +7,7 @@
 
 import SpriteKit
 
-/// Manages the virtual joystick UI and input processing
+/// Manages the virtual joystick UI - clean retro style
 class JoystickController {
     // Nodes
     private var joystickNode: SKNode?
@@ -21,25 +21,26 @@ class JoystickController {
     
     init() {}
     
-    /// Setup the joystick UI
+    /// Setup the joystick UI with retro styling
     func setup(in scene: SKScene, at position: CGPoint) {
         let newJoystickNode = SKNode()
         newJoystickNode.position = position
         scene.addChild(newJoystickNode)
         joystickNode = newJoystickNode
         
-        let newJoystickBase = SKShapeNode(circleOfRadius: 50)
-        newJoystickBase.fillColor = .gray
-        newJoystickBase.strokeColor = .white
-        newJoystickBase.lineWidth = 2
-        newJoystickBase.alpha = 0.5
+        let newJoystickBase = SKShapeNode(circleOfRadius: RetroTheme.Dimensions.joystickBaseRadius)
+        newJoystickBase.fillColor = RetroTheme.Colors.joystickBase
+        newJoystickBase.strokeColor = RetroTheme.Colors.textSecondary
+        newJoystickBase.lineWidth = RetroTheme.Dimensions.borderWidth
+        newJoystickBase.alpha = RetroTheme.Dimensions.controlOpacity
         newJoystickNode.addChild(newJoystickBase)
         joystickBase = newJoystickBase
         
-        let newJoystickHandle = SKShapeNode(circleOfRadius: 25)
-        newJoystickHandle.fillColor = .white
-        newJoystickHandle.strokeColor = .white
-        newJoystickHandle.alpha = 0.8
+        let newJoystickHandle = SKShapeNode(circleOfRadius: RetroTheme.Dimensions.joystickHandleRadius)
+        newJoystickHandle.fillColor = RetroTheme.Colors.joystickHandle
+        newJoystickHandle.strokeColor = RetroTheme.Colors.text
+        newJoystickHandle.lineWidth = 1
+        newJoystickHandle.alpha = 0.9
         newJoystickNode.addChild(newJoystickHandle)
         joystickHandle = newJoystickHandle
     }

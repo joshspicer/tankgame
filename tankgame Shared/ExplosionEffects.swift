@@ -7,7 +7,7 @@
 
 import SpriteKit
 
-/// Manages explosion animations and visual effects
+/// Manages explosion animations - clean retro style
 class ExplosionEffects {
     let tileSize: CGFloat
     
@@ -15,55 +15,58 @@ class ExplosionEffects {
         self.tileSize = tileSize
     }
     
-    /// Create an explosion effect at a specific position
+    /// Create a simple retro explosion effect at a specific position
     /// - Parameters:
     ///   - position: Position for the explosion center
     ///   - color: Color of the explosion
     ///   - parentNode: Node to add explosion particles to
     ///   - completion: Called when the explosion animation completes
     func createExplosion(at position: CGPoint, color: SKColor, in parentNode: SKNode, completion: @escaping () -> Void) {
-        // Create explosion particles
-        let particleCount = 12
-        for i in 0..<particleCount {
-            let particle = SKShapeNode(circleOfRadius: 8)
-            particle.fillColor = color
-            particle.strokeColor = .white
-            particle.lineWidth = 2
+        // Simple expanding ring effect
+        let ring = SKShapeNode(circleOfRadius: tileSize * 0.3)
+        ring.fillColor = .clear
+        ring.strokeColor = color
+        ring.lineWidth = 4
+        ring.position = position
+        ring.zPosition = 10
+        
+        let expandAction = SKAction.scale(to: 3.0, duration: 0.4)
+        let fadeAction = SKAction.fadeOut(withDuration: 0.4)
+        let groupAction = SKAction.group([expandAction, fadeAction])
+        let removeAction = SKAction.removeFromParent()
+        let sequence = SKAction.sequence([groupAction, removeAction])
+        
+        parentNode.addChild(ring)
+        ring.run(sequence)
+        
+        // Simple particles in 4 cardinal directions
+        let directions: [(CGFloat, CGFloat)] = [(1, 0), (-1, 0), (0, 1), (0, -1)]
+        for (dx, dy) in directions {
+            let particle = SKShapeNode(circleOfRadius: 6)
+            particle.fillColor = RetroTheme.Colors.projectile
+            particle.strokeColor = .clear
             particle.position = position
             particle.zPosition = 10
             
-            // Calculate random direction
-            let angle = (CGFloat(i) / CGFloat(particleCount)) * 2 * .pi
-            let velocity: CGFloat = 150
-            let dx = cos(angle) * velocity
-            let dy = sin(angle) * velocity
-            
-            // Create movement animation
-            let moveAction = SKAction.moveBy(x: dx, y: dy, duration: 0.6)
-            let fadeOut = SKAction.fadeOut(withDuration: 0.6)
-            let scaleUp = SKAction.scale(to: 2.0, duration: 0.3)
-            let scaleDown = SKAction.scale(to: 0.1, duration: 0.3)
-            let scaleSequence = SKAction.sequence([scaleUp, scaleDown])
-            
-            let group = SKAction.group([moveAction, fadeOut, scaleSequence])
+            let moveAction = SKAction.moveBy(x: dx * 60, y: dy * 60, duration: 0.3)
+            let fadeOut = SKAction.fadeOut(withDuration: 0.3)
+            let group = SKAction.group([moveAction, fadeOut])
             let remove = SKAction.removeFromParent()
-            let sequence = SKAction.sequence([group, remove])
+            let seq = SKAction.sequence([group, remove])
             
             parentNode.addChild(particle)
-            particle.run(sequence)
+            particle.run(seq)
         }
         
-        // Create central flash effect
-        let flash = SKShapeNode(circleOfRadius: tileSize * 0.5)
+        // Central flash
+        let flash = SKShapeNode(circleOfRadius: tileSize * 0.25)
         flash.fillColor = .white
-        flash.strokeColor = .yellow
-        flash.lineWidth = 4
+        flash.strokeColor = .clear
         flash.position = position
         flash.zPosition = 11
-        flash.alpha = 0.9
         
-        let flashScale = SKAction.scale(to: 2.5, duration: 0.4)
-        let flashFade = SKAction.fadeOut(withDuration: 0.4)
+        let flashScale = SKAction.scale(to: 2.0, duration: 0.2)
+        let flashFade = SKAction.fadeOut(withDuration: 0.2)
         let flashGroup = SKAction.group([flashScale, flashFade])
         let flashRemove = SKAction.removeFromParent()
         let flashSequence = SKAction.sequence([flashGroup, flashRemove])

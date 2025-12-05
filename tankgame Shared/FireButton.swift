@@ -7,29 +7,29 @@
 
 import SpriteKit
 
-/// Manages the fire button UI and interactions
+/// Manages the fire button UI - clean retro style
 class FireButton {
     private var buttonNode: SKShapeNode?
     var onTap: (() -> Void)?
     
     init() {}
     
-    /// Setup the fire button
+    /// Setup the fire button with retro styling
     func setup(in scene: SKScene, at position: CGPoint) {
-        let newFireButton = SKShapeNode(circleOfRadius: 40)
+        let newFireButton = SKShapeNode(circleOfRadius: RetroTheme.Dimensions.fireButtonRadius)
         newFireButton.position = position
-        newFireButton.fillColor = .red
-        newFireButton.strokeColor = .white
-        newFireButton.lineWidth = 3
-        newFireButton.alpha = 0.7
+        newFireButton.fillColor = RetroTheme.Colors.fireButton
+        newFireButton.strokeColor = RetroTheme.Colors.text
+        newFireButton.lineWidth = RetroTheme.Dimensions.borderWidth
+        newFireButton.alpha = RetroTheme.Dimensions.controlOpacity
         scene.addChild(newFireButton)
         buttonNode = newFireButton
         
-        // Add fire label
-        let fireLabel = SKLabelNode(fontNamed: "Arial-BoldMT")
+        // Add fire label with retro font
+        let fireLabel = SKLabelNode(fontNamed: RetroTheme.Fonts.primary)
         fireLabel.text = "FIRE"
-        fireLabel.fontSize = 14
-        fireLabel.fontColor = .white
+        fireLabel.fontSize = RetroTheme.Fonts.smallSize
+        fireLabel.fontColor = RetroTheme.Colors.text
         fireLabel.verticalAlignmentMode = .center
         newFireButton.addChild(fireLabel)
     }
