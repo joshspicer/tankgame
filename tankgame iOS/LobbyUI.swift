@@ -7,9 +7,8 @@
 
 import UIKit
 import MultipeerConnectivity
-import QuartzCore
 
-/// Manages the lobby user interface
+/// Manages the lobby user interface - Classic retro style
 class LobbyUI {
     // UI Elements
     private(set) var lobbyView: UIView!
@@ -85,17 +84,17 @@ class LobbyUI {
         lobbyView.addSubview(instructionsLabel)
         
         // Single Player button (with AI bots)
-        singlePlayerButton = createButton(title: "1 PLAYER", backgroundColor: UIColor(red: 0.7, green: 0.4, blue: 0.1, alpha: 1.0), icon: nil)
+        singlePlayerButton = createButton(title: "1 PLAYER", backgroundColor: UIColor(red: 0.7, green: 0.4, blue: 0.1, alpha: 1.0))
         singlePlayerButton.addTarget(self, action: #selector(singlePlayerButtonTapped), for: .touchUpInside)
         lobbyView.addSubview(singlePlayerButton)
         
         // Host button
-        hostButton = createButton(title: "HOST", backgroundColor: UIColor(red: 0.2, green: 0.4, blue: 0.7, alpha: 1.0), icon: nil)
+        hostButton = createButton(title: "HOST", backgroundColor: UIColor(red: 0.2, green: 0.4, blue: 0.7, alpha: 1.0))
         hostButton.addTarget(self, action: #selector(hostButtonTapped), for: .touchUpInside)
         lobbyView.addSubview(hostButton)
         
         // Join button
-        joinButton = createButton(title: "JOIN", backgroundColor: UIColor(red: 0.2, green: 0.6, blue: 0.3, alpha: 1.0), icon: nil)
+        joinButton = createButton(title: "JOIN", backgroundColor: UIColor(red: 0.2, green: 0.6, blue: 0.3, alpha: 1.0))
         joinButton.addTarget(self, action: #selector(joinButtonTapped), for: .touchUpInside)
         lobbyView.addSubview(joinButton)
         
@@ -141,7 +140,7 @@ class LobbyUI {
         lobbyView.addSubview(cancelButton)
         
         // Start Game button (for host)
-        startGameButton = createButton(title: "START", backgroundColor: UIColor(red: 0.2, green: 0.6, blue: 0.3, alpha: 1.0), icon: nil)
+        startGameButton = createButton(title: "START", backgroundColor: UIColor(red: 0.2, green: 0.6, blue: 0.3, alpha: 1.0))
         startGameButton.isHidden = true
         startGameButton.addTarget(self, action: #selector(startGameButtonTapped), for: .touchUpInside)
         lobbyView.addSubview(startGameButton)
@@ -197,7 +196,7 @@ class LobbyUI {
         setupConstraints(titleLabel: titleLabel, tankEmojiLabel: tankEmojiLabel)
     }
     
-    private func createButton(title: String, backgroundColor: UIColor, icon: String?) -> UIButton {
+    private func createButton(title: String, backgroundColor: UIColor) -> UIButton {
         let button = UIButton(type: .system)
         
         // Simple text label - classic style
