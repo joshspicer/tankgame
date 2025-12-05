@@ -13,11 +13,16 @@ class GameSceneRenderer {
     let tileSize: CGFloat
     let gridSize: Int
     
-    // Tank colors for up to 4 players
-    let tankColors: [SKColor] = [.blue, .red, .green, .orange]
+    // Tank colors for up to 4 players - modernized palette
+    let tankColors: [SKColor] = [
+        SKColor(red: 0.25, green: 0.55, blue: 1.0, alpha: 1.0),   // Blue
+        SKColor(red: 1.0, green: 0.35, blue: 0.35, alpha: 1.0),   // Red
+        SKColor(red: 0.35, green: 0.85, blue: 0.45, alpha: 1.0),  // Green
+        SKColor(red: 1.0, green: 0.65, blue: 0.20, alpha: 1.0)    // Orange
+    ]
     
     // Specialized renderers
-    private let gridRenderer: GridRenderer
+    private let gridRenderer: ModernGridRenderer
     private let tankRenderer: TankRenderer
     private let projectileRenderer: ProjectileRenderer
     private let lizardRenderer: LizardRenderer
@@ -25,7 +30,7 @@ class GameSceneRenderer {
     init(tileSize: CGFloat, gridSize: Int) {
         self.tileSize = tileSize
         self.gridSize = gridSize
-        self.gridRenderer = GridRenderer(tileSize: tileSize, gridSize: gridSize)
+        self.gridRenderer = ModernGridRenderer(tileSize: tileSize, gridSize: gridSize)
         self.tankRenderer = TankRenderer(tileSize: tileSize, gridSize: gridSize)
         self.projectileRenderer = ProjectileRenderer(tileSize: tileSize, gridSize: gridSize)
         self.lizardRenderer = LizardRenderer(tileSize: tileSize, gridSize: gridSize)

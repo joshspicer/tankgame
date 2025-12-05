@@ -28,9 +28,9 @@ class GameScene: SKScene {
     var renderer: GameSceneRenderer!
     var soundManager: SoundManager!
     var explosionEffects: ExplosionEffects!
-    var joystickController: JoystickController!
-    var fireButton: FireButton!
-    var ui: GameSceneUI!
+    var joystickController: ModernJoystickController!
+    var fireButton: ModernFireButton!
+    var ui: ModernGameSceneUI!
     
     #if os(iOS) || os(tvOS)
     var inputHandler: GameSceneInputHandler!
@@ -47,7 +47,8 @@ class GameScene: SKScene {
     }
     
     override func didMove(to view: SKView) {
-        backgroundColor = .darkGray
+        // Modern dark background
+        backgroundColor = SKColor(red: 0.10, green: 0.13, blue: 0.20, alpha: 1.0)
         setupComponents()
         setupScene()
         
@@ -66,9 +67,9 @@ class GameScene: SKScene {
         renderer = GameSceneRenderer(tileSize: tileSize, gridSize: gridSize)
         soundManager = SoundManager(scene: self)
         explosionEffects = ExplosionEffects(tileSize: tileSize)
-        joystickController = JoystickController()
-        fireButton = FireButton()
-        ui = GameSceneUI()
+        joystickController = ModernJoystickController()
+        fireButton = ModernFireButton()
+        ui = ModernGameSceneUI()
         #if os(iOS) || os(tvOS)
         inputHandler = GameSceneInputHandler(scene: self)
         #endif

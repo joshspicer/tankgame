@@ -20,7 +20,7 @@ class GameViewController: UIViewController {
     var permissionManager: PermissionManager!
     
     // UI components
-    var lobbyUI: LobbyUI!
+    var lobbyUI: ModernLobbyUI!
     
     // Game components
     var gameScene: GameScene?
@@ -47,7 +47,7 @@ class GameViewController: UIViewController {
     }
     
     private func setupLobby() {
-        lobbyUI = LobbyUI()
+        lobbyUI = ModernLobbyUI()
         lobbyUI.setup(in: view)
         
         // Setup callbacks
