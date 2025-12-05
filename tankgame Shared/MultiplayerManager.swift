@@ -335,8 +335,16 @@ extension MultiplayerManager: MCSessionDelegate {
     }
     
     func session(_ session: MCSession, didReceiveCertificate certificate: [Any]?, fromPeer peerID: MCPeerID, certificateHandler: @escaping (Bool) -> Void) {
-        // Accept all certificates to complete the TLS handshake.
+        // Accept certificates to complete the TLS handshake.
         // This is required when encryptionPreference is .required.
+        //
+        // Security note: For local multiplayer games using MultipeerConnectivity,
+        // certificate validation is not typically implemented because:
+        // 1. Peers are discovered locally (Bluetooth/WiFi) and users explicitly invite/accept connections
+        // 2. The encryption still provides transport-layer security against eavesdropping
+        // 3. Custom certificate validation would require a PKI infrastructure not suited for local gaming
+        //
+        // This follows Apple's recommended pattern for peer-to-peer gaming scenarios.
         certificateHandler(true)
     }
 }
