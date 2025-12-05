@@ -7,6 +7,52 @@
 
 import UIKit
 
+/// Custom button class with built-in touch animations
+class ModernGradientButton: UIButton {
+    
+    private var gradientLayer: CAGradientLayer?
+    
+    override init(frame: CGRect) {
+        super.init(frame: frame)
+        setupTouchHandlers()
+    }
+    
+    required init?(coder: NSCoder) {
+        super.init(coder: coder)
+        setupTouchHandlers()
+    }
+    
+    private func setupTouchHandlers() {
+        addTarget(self, action: #selector(touchDownAnimation), for: .touchDown)
+        addTarget(self, action: #selector(touchUpAnimation), for: [.touchUpInside, .touchUpOutside, .touchCancel])
+    }
+    
+    @objc private func touchDownAnimation() {
+        UIView.animate(withDuration: 0.1, delay: 0, options: .curveEaseIn) {
+            self.transform = CGAffineTransform(scaleX: 0.95, y: 0.95)
+            self.layer.shadowOpacity = 0.15
+            self.layer.shadowOffset = CGSize(width: 0, height: 3)
+        }
+    }
+    
+    @objc private func touchUpAnimation() {
+        UIView.animate(withDuration: 0.2, delay: 0, usingSpringWithDamping: 0.5, initialSpringVelocity: 0.5, options: .curveEaseOut) {
+            self.transform = .identity
+            self.layer.shadowOpacity = 0.3
+            self.layer.shadowOffset = CGSize(width: 0, height: 6)
+        }
+    }
+    
+    override func layoutSubviews() {
+        super.layoutSubviews()
+        gradientLayer?.frame = bounds
+    }
+    
+    func setGradientLayer(_ layer: CAGradientLayer) {
+        gradientLayer = layer
+    }
+}
+
 /// Provides modern button styling utilities for consistent UI
 class ModernButtonStyle {
     
@@ -40,7 +86,7 @@ class ModernButtonStyle {
         width: CGFloat = 260,
         height: CGFloat = 60
     ) -> UIButton {
-        let button = UIButton(type: .system)
+        let button = ModernGradientButton(type: .system)
         button.translatesAutoresizingMaskIntoConstraints = false
         
         // Create gradient layer
@@ -53,6 +99,7 @@ class ModernButtonStyle {
         gradientLayer.frame = CGRect(x: 0, y: 0, width: width, height: height)
         gradientLayer.name = "gradientLayer"
         button.layer.insertSublayer(gradientLayer, at: 0)
+        (button as? ModernGradientButton)?.setGradientLayer(gradientLayer)
         
         // Create content stack
         let stackView = UIStackView()
@@ -95,29 +142,7 @@ class ModernButtonStyle {
             stackView.centerYAnchor.constraint(equalTo: button.centerYAnchor)
         ])
         
-        // Add touch animations
-        button.addTarget(nil, action: #selector(handleTouchDown(_:)), for: .touchDown)
-        button.addTarget(nil, action: #selector(handleTouchUp(_:)), for: [.touchUpInside, .touchUpOutside, .touchCancel])
-        
         return button
-    }
-    
-    // MARK: - Animation Handlers
-    
-    @objc static func handleTouchDown(_ sender: UIButton) {
-        UIView.animate(withDuration: 0.1, delay: 0, options: .curveEaseIn) {
-            sender.transform = CGAffineTransform(scaleX: 0.95, y: 0.95)
-            sender.layer.shadowOpacity = 0.15
-            sender.layer.shadowOffset = CGSize(width: 0, height: 3)
-        }
-    }
-    
-    @objc static func handleTouchUp(_ sender: UIButton) {
-        UIView.animate(withDuration: 0.2, delay: 0, usingSpringWithDamping: 0.5, initialSpringVelocity: 0.5, options: .curveEaseOut) {
-            sender.transform = .identity
-            sender.layer.shadowOpacity = 0.3
-            sender.layer.shadowOffset = CGSize(width: 0, height: 6)
-        }
     }
     
     // MARK: - Preset Button Styles
