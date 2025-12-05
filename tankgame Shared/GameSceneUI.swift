@@ -31,8 +31,8 @@ class GameSceneUI {
         scene.addChild(statusBg)
         statusBackground = statusBg
         
-        // Create status label
-        let newStatusLabel = SKLabelNode(fontNamed: "AvenirNext-Bold")
+        // Create status label (use Helvetica Neue as reliable fallback)
+        let newStatusLabel = SKLabelNode(fontNamed: "HelveticaNeue-Bold")
         newStatusLabel.fontSize = 18
         newStatusLabel.fontColor = .white
         newStatusLabel.position = CGPoint.zero
@@ -55,8 +55,8 @@ class GameSceneUI {
         scene.addChild(scoreBg)
         scoreBackground = scoreBg
         
-        // Create score label
-        let newScoreLabel = SKLabelNode(fontNamed: "AvenirNext-DemiBold")
+        // Create score label (use Helvetica Neue as reliable fallback)
+        let newScoreLabel = SKLabelNode(fontNamed: "HelveticaNeue-Medium")
         newScoreLabel.fontSize = 16
         newScoreLabel.fontColor = .white
         newScoreLabel.position = CGPoint.zero

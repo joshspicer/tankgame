@@ -62,8 +62,8 @@ class FireButton {
         highlight.position = CGPoint(x: -4, y: 4)
         container.addChild(highlight)
         
-        // Fire label with icon
-        let label = SKLabelNode(fontNamed: "AvenirNext-Heavy")
+        // Fire label with icon (use Helvetica Neue as reliable fallback)
+        let label = SKLabelNode(fontNamed: "HelveticaNeue-Bold")
         label.text = "FIRE"
         label.fontSize = 14
         label.fontColor = .white

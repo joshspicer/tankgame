@@ -447,10 +447,8 @@ class LobbyUI {
         button.addTarget(self, action: #selector(buttonTouchDown(_:)), for: .touchDown)
         button.addTarget(self, action: #selector(buttonTouchUp(_:)), for: [.touchUpInside, .touchUpOutside, .touchCancel])
         
-        // Update gradient frame after layout
-        DispatchQueue.main.async {
-            gradientLayer.frame = button.bounds
-        }
+        // Set gradient frame directly since button size is constrained
+        gradientLayer.frame = CGRect(x: 0, y: 0, width: buttonWidth, height: buttonHeight)
         
         return button
     }
