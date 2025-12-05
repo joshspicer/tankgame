@@ -119,16 +119,24 @@ class TankSpriteRenderer {
         return tankNode
     }
     
+    // MARK: - Tread Configuration Constants
+    private let treadDetailCount = 5
+    private let treadWidthMultiplier: CGFloat = 0.18
+    private let treadHeightMultiplier: CGFloat = 0.75
+    private let treadAlpha: CGFloat = 0.4
+    private let treadLineHeight: CGFloat = 2
+    
     /// Add tread detail lines
     private func addTreadDetails(to tankNode: SKNode, xPosition: CGFloat, color: SKColor) {
-        let treadCount = 5
-        let spacing = (tileSize * 0.75) / CGFloat(treadCount + 1)
+        let treadHeight = tileSize * treadHeightMultiplier
+        let spacing = treadHeight / CGFloat(treadDetailCount + 1)
+        let startY = -treadHeight / 2
         
-        for i in 1...treadCount {
-            let treadLine = SKShapeNode(rectOf: CGSize(width: tileSize * 0.18, height: 2))
-            treadLine.fillColor = color.withAlphaComponent(0.4)
+        for i in 1...treadDetailCount {
+            let treadLine = SKShapeNode(rectOf: CGSize(width: tileSize * treadWidthMultiplier, height: treadLineHeight))
+            treadLine.fillColor = color.withAlphaComponent(treadAlpha)
             treadLine.strokeColor = .clear
-            treadLine.position = CGPoint(x: xPosition, y: -tileSize * 0.375 + CGFloat(i) * spacing)
+            treadLine.position = CGPoint(x: xPosition, y: startY + CGFloat(i) * spacing)
             tankNode.addChild(treadLine)
         }
     }

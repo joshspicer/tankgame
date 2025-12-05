@@ -161,21 +161,27 @@ class ExplosionEffects {
         }
     }
     
+    // MARK: - Shockwave Configuration Constants
+    private let shockwaveDuration: TimeInterval = 0.4
+    private let shockwaveInitialLineWidth: CGFloat = 4
+    
     /// Create shockwave ring effect
     private func createShockwave(at position: CGPoint, in parentNode: SKNode) {
         let shockwave = SKShapeNode(circleOfRadius: tileSize * 0.3)
         shockwave.fillColor = .clear
         shockwave.strokeColor = SKColor.white.withAlphaComponent(0.6)
-        shockwave.lineWidth = 4
+        shockwave.lineWidth = shockwaveInitialLineWidth
         shockwave.position = position
         shockwave.zPosition = 8
         
-        let expandScale = SKAction.scale(to: 4.0, duration: 0.4)
-        let fadeOut = SKAction.fadeOut(withDuration: 0.4)
-        let thinLine = SKAction.customAction(withDuration: 0.4) { node, elapsedTime in
+        let expandScale = SKAction.scale(to: 4.0, duration: shockwaveDuration)
+        let fadeOut = SKAction.fadeOut(withDuration: shockwaveDuration)
+        let initialLineWidth = shockwaveInitialLineWidth
+        let animDuration = shockwaveDuration
+        let thinLine = SKAction.customAction(withDuration: animDuration) { node, elapsedTime in
             if let shape = node as? SKShapeNode {
-                let progress = elapsedTime / 0.4
-                shape.lineWidth = 4 * (1 - progress)
+                let progress = elapsedTime / CGFloat(animDuration)
+                shape.lineWidth = initialLineWidth * (1 - progress)
             }
         }
         

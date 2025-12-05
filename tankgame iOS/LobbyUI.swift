@@ -58,6 +58,9 @@ class LobbyUI {
     private let accentGreen = UIColor(red: 0.2, green: 0.85, blue: 0.5, alpha: 1.0)
     private let accentPurple = UIColor(red: 0.6, green: 0.4, blue: 1.0, alpha: 1.0)
     
+    // Constants for button identification
+    private let gradientButtonTag = 1001
+    
     func setup(in parentView: UIView) {
         // Create lobby view
         lobbyView = UIView(frame: parentView.bounds)
@@ -71,28 +74,30 @@ class LobbyUI {
         setupParticleBackground(in: parentView)
         
         // Title label with glow effect
-        titleLabel = UILabel()
-        titleLabel!.text = "TANK BATTLE"
-        titleLabel!.font = UIFont.systemFont(ofSize: 42, weight: .black)
-        titleLabel!.textAlignment = .center
-        titleLabel!.textColor = .white
-        titleLabel!.translatesAutoresizingMaskIntoConstraints = false
+        let newTitleLabel = UILabel()
+        newTitleLabel.text = "TANK BATTLE"
+        newTitleLabel.font = UIFont.systemFont(ofSize: 42, weight: .black)
+        newTitleLabel.textAlignment = .center
+        newTitleLabel.textColor = .white
+        newTitleLabel.translatesAutoresizingMaskIntoConstraints = false
         
         // Add glow effect to title
-        titleLabel!.layer.shadowColor = accentOrange.cgColor
-        titleLabel!.layer.shadowRadius = 15
-        titleLabel!.layer.shadowOpacity = 0.8
-        titleLabel!.layer.shadowOffset = .zero
-        lobbyView.addSubview(titleLabel!)
+        newTitleLabel.layer.shadowColor = accentOrange.cgColor
+        newTitleLabel.layer.shadowRadius = 15
+        newTitleLabel.layer.shadowOpacity = 0.8
+        newTitleLabel.layer.shadowOffset = .zero
+        lobbyView.addSubview(newTitleLabel)
+        titleLabel = newTitleLabel
         
         // Animated tank emoji
-        tankEmojiLabel = UILabel()
-        tankEmojiLabel!.text = "⚔️"
-        tankEmojiLabel!.font = .systemFont(ofSize: 80)
-        tankEmojiLabel!.textAlignment = .center
-        tankEmojiLabel!.translatesAutoresizingMaskIntoConstraints = false
-        lobbyView.addSubview(tankEmojiLabel!)
-        addPulseAnimation(to: tankEmojiLabel!)
+        let newTankEmojiLabel = UILabel()
+        newTankEmojiLabel.text = "⚔️"
+        newTankEmojiLabel.font = .systemFont(ofSize: 80)
+        newTankEmojiLabel.textAlignment = .center
+        newTankEmojiLabel.translatesAutoresizingMaskIntoConstraints = false
+        lobbyView.addSubview(newTankEmojiLabel)
+        addPulseAnimation(to: newTankEmojiLabel)
+        tankEmojiLabel = newTankEmojiLabel
         
         // Status label with modern styling
         statusLabel = UILabel()
@@ -218,7 +223,7 @@ class LobbyUI {
         emptyStateLabel.translatesAutoresizingMaskIntoConstraints = false
         lobbyView.addSubview(emptyStateLabel)
         
-        setupConstraints(titleLabel: titleLabel!, tankEmojiLabel: tankEmojiLabel!)
+        setupConstraints(titleLabel: newTitleLabel, tankEmojiLabel: newTankEmojiLabel)
         
         // Start title glow animation
         startTitleGlowAnimation()
@@ -278,7 +283,7 @@ class LobbyUI {
         ])
         
         // Store gradient layer for layout updates
-        button.tag = 1001
+        button.tag = gradientButtonTag
         
         return button
     }
@@ -394,14 +399,13 @@ class LobbyUI {
         particleEmitter?.emitterPosition = CGPoint(x: bounds.width / 2, y: -50)
         particleEmitter?.emitterSize = CGSize(width: bounds.width, height: 1)
         
-        // Update button gradient layers
-        for button in [singlePlayerButton, hostButton, joinButton, startGameButton] {
-            if let btn = button {
-                for layer in btn.layer.sublayers ?? [] {
-                    if let gradientLayer = layer as? CAGradientLayer {
-                        gradientLayer.frame = btn.bounds
-                    }
-                }
+        // Update button gradient layers - only for buttons with our gradient tag
+        let gradientButtons = [singlePlayerButton, hostButton, joinButton, startGameButton]
+        for button in gradientButtons {
+            guard let btn = button, btn.tag == gradientButtonTag else { continue }
+            // Get the first gradient layer (should be at index 0)
+            if let firstLayer = btn.layer.sublayers?.first as? CAGradientLayer {
+                firstLayer.frame = btn.bounds
             }
         }
     }
