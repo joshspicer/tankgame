@@ -47,7 +47,12 @@ class GameScene: SKScene {
     }
     
     override func didMove(to view: SKView) {
-        backgroundColor = .darkGray
+        // Modern dark background
+        backgroundColor = SKColor(red: 0.06, green: 0.06, blue: 0.1, alpha: 1.0)
+        
+        // Add background gradient effect
+        setupBackgroundGradient()
+        
         setupComponents()
         setupScene()
         
@@ -59,6 +64,60 @@ class GameScene: SKScene {
             renderProjectiles()
             renderLizards()
             updateScore()
+        }
+    }
+    
+    /// Setup background with gradient effect
+    private func setupBackgroundGradient() {
+        // Create gradient background using multiple shapes
+        let gradientNode = SKNode()
+        gradientNode.zPosition = -100
+        
+        // Top gradient (darker)
+        let topGradient = SKSpriteNode(color: SKColor(red: 0.04, green: 0.04, blue: 0.08, alpha: 1.0), 
+                                        size: CGSize(width: size.width, height: size.height / 3))
+        topGradient.position = CGPoint(x: size.width / 2, y: size.height - size.height / 6)
+        gradientNode.addChild(topGradient)
+        
+        // Middle section
+        let midGradient = SKSpriteNode(color: SKColor(red: 0.06, green: 0.06, blue: 0.1, alpha: 1.0),
+                                        size: CGSize(width: size.width, height: size.height / 3))
+        midGradient.position = CGPoint(x: size.width / 2, y: size.height / 2)
+        gradientNode.addChild(midGradient)
+        
+        // Bottom gradient (slightly lighter for controls area)
+        let bottomGradient = SKSpriteNode(color: SKColor(red: 0.08, green: 0.08, blue: 0.12, alpha: 1.0),
+                                           size: CGSize(width: size.width, height: size.height / 3))
+        bottomGradient.position = CGPoint(x: size.width / 2, y: size.height / 6)
+        gradientNode.addChild(bottomGradient)
+        
+        addChild(gradientNode)
+        
+        // Add subtle vignette effect at corners
+        addVignetteEffect()
+    }
+    
+    /// Add subtle vignette corners
+    private func addVignetteEffect() {
+        let vignetteColor = SKColor(red: 0.0, green: 0.0, blue: 0.05, alpha: 0.3)
+        let cornerSize: CGFloat = 150
+        
+        // Corner vignettes
+        let corners = [
+            CGPoint(x: 0, y: 0),
+            CGPoint(x: size.width, y: 0),
+            CGPoint(x: 0, y: size.height),
+            CGPoint(x: size.width, y: size.height)
+        ]
+        
+        for corner in corners {
+            let vignette = SKShapeNode(circleOfRadius: cornerSize)
+            vignette.fillColor = vignetteColor
+            vignette.strokeColor = .clear
+            vignette.position = corner
+            vignette.zPosition = -99
+            vignette.alpha = 0.5
+            addChild(vignette)
         }
     }
     
