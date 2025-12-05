@@ -32,15 +32,15 @@ class TankSpriteRenderer {
         // Tank treads (left side) with detail
         let leftTread = SKShapeNode(rectOf: CGSize(width: tileSize * 0.16, height: tileSize * 0.78), cornerRadius: 4)
         leftTread.position = CGPoint(x: -tileSize * 0.3, y: 0)
-        leftTread.fillColor = darkenColor(color, by: 0.3)
-        leftTread.strokeColor = darkenColor(color, by: 0.4)
+        leftTread.fillColor = ColorUtilities.darken(color, by: 0.3)
+        leftTread.strokeColor = ColorUtilities.darken(color, by: 0.4)
         leftTread.lineWidth = 1
         tankNode.addChild(leftTread)
         
         // Left tread detail lines
         for i in -3...3 {
             let treadLine = SKSpriteNode(
-                color: darkenColor(color, by: 0.5),
+                color: ColorUtilities.darken(color, by: 0.5),
                 size: CGSize(width: tileSize * 0.14, height: 2)
             )
             treadLine.position = CGPoint(x: -tileSize * 0.3, y: CGFloat(i) * tileSize * 0.1)
@@ -50,15 +50,15 @@ class TankSpriteRenderer {
         // Tank treads (right side) with detail
         let rightTread = SKShapeNode(rectOf: CGSize(width: tileSize * 0.16, height: tileSize * 0.78), cornerRadius: 4)
         rightTread.position = CGPoint(x: tileSize * 0.3, y: 0)
-        rightTread.fillColor = darkenColor(color, by: 0.3)
-        rightTread.strokeColor = darkenColor(color, by: 0.4)
+        rightTread.fillColor = ColorUtilities.darken(color, by: 0.3)
+        rightTread.strokeColor = ColorUtilities.darken(color, by: 0.4)
         rightTread.lineWidth = 1
         tankNode.addChild(rightTread)
         
         // Right tread detail lines
         for i in -3...3 {
             let treadLine = SKSpriteNode(
-                color: darkenColor(color, by: 0.5),
+                color: ColorUtilities.darken(color, by: 0.5),
                 size: CGSize(width: tileSize * 0.14, height: 2)
             )
             treadLine.position = CGPoint(x: tileSize * 0.3, y: CGFloat(i) * tileSize * 0.1)
@@ -68,21 +68,21 @@ class TankSpriteRenderer {
         // Tank body (main hull) with gradient effect
         let body = SKShapeNode(rectOf: CGSize(width: tileSize * 0.52, height: tileSize * 0.65), cornerRadius: 6)
         body.fillColor = color
-        body.strokeColor = lightenColor(color, by: 0.2)
+        body.strokeColor = ColorUtilities.lighten(color, by: 0.2)
         body.lineWidth = 2
         tankNode.addChild(body)
         
         // Body highlight (top reflection)
         let bodyHighlight = SKShapeNode(rectOf: CGSize(width: tileSize * 0.4, height: tileSize * 0.15), cornerRadius: 3)
         bodyHighlight.position = CGPoint(x: 0, y: tileSize * 0.15)
-        bodyHighlight.fillColor = lightenColor(color, by: 0.3).withAlphaComponent(0.5)
+        bodyHighlight.fillColor = ColorUtilities.lighten(color, by: 0.3).withAlphaComponent(0.5)
         bodyHighlight.strokeColor = .clear
         tankNode.addChild(bodyHighlight)
         
         // Turret base (circular platform) with metallic look
         let turretBase = SKShapeNode(circleOfRadius: tileSize * 0.22)
-        turretBase.fillColor = darkenColor(color, by: 0.1)
-        turretBase.strokeColor = lightenColor(color, by: 0.2)
+        turretBase.fillColor = ColorUtilities.darken(color, by: 0.1)
+        turretBase.strokeColor = ColorUtilities.lighten(color, by: 0.2)
         turretBase.lineWidth = 2
         turretBase.position = CGPoint(x: 0, y: 0)
         turretBase.glowWidth = 2
@@ -90,15 +90,15 @@ class TankSpriteRenderer {
         
         // Turret highlight
         let turretHighlight = SKShapeNode(circleOfRadius: tileSize * 0.12)
-        turretHighlight.fillColor = lightenColor(color, by: 0.3).withAlphaComponent(0.4)
+        turretHighlight.fillColor = ColorUtilities.lighten(color, by: 0.3).withAlphaComponent(0.4)
         turretHighlight.strokeColor = .clear
         turretHighlight.position = CGPoint(x: -tileSize * 0.05, y: tileSize * 0.05)
         tankNode.addChild(turretHighlight)
         
         // Tank barrel (main gun) with detail
         let barrel = SKShapeNode(rectOf: CGSize(width: tileSize * 0.12, height: tileSize * 0.45), cornerRadius: 3)
-        barrel.fillColor = darkenColor(color, by: 0.15)
-        barrel.strokeColor = lightenColor(color, by: 0.1)
+        barrel.fillColor = ColorUtilities.darken(color, by: 0.15)
+        barrel.strokeColor = ColorUtilities.lighten(color, by: 0.1)
         barrel.lineWidth = 1
         barrel.position = CGPoint(x: 0, y: tileSize * 0.32)
         tankNode.addChild(barrel)
@@ -136,29 +136,5 @@ class TankSpriteRenderer {
         tankNode.zRotation = CGFloat(direction.angle)
         
         return tankNode
-    }
-    
-    /// Darken a color by a percentage
-    private func darkenColor(_ color: SKColor, by percentage: CGFloat) -> SKColor {
-        var r: CGFloat = 0, g: CGFloat = 0, b: CGFloat = 0, a: CGFloat = 0
-        color.getRed(&r, green: &g, blue: &b, alpha: &a)
-        return SKColor(
-            red: max(0, r - percentage),
-            green: max(0, g - percentage),
-            blue: max(0, b - percentage),
-            alpha: a
-        )
-    }
-    
-    /// Lighten a color by a percentage
-    private func lightenColor(_ color: SKColor, by percentage: CGFloat) -> SKColor {
-        var r: CGFloat = 0, g: CGFloat = 0, b: CGFloat = 0, a: CGFloat = 0
-        color.getRed(&r, green: &g, blue: &b, alpha: &a)
-        return SKColor(
-            red: min(1, r + percentage),
-            green: min(1, g + percentage),
-            blue: min(1, b + percentage),
-            alpha: a
-        )
     }
 }

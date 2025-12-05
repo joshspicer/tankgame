@@ -239,16 +239,19 @@ class LobbyUI {
     
     /// Create a premium button with gradient background
     private func createPremiumButton(title: String, icon: String, colors: [UIColor]) -> UIButton {
-        let button = UIButton(type: .custom)
+        let button = PremiumButton(type: .custom)
         button.translatesAutoresizingMaskIntoConstraints = false
+        button.gradientColors = colors
         
-        // Add gradient layer
+        // Add gradient layer with name for identification
         let gradientLayer = CAGradientLayer()
+        gradientLayer.name = LobbyUIEffects.gradientLayerName
         gradientLayer.colors = colors.map { $0.cgColor }
         gradientLayer.locations = [0.0, 1.0]
         gradientLayer.startPoint = CGPoint(x: 0, y: 0)
         gradientLayer.endPoint = CGPoint(x: 1, y: 1)
         gradientLayer.cornerRadius = LobbyUITheme.buttonCornerRadius
+        // Initial frame will be updated in layoutSubviews
         gradientLayer.frame = CGRect(x: 0, y: 0, width: LobbyUITheme.buttonWidth, height: LobbyUITheme.buttonHeight)
         button.layer.insertSublayer(gradientLayer, at: 0)
         
@@ -521,5 +524,18 @@ class LobbyUI {
         activityIndicator.stopAnimating()
         statusLabel.text = "Choose your battle mode"
         updateSpriteModeButton()
+    }
+}
+
+/// Custom button that updates gradient layer frame on layout changes
+class PremiumButton: UIButton {
+    var gradientColors: [UIColor] = []
+    
+    override func layoutSubviews() {
+        super.layoutSubviews()
+        // Update gradient layer frame to match button bounds
+        if let gradientLayer = layer.sublayers?.first(where: { $0.name == LobbyUIEffects.gradientLayerName }) as? CAGradientLayer {
+            gradientLayer.frame = bounds
+        }
     }
 }

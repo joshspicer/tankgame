@@ -74,15 +74,10 @@ class ProjectileRenderer {
         }
     }
     
-    /// Add color animation to bullet
+    /// Add color animation to bullet using shared palette
     private func addBulletColorAnimation(to shape: SKShapeNode) {
         let animationDuration: TimeInterval = 0.8
-        let colors: [(fill: SKColor, stroke: SKColor)] = [
-            (SKColor(red: 1.0, green: 0.9, blue: 0.3, alpha: 1.0), SKColor(red: 1.0, green: 0.7, blue: 0.1, alpha: 1.0)),
-            (SKColor(red: 1.0, green: 0.7, blue: 0.2, alpha: 1.0), SKColor(red: 1.0, green: 0.5, blue: 0.0, alpha: 1.0)),
-            (SKColor(red: 1.0, green: 0.5, blue: 0.3, alpha: 1.0), SKColor(red: 1.0, green: 0.3, blue: 0.1, alpha: 1.0)),
-            (SKColor(red: 1.0, green: 0.7, blue: 0.2, alpha: 1.0), SKColor(red: 1.0, green: 0.5, blue: 0.0, alpha: 1.0))
-        ]
+        let colors = ProjectileColorPalette.warmColors
         
         var colorActions: [SKAction] = []
         for colorPair in colors {

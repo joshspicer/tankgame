@@ -81,7 +81,7 @@ class LobbyUIEffects {
         return gradient
     }
     
-    /// Create a floating particle effect layer
+    /// Create a floating particle effect layer with cached particle image
     static func createParticleEffect(in view: UIView) -> CAEmitterLayer {
         let emitter = CAEmitterLayer()
         emitter.emitterPosition = CGPoint(x: view.bounds.width / 2, y: -50)
@@ -103,15 +103,14 @@ class LobbyUIEffects {
         cell.scaleRange = 0.02
         cell.alphaSpeed = -0.03
         
-        // Create a star-like particle
+        // Use UIGraphicsImageRenderer for better performance
         let size = CGSize(width: 20, height: 20)
-        UIGraphicsBeginImageContext(size)
-        if let context = UIGraphicsGetCurrentContext() {
-            context.setFillColor(UIColor.white.withAlphaComponent(0.6).cgColor)
-            context.fillEllipse(in: CGRect(origin: .zero, size: size))
+        let renderer = UIGraphicsImageRenderer(size: size)
+        let particleImage = renderer.image { context in
+            context.cgContext.setFillColor(UIColor.white.withAlphaComponent(0.6).cgColor)
+            context.cgContext.fillEllipse(in: CGRect(origin: .zero, size: size))
         }
-        cell.contents = UIGraphicsGetImageFromCurrentImageContext()?.cgImage
-        UIGraphicsEndImageContext()
+        cell.contents = particleImage.cgImage
         
         emitter.emitterCells = [cell]
         return emitter
@@ -222,9 +221,13 @@ class LobbyUIEffects {
         }
     }
     
+    /// Gradient layer name for identification
+    static let gradientLayerName = "premiumButtonGradient"
+    
     /// Update gradient layer frame (call on layout changes)
+    /// Uses name-based identification for robustness
     static func updateGradientFrame(in button: UIButton, size: CGSize) {
-        if let gradientLayer = button.layer.sublayers?.first as? CAGradientLayer {
+        if let gradientLayer = button.layer.sublayers?.first(where: { $0.name == gradientLayerName }) as? CAGradientLayer {
             gradientLayer.frame = CGRect(origin: .zero, size: size)
         }
     }
