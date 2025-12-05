@@ -91,7 +91,7 @@ class LobbyUI {
         
         // Tank emoji with bounce animation
         tankEmojiLabel = UILabel()
-        tankEmojiLabel.text = "🎮"
+        tankEmojiLabel.text = "🎯"
         tankEmojiLabel.font = .systemFont(ofSize: Design.emojiFontSize)
         tankEmojiLabel.textAlignment = .center
         tankEmojiLabel.translatesAutoresizingMaskIntoConstraints = false
@@ -252,27 +252,28 @@ class LobbyUI {
         gradientLayer?.add(animation, forKey: "gradientAnimation")
     }
     
-    /// Add subtle particle effects
+    /// Add subtle particle effects (optimized for performance)
     private func addParticleEffects() {
-        // Add floating particles for ambient effect
-        for _ in 0..<15 {
+        // Add floating particles for ambient effect (reduced count for performance)
+        let particleCount = 8  // Reduced from 15 for better performance
+        for _ in 0..<particleCount {
             let particle = UIView()
-            let size = CGFloat.random(in: 3...8)
+            let size = CGFloat.random(in: 4...10)
             particle.frame = CGRect(
                 x: CGFloat.random(in: 0...lobbyView.bounds.width),
                 y: CGFloat.random(in: 0...lobbyView.bounds.height),
                 width: size,
                 height: size
             )
-            particle.backgroundColor = UIColor.white.withAlphaComponent(CGFloat.random(in: 0.1...0.3))
+            particle.backgroundColor = UIColor.white.withAlphaComponent(CGFloat.random(in: 0.08...0.2))
             particle.layer.cornerRadius = size / 2
-            lobbyView.addSubview(particle)
+            lobbyView.insertSubview(particle, at: 1)  // Insert behind other UI elements
             
-            // Animate floating
-            let duration = Double.random(in: 3...6)
-            UIView.animate(withDuration: duration, delay: Double.random(in: 0...2), options: [.repeat, .autoreverse, .curveEaseInOut], animations: {
-                particle.transform = CGAffineTransform(translationX: CGFloat.random(in: -30...30), y: CGFloat.random(in: -50...50))
-                particle.alpha = CGFloat.random(in: 0.1...0.4)
+            // Animate floating with longer duration for smoother effect
+            let duration = Double.random(in: 4...8)
+            UIView.animate(withDuration: duration, delay: Double.random(in: 0...3), options: [.repeat, .autoreverse, .curveEaseInOut], animations: {
+                particle.transform = CGAffineTransform(translationX: CGFloat.random(in: -20...20), y: CGFloat.random(in: -40...40))
+                particle.alpha = CGFloat.random(in: 0.05...0.25)
             })
         }
     }
@@ -341,12 +342,15 @@ class LobbyUI {
         
         button.addSubview(stackView)
         button.layer.cornerRadius = Design.buttonCornerRadius
-        button.clipsToBounds = true
+        button.clipsToBounds = false  // Allow shadows to show
         button.layer.shadowColor = gradientColors[0].cgColor
         button.layer.shadowOpacity = Design.buttonShadowOpacity
         button.layer.shadowOffset = CGSize(width: 0, height: 6)
         button.layer.shadowRadius = Design.buttonShadowRadius
         button.layer.masksToBounds = false
+        
+        // Apply corner radius to gradient layer separately
+        gradientLayer.masksToBounds = true
         
         // Store gradient reference for resizing
         button.layer.setValue(gradientLayer, forKey: "gradientLayer")

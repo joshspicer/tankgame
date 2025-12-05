@@ -22,7 +22,7 @@ class ExplosionEffects {
     ///   - parentNode: Node to add explosion particles to
     ///   - completion: Called when the explosion animation completes
     func createExplosion(at position: CGPoint, color: SKColor, in parentNode: SKNode, completion: @escaping () -> Void) {
-        // Create multiple layers of particles for depth
+        // Create particle layers with optimized counts for performance
         createOuterParticles(at: position, color: color, in: parentNode)
         createInnerParticles(at: position, color: color, in: parentNode)
         createSparks(at: position, in: parentNode)
@@ -33,15 +33,15 @@ class ExplosionEffects {
         // Add screen shake effect via parent
         addShakeEffect(to: parentNode)
         
-        // Add smoke effect
+        // Add smoke effect (reduced count)
         createSmoke(at: position, in: parentNode)
     }
     
-    /// Create outer explosion particles
+    /// Create outer explosion particles (optimized count)
     private func createOuterParticles(at position: CGPoint, color: SKColor, in parentNode: SKNode) {
-        let particleCount = 16
+        let particleCount = 10  // Reduced from 16 for better performance
         for i in 0..<particleCount {
-            let particle = SKShapeNode(circleOfRadius: CGFloat.random(in: 6...12))
+            let particle = SKShapeNode(circleOfRadius: CGFloat.random(in: 8...14))
             particle.fillColor = color
             particle.strokeColor = SKColor.white.withAlphaComponent(0.8)
             particle.lineWidth = 2
@@ -73,11 +73,11 @@ class ExplosionEffects {
         }
     }
     
-    /// Create inner explosion particles (brighter, faster)
+    /// Create inner explosion particles (brighter, faster - optimized count)
     private func createInnerParticles(at position: CGPoint, color: SKColor, in parentNode: SKNode) {
-        let particleCount = 8
+        let particleCount = 6  // Reduced from 8 for better performance
         for i in 0..<particleCount {
-            let particle = SKShapeNode(circleOfRadius: CGFloat.random(in: 4...8))
+            let particle = SKShapeNode(circleOfRadius: CGFloat.random(in: 5...10))
             particle.fillColor = SKColor.white
             particle.strokeColor = color
             particle.lineWidth = 3
@@ -104,11 +104,11 @@ class ExplosionEffects {
         }
     }
     
-    /// Create spark particles
+    /// Create spark particles (optimized count)
     private func createSparks(at position: CGPoint, in parentNode: SKNode) {
-        let sparkCount = 12
+        let sparkCount = 8  // Reduced from 12 for better performance
         for _ in 0..<sparkCount {
-            let spark = SKShapeNode(rectOf: CGSize(width: 2, height: CGFloat.random(in: 8...16)))
+            let spark = SKShapeNode(rectOf: CGSize(width: 2, height: CGFloat.random(in: 10...18)))
             spark.fillColor = SKColor.yellow
             spark.strokeColor = .clear
             spark.position = position
