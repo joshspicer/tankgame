@@ -333,6 +333,12 @@ extension MultiplayerManager: MCSessionDelegate {
     func session(_ session: MCSession, didFinishReceivingResourceWithName resourceName: String, fromPeer peerID: MCPeerID, at localURL: URL?, withError error: Error?) {
         // Not used
     }
+    
+    func session(_ session: MCSession, didReceiveCertificate certificate: [Any]?, fromPeer peerID: MCPeerID, certificateHandler: @escaping (Bool) -> Void) {
+        // Accept all certificates since we're using local network for multiplayer
+        // This is required when MCSession uses encryptionPreference: .required
+        certificateHandler(true)
+    }
 }
 
 // MARK: - MCNearbyServiceAdvertiserDelegate

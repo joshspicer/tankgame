@@ -40,6 +40,9 @@ class GameScene: SKScene {
     // Explosion state
     var tankExploding: [Bool] = [false, false, false, false]
     
+    // Flag to track if scene setup is complete
+    private var isSceneSetupComplete: Bool = false
+    
     class func newGameScene() -> GameScene {
         let scene = GameScene(size: CGSize(width: 600, height: 800))
         scene.scaleMode = .aspectFit
@@ -51,6 +54,9 @@ class GameScene: SKScene {
         setupComponents()
         setupScene()
         
+        // Mark scene setup as complete
+        isSceneSetupComplete = true
+        
         // If startGame was called before didMove (e.g., for clients receiving roundStart),
         // render the grid now that the scene has been set up
         if gameState != nil {
@@ -59,6 +65,7 @@ class GameScene: SKScene {
             renderProjectiles()
             renderLizards()
             updateScore()
+            ui.updateStatus("Fight!")
         }
     }
     
@@ -82,6 +89,11 @@ class GameScene: SKScene {
     func startGame(with state: GameState) {
         self.gameState = state
         tankExploding = Array(repeating: false, count: state.tanks.count)
+        
+        // Only render if the scene is fully set up
+        // If not, didMove(to:) will handle rendering when the scene is ready
+        guard isSceneSetupComplete else { return }
+        
         renderGrid()
         renderTanks()
         renderLizards()
