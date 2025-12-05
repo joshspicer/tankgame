@@ -7,7 +7,7 @@
 
 import SpriteKit
 
-/// Manages the virtual joystick UI and input processing
+/// Manages the virtual joystick UI and input processing with classic retro styling
 class JoystickController {
     // Nodes
     private var joystickNode: SKNode?
@@ -21,7 +21,7 @@ class JoystickController {
     
     init() {}
     
-    /// Setup the joystick UI
+    /// Setup the joystick UI with retro style
     func setup(in scene: SKScene, at position: CGPoint) {
         let newJoystickNode = SKNode()
         newJoystickNode.position = position
@@ -29,17 +29,18 @@ class JoystickController {
         joystickNode = newJoystickNode
         
         let newJoystickBase = SKShapeNode(circleOfRadius: 50)
-        newJoystickBase.fillColor = .gray
-        newJoystickBase.strokeColor = .white
+        newJoystickBase.fillColor = RetroColors.joystickBase
+        newJoystickBase.strokeColor = RetroColors.joystickBorder
         newJoystickBase.lineWidth = 2
-        newJoystickBase.alpha = 0.5
+        newJoystickBase.alpha = 0.7
         newJoystickNode.addChild(newJoystickBase)
         joystickBase = newJoystickBase
         
         let newJoystickHandle = SKShapeNode(circleOfRadius: 25)
-        newJoystickHandle.fillColor = .white
-        newJoystickHandle.strokeColor = .white
-        newJoystickHandle.alpha = 0.8
+        newJoystickHandle.fillColor = RetroColors.joystickHandle
+        newJoystickHandle.strokeColor = RetroColors.joystickBorder
+        newJoystickHandle.lineWidth = 1
+        newJoystickHandle.alpha = 0.9
         newJoystickNode.addChild(newJoystickHandle)
         joystickHandle = newJoystickHandle
     }

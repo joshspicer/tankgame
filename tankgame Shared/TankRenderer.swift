@@ -7,13 +7,10 @@
 
 import SpriteKit
 
-/// Handles rendering of tanks with animations
+/// Handles rendering of tanks with classic retro styling
 class TankRenderer {
     let tileSize: CGFloat
     let gridSize: Int
-    
-    // Tank colors for up to 4 players
-    let tankColors: [SKColor] = [.blue, .red, .green, .orange]
     
     // Sprite renderers
     private let tankSpriteRenderer: TankSpriteRenderer
@@ -34,7 +31,7 @@ class TankRenderer {
             
             let tank = tanks[i]
             if tank.isAlive || tankExploding[i] {
-                let color = tankColors[i]
+                let color = RetroColors.playerColors[i]
                 let tankSprite = createTankNode(color: color, direction: tank.direction)
                 tankSprite.position = gridPosition(row: tank.row, col: tank.col)
                 tankNode.addChild(tankSprite)
@@ -70,7 +67,7 @@ class TankRenderer {
                     }
                 } else {
                     // Create new sprite if doesn't exist
-                    let color = tankColors[i]
+                    let color = RetroColors.playerColors[i]
                     let tankSprite = createTankNode(color: color, direction: tank.direction)
                     tankSprite.position = targetPosition
                     tankNode.addChild(tankSprite)

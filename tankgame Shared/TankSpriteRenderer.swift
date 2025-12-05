@@ -7,21 +7,19 @@
 
 import SpriteKit
 
-/// Handles tank sprite creation and rendering
+/// Handles tank sprite creation and rendering with classic retro styling
 class TankSpriteRenderer {
     let tileSize: CGFloat
-    private let animationHelper: RainbowAnimationHelper
     
     init(tileSize: CGFloat) {
         self.tileSize = tileSize
-        self.animationHelper = RainbowAnimationHelper()
     }
     
-    /// Create a tank sprite node with improved visual details
+    /// Create a tank sprite node with classic retro visual design
     func createTankNode(color: SKColor, direction: Direction) -> SKNode {
         let tankNode = SKNode()
         
-        // Tank treads (left side)
+        // Tank treads (left side) - solid color, no animations
         let leftTread = SKSpriteNode(color: color.withAlphaComponent(0.6), size: CGSize(width: tileSize * 0.15, height: tileSize * 0.75))
         leftTread.position = CGPoint(x: -tileSize * 0.3, y: 0)
         tankNode.addChild(leftTread)
@@ -35,7 +33,7 @@ class TankSpriteRenderer {
         let body = SKSpriteNode(color: color, size: CGSize(width: tileSize * 0.55, height: tileSize * 0.65))
         tankNode.addChild(body)
         
-        // Turret base (circular platform)
+        // Turret base (circular platform) - solid color
         let turretBase = SKShapeNode(circleOfRadius: tileSize * 0.25)
         turretBase.fillColor = color.withAlphaComponent(0.9)
         turretBase.strokeColor = color.withAlphaComponent(0.5)
@@ -48,19 +46,10 @@ class TankSpriteRenderer {
         barrel.position = CGPoint(x: 0, y: tileSize * 0.35)
         tankNode.addChild(barrel)
         
-        // Barrel muzzle (gun tip)
-        let muzzle = SKSpriteNode(color: .darkGray, size: CGSize(width: tileSize * 0.18, height: tileSize * 0.12))
+        // Barrel muzzle (gun tip) - classic dark color
+        let muzzle = SKSpriteNode(color: SKColor(white: 0.25, alpha: 1.0), size: CGSize(width: tileSize * 0.18, height: tileSize * 0.12))
         muzzle.position = CGPoint(x: 0, y: tileSize * 0.56)
         tankNode.addChild(muzzle)
-        
-        // Add rainbow animation to all colored parts using shared helper
-        animationHelper.addRainbowAnimation(to: leftTread, phaseOffset: 0)
-        animationHelper.addRainbowAnimation(to: rightTread, phaseOffset: 0)
-        animationHelper.addRainbowAnimation(to: body, phaseOffset: 0.1)
-        animationHelper.addRainbowAnimation(to: barrel, phaseOffset: 0.2)
-        
-        // Add rainbow animation to turret base using shared helper
-        animationHelper.addRainbowAnimationToShape(turretBase, phaseOffset: 0.15)
         
         // Rotate based on direction
         tankNode.zRotation = CGFloat(direction.angle)

@@ -7,7 +7,7 @@
 
 import SpriteKit
 
-/// Handles rendering of the game grid
+/// Handles rendering of the game grid with classic retro styling
 class GridRenderer {
     let tileSize: CGFloat
     let gridSize: Int
@@ -17,14 +17,15 @@ class GridRenderer {
         self.gridSize = gridSize
     }
     
-    /// Render the game grid
+    /// Render the game grid with retro colors
     func renderGrid(_ grid: [[GridCell]], in gridNode: SKNode) {
         gridNode.removeAllChildren()
         
         for row in 0..<gridSize {
             for col in 0..<gridSize {
                 let cell = grid[row][col]
-                let tile = SKSpriteNode(color: cell == .wall ? .black : .white, size: CGSize(width: tileSize - 2, height: tileSize - 2))
+                let color = cell == .wall ? RetroColors.gridWall : RetroColors.gridFloor
+                let tile = SKSpriteNode(color: color, size: CGSize(width: tileSize - 2, height: tileSize - 2))
                 tile.position = gridPosition(row: row, col: col)
                 gridNode.addChild(tile)
             }

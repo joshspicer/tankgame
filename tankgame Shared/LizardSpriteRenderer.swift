@@ -7,24 +7,22 @@
 
 import SpriteKit
 
-/// Creates and manages lizard sprite nodes
+/// Creates and manages lizard sprite nodes with classic retro styling
 class LizardSpriteRenderer {
     let tileSize: CGFloat
-    private let animationHelper: RainbowAnimationHelper
     
     init(tileSize: CGFloat) {
         self.tileSize = tileSize
-        self.animationHelper = RainbowAnimationHelper()
     }
     
-    /// Create a lizard sprite node with visual details
+    /// Create a lizard sprite node with classic retro visual design
     func createLizardNode(direction: Direction) -> SKNode {
         let lizardNode = SKNode()
         
-        // Base color for lizard (green)
-        let baseColor = SKColor.systemGreen
+        // Use retro lizard color
+        let baseColor = RetroColors.lizard
         
-        // Lizard body (elongated oval shape)
+        // Lizard body (elongated oval shape) - solid color
         let body = SKSpriteNode(color: baseColor, size: CGSize(width: tileSize * 0.5, height: tileSize * 0.7))
         body.alpha = 0.9
         lizardNode.addChild(body)
@@ -79,24 +77,6 @@ class LizardSpriteRenderer {
         backRightLeg.position = CGPoint(x: tileSize * 0.25, y: -tileSize * 0.15)
         backRightLeg.zRotation = 0.3
         lizardNode.addChild(backRightLeg)
-        
-        // Add rainbow animation to body parts
-        animationHelper.addRainbowAnimation(to: body, phaseOffset: 0)
-        animationHelper.addRainbowAnimation(to: head, phaseOffset: 0.1)
-        animationHelper.addRainbowAnimation(to: tail, phaseOffset: 0.2)
-        animationHelper.addRainbowAnimation(to: frontLeftLeg, phaseOffset: 0.3)
-        animationHelper.addRainbowAnimation(to: frontRightLeg, phaseOffset: 0.35)
-        animationHelper.addRainbowAnimation(to: backLeftLeg, phaseOffset: 0.4)
-        animationHelper.addRainbowAnimation(to: backRightLeg, phaseOffset: 0.45)
-        
-        // Add a subtle idle animation (slight bobbing)
-        let bobUp = SKAction.moveBy(x: 0, y: 2, duration: 0.5)
-        let bobDown = SKAction.moveBy(x: 0, y: -2, duration: 0.5)
-        bobUp.timingMode = .easeInEaseOut
-        bobDown.timingMode = .easeInEaseOut
-        let bobSequence = SKAction.sequence([bobUp, bobDown])
-        let bobForever = SKAction.repeatForever(bobSequence)
-        lizardNode.run(bobForever)
         
         // Rotate based on direction
         lizardNode.zRotation = CGFloat(direction.angle)
