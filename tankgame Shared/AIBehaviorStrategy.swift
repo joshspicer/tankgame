@@ -215,11 +215,42 @@ struct AIBehaviorStrategy {
         return abs(tank1.row - tank2.row) + abs(tank1.col - tank2.col)
     }
     
+    /// Check if a position is a near miss for a tank (adjacent on same axis)
+    /// - Parameters:
+    ///   - checkRow: Row position to check
+    ///   - checkCol: Column position to check
+    ///   - tankRow: Tank's row position
+    ///   - tankCol: Tank's column position
+    /// - Returns: True if the position represents a near miss
+    static func isNearMiss(checkRow: Int, checkCol: Int, tankRow: Int, tankCol: Int) -> Bool {
+        let rowDiff = abs(checkRow - tankRow)
+        let colDiff = abs(checkCol - tankCol)
+        
+        // Adjacent on same row (left/right of tank)
+        if rowDiff == 0 && colDiff == 1 {
+            return true
+        }
+        // Adjacent on same column (above/below tank)
+        if colDiff == 0 && rowDiff == 1 {
+            return true
+        }
+        return false
+    }
+    
     /// Detect if there's an incoming projectile heading toward the tank
-    private static func detectIncomingDanger(
-        tank: Tank,
+    /// - Parameters:
+    ///   - tankRow: Tank's row position
+    ///   - tankCol: Tank's column position
+    ///   - projectiles: Current projectiles
+    ///   - lookahead: How far ahead to check
+    ///   - checkNearMiss: Whether to also check near misses
+    /// - Returns: Direction of incoming danger, if any
+    static func detectIncomingDanger(
+        tankRow: Int,
+        tankCol: Int,
         projectiles: [Projectile],
-        lookahead: Int
+        lookahead: Int,
+        checkNearMiss: Bool = false
     ) -> Direction? {
         for projectile in projectiles {
             let offset = projectile.direction.offset
@@ -230,18 +261,33 @@ struct AIBehaviorStrategy {
                 checkRow += offset.row
                 checkCol += offset.col
                 
-                if checkRow == tank.row && checkCol == tank.col {
+                // Direct hit check
+                if checkRow == tankRow && checkCol == tankCol {
                     return projectile.direction
                 }
                 
-                // Also check adjacent cells for near misses
-                if abs(checkRow - tank.row) <= 1 && abs(checkCol - tank.col) <= 1 &&
-                   (checkRow == tank.row || checkCol == tank.col) {
+                // Near miss check
+                if checkNearMiss && isNearMiss(checkRow: checkRow, checkCol: checkCol, tankRow: tankRow, tankCol: tankCol) {
                     return projectile.direction
                 }
             }
         }
         return nil
+    }
+    
+    /// Detect if there's an incoming projectile heading toward the tank
+    private static func detectIncomingDanger(
+        tank: Tank,
+        projectiles: [Projectile],
+        lookahead: Int
+    ) -> Direction? {
+        return detectIncomingDanger(
+            tankRow: tank.row,
+            tankCol: tank.col,
+            projectiles: projectiles,
+            lookahead: lookahead,
+            checkNearMiss: true
+        )
     }
     
     /// Check if there's a clear line of sight between two tanks

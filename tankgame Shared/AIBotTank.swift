@@ -148,7 +148,7 @@ struct AIBotTank {
         for (index, otherTank) in allTanks.enumerated() {
             guard index != tankIndex && otherTank.isAlive else { continue }
             
-            let distance = abs(tank.row - otherTank.row) + abs(tank.col - otherTank.col)
+            let distance = AIBehaviorStrategy.manhattanDistance(from: tank, to: otherTank)
             if distance < nearestDistance {
                 nearestDistance = distance
                 nearestTank = otherTank
@@ -161,31 +161,13 @@ struct AIBotTank {
     
     /// Detect if there's an incoming projectile danger
     private func detectDanger(tank: Tank, projectiles: [Projectile]) -> Direction? {
-        for projectile in projectiles {
-            // Check if projectile is heading toward the tank
-            let projOffset = projectile.direction.offset
-            var checkRow = projectile.row
-            var checkCol = projectile.col
-            
-            // Look ahead based on difficulty level
-            for _ in 0..<difficulty.dangerLookahead {
-                checkRow += projOffset.row
-                checkCol += projOffset.col
-                
-                if checkRow == tank.row && checkCol == tank.col {
-                    return projectile.direction
-                }
-                
-                // For higher difficulties, also check adjacent cells for near misses
-                if difficulty.useAdvancedTactics {
-                    if abs(checkRow - tank.row) <= 1 && abs(checkCol - tank.col) <= 1 &&
-                       (checkRow == tank.row || checkCol == tank.col) {
-                        return projectile.direction
-                    }
-                }
-            }
-        }
-        return nil
+        return AIBehaviorStrategy.detectIncomingDanger(
+            tankRow: tank.row,
+            tankCol: tank.col,
+            projectiles: projectiles,
+            lookahead: difficulty.dangerLookahead,
+            checkNearMiss: difficulty.useAdvancedTactics
+        )
     }
     
     /// Get a direction to dodge incoming danger
