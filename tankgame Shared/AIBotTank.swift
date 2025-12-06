@@ -3,6 +3,7 @@
 //  tankgame Shared
 //
 //  AI controller for bot tanks - enables single player mode and AI opponents in multiplayer
+//  Supports multiple difficulty levels with varying behaviors
 //
 
 import Foundation
@@ -13,22 +14,41 @@ struct AIBotTank {
     /// The tank index this AI controls
     let tankIndex: Int
     
+    /// The difficulty level for this bot
+    let difficulty: AIBotDifficulty
+    
+    /// Configuration based on difficulty
+    var config: AIBotConfig { difficulty.config }
+    
     /// Movement decision interval in update ticks
     private var moveCounter: Int = 0
-    static let moveInterval: Int = 12
     
     /// Shooting decision interval in update ticks
     private var shootCounter: Int = 0
-    static let shootInterval: Int = 25
     
     /// Whether the bot should attempt to shoot this update
     var shouldShoot: Bool = false
     
-    init(tankIndex: Int) {
+    /// Current tactical state
+    private var currentState: TacticalState = .pursuing
+    
+    /// Tactical states for the AI
+    enum TacticalState {
+        case pursuing       // Chasing an enemy
+        case flanking       // Attempting to flank an enemy
+        case retreating     // Running away from threats
+        case seekingCover   // Looking for defensive position
+        case wandering      // No target, exploring
+    }
+    
+    init(tankIndex: Int, difficulty: AIBotDifficulty = .medium) {
         self.tankIndex = tankIndex
+        self.difficulty = difficulty
         // Randomize initial counters to avoid synchronized bot behavior
-        self.moveCounter = Int.random(in: 0..<AIBotTank.moveInterval)
-        self.shootCounter = Int.random(in: 0..<AIBotTank.shootInterval)
+        let moveInterval = difficulty.config.moveInterval
+        let shootInterval = difficulty.config.shootInterval
+        self.moveCounter = Int.random(in: 0..<moveInterval)
+        self.shootCounter = Int.random(in: 0..<shootInterval)
     }
     
     /// Update the AI bot behavior
@@ -43,104 +63,171 @@ struct AIBotTank {
         
         // Update shooting logic
         shootCounter += 1
-        if shootCounter >= AIBotTank.shootInterval {
+        if shootCounter >= config.shootInterval {
             shootCounter = 0
-            shouldShoot = shouldAttemptShoot(tank: tank, allTanks: allTanks, grid: grid)
+            shouldShoot = AITargeting.shouldShoot(
+                tank: tank,
+                allTanks: allTanks,
+                grid: grid,
+                config: config,
+                tankIndex: tankIndex
+            )
         } else {
             shouldShoot = false
         }
         
         // Update movement logic
         moveCounter += 1
-        guard moveCounter >= AIBotTank.moveInterval else { return nil }
+        guard moveCounter >= config.moveInterval else { return nil }
         moveCounter = 0
         
         return decideMovement(tank: tank, grid: grid, allTanks: allTanks, projectiles: projectiles)
     }
     
-    /// Decide which direction to move
-    private func decideMovement(tank: Tank, grid: [[GridCell]], allTanks: [Tank], projectiles: [Projectile]) -> Direction? {
-        // Find the nearest enemy tank
-        guard let target = findNearestEnemy(tank: tank, allTanks: allTanks) else {
-            // No enemy found, wander randomly
-            return wanderRandomly(tank: tank, grid: grid, allTanks: allTanks)
-        }
+    /// Decide which direction to move based on tactical state
+    private mutating func decideMovement(tank: Tank, grid: [[GridCell]], allTanks: [Tank], projectiles: [Projectile]) -> Direction? {
+        // Detect threats
+        let projectileThreats = AIThreatDetection.detectProjectileThreats(
+            tank: tank,
+            projectiles: projectiles,
+            lookAhead: config.dodgeReactionTime
+        )
         
-        // Decide whether to pursue, dodge, or attack
-        let dangerDirection = detectDanger(tank: tank, projectiles: projectiles)
+        let threatLevel = AIThreatDetection.assessOverallThreatLevel(
+            tank: tank,
+            allTanks: allTanks,
+            projectiles: projectiles,
+            tankIndex: tankIndex,
+            grid: grid
+        )
         
-        if let dodge = dangerDirection {
-            // Dodge incoming projectile
-            return dodgeDirection(from: dodge, tank: tank, grid: grid, allTanks: allTanks)
-        }
-        
-        // Pursue the target with some randomness
-        return pursueTarget(tank: tank, target: target, grid: grid, allTanks: allTanks)
-    }
-    
-    /// Find the nearest enemy tank
-    private func findNearestEnemy(tank: Tank, allTanks: [Tank]) -> Tank? {
-        var nearestTank: Tank?
-        var nearestDistance = Int.max
-        
-        for (index, otherTank) in allTanks.enumerated() {
-            guard index != tankIndex && otherTank.isAlive else { continue }
-            
-            let distance = abs(tank.row - otherTank.row) + abs(tank.col - otherTank.col)
-            if distance < nearestDistance {
-                nearestDistance = distance
-                nearestTank = otherTank
+        // Priority 1: Dodge incoming projectiles
+        if let mostDangerousThreat = projectileThreats.first, mostDangerousThreat.severity >= .medium {
+            if let dodgeDir = AIThreatDetection.findDodgeDirection(
+                tank: tank,
+                threats: projectileThreats,
+                grid: grid,
+                allTanks: allTanks,
+                tankIndex: tankIndex
+            ) {
+                currentState = .seekingCover
+                return dodgeDir
             }
         }
         
-        return nearestTank
-    }
-    
-    /// Detect if there's an incoming projectile danger
-    private func detectDanger(tank: Tank, projectiles: [Projectile]) -> Direction? {
-        for projectile in projectiles {
-            // Check if projectile is heading toward the tank
-            let projOffset = projectile.direction.offset
-            var checkRow = projectile.row
-            var checkCol = projectile.col
+        // Priority 2: Retreat if advisable and enabled
+        if config.retreatEnabled && AIThreatDetection.shouldRetreat(
+            tank: tank,
+            allTanks: allTanks,
+            tankIndex: tankIndex,
+            threatLevel: threatLevel
+        ) {
+            currentState = .retreating
+            let enemies = allTanks.enumerated()
+                .filter { $0.offset != tankIndex && $0.element.isAlive }
+                .map { $0.element }
             
-            // Look ahead a few steps
-            for _ in 0..<4 {
-                checkRow += projOffset.row
-                checkCol += projOffset.col
-                
-                if checkRow == tank.row && checkCol == tank.col {
-                    return projectile.direction
+            if let retreatDir = AIPathfinding.findRetreatDirection(
+                from: (tank.row, tank.col),
+                enemies: enemies,
+                grid: grid,
+                tanks: allTanks,
+                currentTankIndex: tankIndex
+            ) {
+                return retreatDir
+            }
+        }
+        
+        // Priority 3: Seek cover if under threat and enabled
+        if config.coverSeekingEnabled && threatLevel >= .high {
+            let enemyThreats = AIThreatDetection.detectEnemyThreats(
+                tank: tank,
+                allTanks: allTanks,
+                tankIndex: tankIndex,
+                grid: grid
+            )
+            
+            if let topThreat = enemyThreats.first {
+                if let coverDir = AIPathfinding.findCoverDirection(
+                    from: (tank.row, tank.col),
+                    grid: grid,
+                    tanks: allTanks,
+                    currentTankIndex: tankIndex,
+                    threatDirection: topThreat.direction
+                ) {
+                    currentState = .seekingCover
+                    return coverDir
                 }
             }
         }
-        return nil
-    }
-    
-    /// Get a direction to dodge incoming danger
-    private func dodgeDirection(from dangerDirection: Direction, tank: Tank, grid: [[GridCell]], allTanks: [Tank]) -> Direction? {
-        // Try to move perpendicular to the danger
-        let perpendicular: [Direction]
-        switch dangerDirection {
-        case .up, .down:
-            perpendicular = [.left, .right]
-        case .left, .right:
-            perpendicular = [.up, .down]
-        default:
-            perpendicular = Direction.cardinalDirections
+        
+        // Find the best target
+        guard let target = AITargeting.findBestTarget(
+            tank: tank,
+            allTanks: allTanks,
+            tankIndex: tankIndex,
+            grid: grid
+        ) else {
+            // No enemy found, wander randomly
+            currentState = .wandering
+            return wanderRandomly(tank: tank, grid: grid, allTanks: allTanks)
         }
         
-        for direction in perpendicular.shuffled() {
-            if canMove(tank: tank, direction: direction, grid: grid, allTanks: allTanks) {
-                return direction
+        // Priority 4: Try flanking if enabled
+        if config.flankingEnabled && Double.random(in: 0...1) < 0.4 {
+            if let flankDir = AIPathfinding.findFlankingDirection(
+                from: (tank.row, tank.col),
+                target: target,
+                grid: grid,
+                tanks: allTanks,
+                currentTankIndex: tankIndex
+            ) {
+                currentState = .flanking
+                return flankDir
             }
         }
         
-        return nil
+        // Priority 5: Direct pursuit
+        currentState = .pursuing
+        return pursueTarget(tank: tank, target: target, grid: grid, allTanks: allTanks)
     }
     
-    /// Pursue a target tank
+    /// Pursue a target tank with difficulty-appropriate randomness
     private func pursueTarget(tank: Tank, target: Tank, grid: [[GridCell]], allTanks: [Tank]) -> Direction? {
+        // Apply pursuit randomness based on difficulty
+        if Double.random(in: 0...1) < config.pursuitRandomness {
+            return wanderRandomly(tank: tank, grid: grid, allTanks: allTanks)
+        }
+        
+        // Check if we can get a shot lined up
+        if let shootDir = AITargeting.findBestShootingDirection(
+            tank: tank,
+            target: target,
+            grid: grid,
+            predictive: config.predictiveAiming
+        ) {
+            // If we're already facing the right direction, we might want to stay put
+            if tank.direction == shootDir {
+                // Small chance to hold position when lined up
+                if Double.random(in: 0...1) < 0.3 {
+                    return nil
+                }
+            }
+        }
+        
+        // Use pathfinding to pursue target
+        if let direction = AIPathfinding.findBestDirection(
+            from: (tank.row, tank.col),
+            to: (target.row, target.col),
+            grid: grid,
+            tanks: allTanks,
+            currentTankIndex: tankIndex,
+            preferFlanking: config.flankingEnabled
+        ) {
+            return direction
+        }
+        
+        // Fall back to basic pursuit logic if pathfinding fails
         var preferredDirections: [Direction] = []
         
         // Calculate direction to target
@@ -156,12 +243,7 @@ struct AIBotTank {
             preferredDirections.append(.right)
         }
         
-        // Add some randomness (30% chance to pick a random direction instead)
-        if Double.random(in: 0...1) < 0.3 {
-            preferredDirections = Direction.cardinalDirections.shuffled()
-        } else {
-            preferredDirections.shuffle()
-        }
+        preferredDirections.shuffle()
         
         // Try preferred directions first
         for direction in preferredDirections {
@@ -211,35 +293,5 @@ struct AIBotTank {
         }
         
         return true
-    }
-    
-    /// Determine if the bot should attempt to shoot
-    private func shouldAttemptShoot(tank: Tank, allTanks: [Tank], grid: [[GridCell]]) -> Bool {
-        // Check if there's an enemy in the line of fire
-        let offset = tank.direction.offset
-        var checkRow = tank.row + offset.row
-        var checkCol = tank.col + offset.col
-        
-        // Look along the firing line
-        while checkRow >= 0 && checkRow < grid.count && checkCol >= 0 && checkCol < grid[0].count {
-            // Stop if we hit a wall
-            if grid[checkRow][checkCol] == .wall {
-                break
-            }
-            
-            // Check if there's an enemy tank here
-            for (index, otherTank) in allTanks.enumerated() {
-                guard index != tankIndex && otherTank.isAlive else { continue }
-                if otherTank.row == checkRow && otherTank.col == checkCol {
-                    return true
-                }
-            }
-            
-            checkRow += offset.row
-            checkCol += offset.col
-        }
-        
-        // Also shoot randomly sometimes (20% chance)
-        return Double.random(in: 0...1) < 0.2
     }
 }

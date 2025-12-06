@@ -16,6 +16,9 @@ class AIBotManager {
     /// Indices of tanks that are controlled by AI bots
     private(set) var botTankIndices: Set<Int> = []
     
+    /// Default difficulty level for bots
+    var defaultDifficulty: AIBotDifficulty = .medium
+    
     /// Callback when a bot wants to shoot
     var onBotShoot: ((Int, Projectile) -> Void)?
     
@@ -23,13 +26,28 @@ class AIBotManager {
     var onBotMove: ((Int, Int, Int, Direction) -> Void)?
     
     /// Initialize the bot manager with specified bot tank indices
-    /// - Parameter botIndices: The indices of tanks to be controlled by AI
-    func initialize(botIndices: [Int]) {
+    /// - Parameters:
+    ///   - botIndices: The indices of tanks to be controlled by AI
+    ///   - difficulty: Optional difficulty level (defaults to manager's default)
+    func initialize(botIndices: [Int], difficulty: AIBotDifficulty? = nil) {
         bots = []
         botTankIndices = Set(botIndices)
         
+        let difficultyLevel = difficulty ?? defaultDifficulty
+        
         for index in botIndices {
-            bots.append(AIBotTank(tankIndex: index))
+            bots.append(AIBotTank(tankIndex: index, difficulty: difficultyLevel))
+        }
+    }
+    
+    /// Initialize bots with varying difficulty levels
+    /// - Parameter botConfigs: Array of tuples (tankIndex, difficulty)
+    func initializeWithVaryingDifficulties(botConfigs: [(index: Int, difficulty: AIBotDifficulty)]) {
+        bots = []
+        botTankIndices = Set(botConfigs.map { $0.index })
+        
+        for config in botConfigs {
+            bots.append(AIBotTank(tankIndex: config.index, difficulty: config.difficulty))
         }
     }
     
@@ -68,9 +86,25 @@ class AIBotManager {
     
     /// Reset the bot manager
     func reset() {
-        // Reinitialize bots with randomized counters
+        // Reinitialize bots with randomized counters, keeping current difficulties
+        let currentBots = bots
+        bots = []
+        
+        for bot in currentBots {
+            bots.append(AIBotTank(tankIndex: bot.tankIndex, difficulty: bot.difficulty))
+        }
+    }
+    
+    /// Set difficulty for all bots
+    func setDifficulty(_ difficulty: AIBotDifficulty) {
+        defaultDifficulty = difficulty
         let indices = Array(botTankIndices)
-        initialize(botIndices: indices)
+        initialize(botIndices: indices, difficulty: difficulty)
+    }
+    
+    /// Get the difficulty of a specific bot
+    func getDifficulty(forBotAt tankIndex: Int) -> AIBotDifficulty? {
+        return bots.first { $0.tankIndex == tankIndex }?.difficulty
     }
     
     /// Get the number of active bots
