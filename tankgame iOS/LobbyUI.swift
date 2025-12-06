@@ -22,6 +22,9 @@ class LobbyUI {
     private(set) var botCountStepper: UIStepper!
     private(set) var botCountLabel: UILabel!
     private(set) var botCountView: UIView!
+    private(set) var difficultyView: UIView!
+    private(set) var difficultyLabel: UILabel!
+    private(set) var difficultySegmentedControl: UISegmentedControl!
     private(set) var peerTableView: UITableView!
     private(set) var connectedPlayersView: UIView!
     private(set) var connectedPlayersLabel: UILabel!
@@ -131,6 +134,28 @@ class LobbyUI {
         botCountStepper.addTarget(self, action: #selector(botCountChanged), for: .valueChanged)
         botCountStepper.translatesAutoresizingMaskIntoConstraints = false
         botCountView.addSubview(botCountStepper)
+        
+        // Difficulty selection view (for single player mode)
+        difficultyView = UIView()
+        difficultyView.backgroundColor = .secondarySystemBackground
+        difficultyView.layer.cornerRadius = 12
+        difficultyView.isHidden = true
+        difficultyView.translatesAutoresizingMaskIntoConstraints = false
+        lobbyView.addSubview(difficultyView)
+        
+        difficultyLabel = UILabel()
+        difficultyLabel.text = "Difficulty:"
+        difficultyLabel.font = .systemFont(ofSize: 16, weight: .medium)
+        difficultyLabel.translatesAutoresizingMaskIntoConstraints = false
+        difficultyView.addSubview(difficultyLabel)
+        
+        // Create segmented control with difficulty options
+        let difficultyItems = AIBotDifficulty.allCases.map { "\($0.icon) \($0.displayName)" }
+        difficultySegmentedControl = UISegmentedControl(items: difficultyItems)
+        difficultySegmentedControl.selectedSegmentIndex = AISettings.shared.difficulty.rawValue
+        difficultySegmentedControl.addTarget(self, action: #selector(difficultyChanged), for: .valueChanged)
+        difficultySegmentedControl.translatesAutoresizingMaskIntoConstraints = false
+        difficultyView.addSubview(difficultySegmentedControl)
         
         // Sprite mode toggle button
         spriteModeButton = createSpriteModeButton()
@@ -287,7 +312,19 @@ class LobbyUI {
             botCountStepper.trailingAnchor.constraint(equalTo: botCountView.trailingAnchor, constant: -16),
             botCountStepper.centerYAnchor.constraint(equalTo: botCountView.centerYAnchor),
             
-            cancelButton.topAnchor.constraint(equalTo: botCountView.bottomAnchor, constant: 16),
+            difficultyView.topAnchor.constraint(equalTo: botCountView.bottomAnchor, constant: 12),
+            difficultyView.centerXAnchor.constraint(equalTo: lobbyView.centerXAnchor),
+            difficultyView.widthAnchor.constraint(equalToConstant: 280),
+            difficultyView.heightAnchor.constraint(equalToConstant: 80),
+            
+            difficultyLabel.topAnchor.constraint(equalTo: difficultyView.topAnchor, constant: 10),
+            difficultyLabel.centerXAnchor.constraint(equalTo: difficultyView.centerXAnchor),
+            
+            difficultySegmentedControl.topAnchor.constraint(equalTo: difficultyLabel.bottomAnchor, constant: 8),
+            difficultySegmentedControl.leadingAnchor.constraint(equalTo: difficultyView.leadingAnchor, constant: 12),
+            difficultySegmentedControl.trailingAnchor.constraint(equalTo: difficultyView.trailingAnchor, constant: -12),
+            
+            cancelButton.topAnchor.constraint(equalTo: difficultyView.bottomAnchor, constant: 16),
             cancelButton.centerXAnchor.constraint(equalTo: lobbyView.centerXAnchor),
             
             connectedPlayersView.topAnchor.constraint(equalTo: cancelButton.bottomAnchor, constant: 20),
@@ -352,6 +389,13 @@ class LobbyUI {
         botCountLabel.text = "AI Bots: \(botCount)"
     }
     
+    @objc private func difficultyChanged() {
+        let selectedIndex = difficultySegmentedControl.selectedSegmentIndex
+        if let difficulty = AIBotDifficulty(rawValue: selectedIndex) {
+            AISettings.shared.difficulty = difficulty
+        }
+    }
+    
     /// Create sprite mode toggle button
     private func createSpriteModeButton() -> UIButton {
         let button = UIButton(type: .system)
@@ -386,9 +430,10 @@ class LobbyUI {
         joinButton.isHidden = true
         instructionsLabel.isHidden = true
         botCountView.isHidden = false
+        difficultyView.isHidden = false
         cancelButton.isHidden = false
         startGameButton.isHidden = false
-        statusLabel.text = "Single Player Mode\nSelect number of AI opponents"
+        statusLabel.text = "Single Player Mode\nSelect number of AI opponents and difficulty"
     }
     
     /// Reset lobby to initial state
@@ -399,6 +444,7 @@ class LobbyUI {
         instructionsLabel.isHidden = false
         spriteModeButton.isHidden = false
         botCountView.isHidden = true
+        difficultyView.isHidden = true
         cancelButton.isHidden = true
         startGameButton.isHidden = true
         connectedPlayersView.isHidden = true
@@ -407,5 +453,7 @@ class LobbyUI {
         activityIndicator.stopAnimating()
         statusLabel.text = "Choose an option to start"
         updateSpriteModeButton()
+        // Reset difficulty selector to current setting
+        difficultySegmentedControl.selectedSegmentIndex = AISettings.shared.difficulty.rawValue
     }
 }

@@ -13,22 +13,32 @@ struct AIBotTank {
     /// The tank index this AI controls
     let tankIndex: Int
     
+    /// The difficulty level for this bot
+    let difficulty: AIBotDifficulty
+    
     /// Movement decision interval in update ticks
     private var moveCounter: Int = 0
-    static let moveInterval: Int = 12
     
     /// Shooting decision interval in update ticks
     private var shootCounter: Int = 0
-    static let shootInterval: Int = 25
     
     /// Whether the bot should attempt to shoot this update
     var shouldShoot: Bool = false
     
-    init(tankIndex: Int) {
+    /// Tracks the last known position of the target for predictive targeting
+    private var lastTargetRow: Int = -1
+    private var lastTargetCol: Int = -1
+    
+    /// Counter for flanking behavior (hard mode)
+    private var flankingCounter: Int = 0
+    private var currentFlankDirection: Direction?
+    
+    init(tankIndex: Int, difficulty: AIBotDifficulty = AISettings.shared.difficulty) {
         self.tankIndex = tankIndex
+        self.difficulty = difficulty
         // Randomize initial counters to avoid synchronized bot behavior
-        self.moveCounter = Int.random(in: 0..<AIBotTank.moveInterval)
-        self.shootCounter = Int.random(in: 0..<AIBotTank.shootInterval)
+        self.moveCounter = Int.random(in: 0..<difficulty.moveInterval)
+        self.shootCounter = Int.random(in: 0..<difficulty.shootInterval)
     }
     
     /// Update the AI bot behavior
@@ -43,38 +53,54 @@ struct AIBotTank {
         
         // Update shooting logic
         shootCounter += 1
-        if shootCounter >= AIBotTank.shootInterval {
+        if shootCounter >= difficulty.shootInterval {
             shootCounter = 0
-            shouldShoot = shouldAttemptShoot(tank: tank, allTanks: allTanks, grid: grid)
+            shouldShoot = shouldAttemptShoot(tank: tank, allTanks: allTanks, grid: grid, projectiles: projectiles)
         } else {
             shouldShoot = false
         }
         
         // Update movement logic
         moveCounter += 1
-        guard moveCounter >= AIBotTank.moveInterval else { return nil }
+        guard moveCounter >= difficulty.moveInterval else { return nil }
         moveCounter = 0
         
         return decideMovement(tank: tank, grid: grid, allTanks: allTanks, projectiles: projectiles)
     }
     
     /// Decide which direction to move
-    private func decideMovement(tank: Tank, grid: [[GridCell]], allTanks: [Tank], projectiles: [Projectile]) -> Direction? {
+    private mutating func decideMovement(tank: Tank, grid: [[GridCell]], allTanks: [Tank], projectiles: [Projectile]) -> Direction? {
+        // Priority 1: Dodge incoming projectiles
+        let dangerDirection = detectDanger(tank: tank, projectiles: projectiles)
+        if let dodge = dangerDirection {
+            return dodgeDirection(from: dodge, tank: tank, grid: grid, allTanks: allTanks)
+        }
+        
         // Find the nearest enemy tank
         guard let target = findNearestEnemy(tank: tank, allTanks: allTanks) else {
             // No enemy found, wander randomly
             return wanderRandomly(tank: tank, grid: grid, allTanks: allTanks)
         }
         
-        // Decide whether to pursue, dodge, or attack
-        let dangerDirection = detectDanger(tank: tank, projectiles: projectiles)
+        // Update last known target position
+        lastTargetRow = target.row
+        lastTargetCol = target.col
         
-        if let dodge = dangerDirection {
-            // Dodge incoming projectile
-            return dodgeDirection(from: dodge, tank: tank, grid: grid, allTanks: allTanks)
+        // Priority 2: For hard mode, use flanking maneuvers
+        if difficulty.usesFlankingManeuvers {
+            if let flankMove = attemptFlankingManeuver(tank: tank, target: target, grid: grid, allTanks: allTanks) {
+                return flankMove
+            }
         }
         
-        // Pursue the target with some randomness
+        // Priority 3: For advanced targeting, try to get into firing position
+        if difficulty.usesAdvancedTargeting {
+            if let positionMove = moveToFiringPosition(tank: tank, target: target, grid: grid, allTanks: allTanks) {
+                return positionMove
+            }
+        }
+        
+        // Priority 4: Pursue the target with difficulty-based randomness
         return pursueTarget(tank: tank, target: target, grid: grid, allTanks: allTanks)
     }
     
@@ -104,8 +130,8 @@ struct AIBotTank {
             var checkRow = projectile.row
             var checkCol = projectile.col
             
-            // Look ahead a few steps
-            for _ in 0..<4 {
+            // Look ahead based on difficulty (more steps = better awareness)
+            for _ in 0..<difficulty.dangerLookAhead {
                 checkRow += projOffset.row
                 checkCol += projOffset.col
                 
@@ -156,8 +182,8 @@ struct AIBotTank {
             preferredDirections.append(.right)
         }
         
-        // Add some randomness (30% chance to pick a random direction instead)
-        if Double.random(in: 0...1) < 0.3 {
+        // Add randomness based on difficulty (higher difficulty = less random)
+        if Double.random(in: 0...1) < difficulty.randomMoveProbability {
             preferredDirections = Direction.cardinalDirections.shuffled()
         } else {
             preferredDirections.shuffle()
@@ -214,14 +240,36 @@ struct AIBotTank {
     }
     
     /// Determine if the bot should attempt to shoot
-    private func shouldAttemptShoot(tank: Tank, allTanks: [Tank], grid: [[GridCell]]) -> Bool {
+    private func shouldAttemptShoot(tank: Tank, allTanks: [Tank], grid: [[GridCell]], projectiles: [Projectile]) -> Bool {
         // Check if there's an enemy in the line of fire
+        if hasEnemyInLineOfFire(tank: tank, allTanks: allTanks, grid: grid) {
+            return true
+        }
+        
+        // For advanced targeting, also check if we're close to having a shot
+        if difficulty.usesAdvancedTargeting {
+            if isNearFiringPosition(tank: tank, allTanks: allTanks, grid: grid) {
+                // Don't randomly shoot when we're close to a good position
+                return false
+            }
+        }
+        
+        // Random shooting based on difficulty (lower probability = smarter)
+        return Double.random(in: 0...1) < difficulty.randomShootProbability
+    }
+    
+    /// Check if there's an enemy directly in the line of fire
+    private func hasEnemyInLineOfFire(tank: Tank, allTanks: [Tank], grid: [[GridCell]]) -> Bool {
         let offset = tank.direction.offset
         var checkRow = tank.row + offset.row
         var checkCol = tank.col + offset.col
         
-        // Look along the firing line
-        while checkRow >= 0 && checkRow < grid.count && checkCol >= 0 && checkCol < grid[0].count {
+        // Look along the firing line up to targeting range
+        var distance = 0
+        while distance < difficulty.targetingRange &&
+              checkRow >= 0 && checkRow < grid.count &&
+              checkCol >= 0 && checkCol < grid[0].count {
+            
             // Stop if we hit a wall
             if grid[checkRow][checkCol] == .wall {
                 break
@@ -237,9 +285,130 @@ struct AIBotTank {
             
             checkRow += offset.row
             checkCol += offset.col
+            distance += 1
         }
         
-        // Also shoot randomly sometimes (20% chance)
-        return Double.random(in: 0...1) < 0.2
+        return false
+    }
+    
+    /// Check if the tank is near a good firing position (one move away from having a shot)
+    private func isNearFiringPosition(tank: Tank, allTanks: [Tank], grid: [[GridCell]]) -> Bool {
+        // Check each cardinal direction to see if turning that way would give us a shot
+        for direction in Direction.cardinalDirections {
+            if wouldHaveShot(tank: tank, facing: direction, allTanks: allTanks, grid: grid) {
+                return true
+            }
+        }
+        return false
+    }
+    
+    /// Check if the tank would have a shot if it were facing a certain direction
+    private func wouldHaveShot(tank: Tank, facing: Direction, allTanks: [Tank], grid: [[GridCell]]) -> Bool {
+        let offset = facing.offset
+        var checkRow = tank.row + offset.row
+        var checkCol = tank.col + offset.col
+        
+        var distance = 0
+        while distance < difficulty.targetingRange &&
+              checkRow >= 0 && checkRow < grid.count &&
+              checkCol >= 0 && checkCol < grid[0].count {
+            
+            if grid[checkRow][checkCol] == .wall {
+                break
+            }
+            
+            for (index, otherTank) in allTanks.enumerated() {
+                guard index != tankIndex && otherTank.isAlive else { continue }
+                if otherTank.row == checkRow && otherTank.col == checkCol {
+                    return true
+                }
+            }
+            
+            checkRow += offset.row
+            checkCol += offset.col
+            distance += 1
+        }
+        
+        return false
+    }
+    
+    /// Move to get into a firing position against the target
+    private func moveToFiringPosition(tank: Tank, target: Tank, grid: [[GridCell]], allTanks: [Tank]) -> Direction? {
+        // Check if we can get a shot by moving to align with the target
+        
+        // If target is on same row, try to get into horizontal firing position
+        if target.row == tank.row {
+            // Already aligned, don't need to move for position
+            return nil
+        }
+        
+        // If target is on same column, try to get into vertical firing position
+        if target.col == tank.col {
+            // Already aligned, don't need to move for position
+            return nil
+        }
+        
+        // Try to move to same row as target
+        let rowDiff = target.row - tank.row
+        let colDiff = target.col - tank.col
+        
+        // Prioritize the shorter distance alignment
+        if abs(rowDiff) < abs(colDiff) {
+            // Move vertically to align rows
+            let direction: Direction = rowDiff < 0 ? .up : .down
+            if canMove(tank: tank, direction: direction, grid: grid, allTanks: allTanks) {
+                return direction
+            }
+        } else {
+            // Move horizontally to align columns
+            let direction: Direction = colDiff < 0 ? .left : .right
+            if canMove(tank: tank, direction: direction, grid: grid, allTanks: allTanks) {
+                return direction
+            }
+        }
+        
+        return nil
+    }
+    
+    /// Attempt a flanking maneuver (hard mode only)
+    private mutating func attemptFlankingManeuver(tank: Tank, target: Tank, grid: [[GridCell]], allTanks: [Tank]) -> Direction? {
+        // Flanking: try to approach from the side or behind the target
+        
+        flankingCounter += 1
+        
+        // Reset flanking direction periodically
+        if flankingCounter > 5 {
+            flankingCounter = 0
+            currentFlankDirection = nil
+        }
+        
+        // If we don't have a flanking direction, decide one
+        if currentFlankDirection == nil {
+            // Get the direction the target is facing
+            let targetFacing = target.direction
+            
+            // Try to move perpendicular to the target's facing direction
+            let perpendicularDirs: [Direction]
+            switch targetFacing {
+            case .up, .down:
+                perpendicularDirs = [.left, .right]
+            case .left, .right:
+                perpendicularDirs = [.up, .down]
+            default:
+                perpendicularDirs = Direction.cardinalDirections
+            }
+            
+            currentFlankDirection = perpendicularDirs.randomElement()
+        }
+        
+        // Try to move in the flanking direction
+        if let flankDir = currentFlankDirection,
+           canMove(tank: tank, direction: flankDir, grid: grid, allTanks: allTanks) {
+            return flankDir
+        }
+        
+        // If flanking direction blocked, clear it
+        currentFlankDirection = nil
+        return nil
     }
 }

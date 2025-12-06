@@ -23,13 +23,16 @@ class AIBotManager {
     var onBotMove: ((Int, Int, Int, Direction) -> Void)?
     
     /// Initialize the bot manager with specified bot tank indices
-    /// - Parameter botIndices: The indices of tanks to be controlled by AI
-    func initialize(botIndices: [Int]) {
+    /// - Parameters:
+    ///   - botIndices: The indices of tanks to be controlled by AI
+    ///   - difficulty: The difficulty level for all bots (defaults to AISettings.shared.difficulty)
+    func initialize(botIndices: [Int], difficulty: AIBotDifficulty? = nil) {
         bots = []
         botTankIndices = Set(botIndices)
         
+        let botDifficulty = difficulty ?? AISettings.shared.difficulty
         for index in botIndices {
-            bots.append(AIBotTank(tankIndex: index))
+            bots.append(AIBotTank(tankIndex: index, difficulty: botDifficulty))
         }
     }
     
