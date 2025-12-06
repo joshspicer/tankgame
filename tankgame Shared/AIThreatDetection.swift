@@ -204,8 +204,8 @@ struct AIThreatDetection {
         let projectileThreats = detectProjectileThreats(tank: tank, projectiles: projectiles, lookAhead: 6)
         let enemyThreats = detectEnemyThreats(tank: tank, allTanks: allTanks, tankIndex: tankIndex, grid: grid)
         
-        // Count alive enemies
-        let aliveEnemies = allTanks.enumerated().filter { $0.offset != tankIndex && $0.element.isAlive }.count
+        // Count alive enemies using helper
+        let aliveEnemyCount = countAliveEnemies(allTanks: allTanks, tankIndex: tankIndex)
         
         // Critical if we have immediate projectile threat
         if let topThreat = projectileThreats.first, topThreat.severity == .critical {
@@ -218,11 +218,20 @@ struct AIThreatDetection {
         }
         
         // Medium if outnumbered or moderate threats
-        if aliveEnemies > 1 || !projectileThreats.isEmpty {
+        if aliveEnemyCount > 1 || !projectileThreats.isEmpty {
             return .medium
         }
         
         return .low
+    }
+    
+    /// Count the number of alive enemies
+    /// - Parameters:
+    ///   - allTanks: All tanks in the game
+    ///   - tankIndex: Index of the current tank
+    /// - Returns: Number of alive enemy tanks
+    static func countAliveEnemies(allTanks: [Tank], tankIndex: Int) -> Int {
+        return allTanks.enumerated().filter { $0.offset != tankIndex && $0.element.isAlive }.count
     }
     
     /// Check if retreat is advisable
@@ -238,11 +247,11 @@ struct AIThreatDetection {
         tankIndex: Int,
         threatLevel: ThreatSeverity
     ) -> Bool {
-        // Count alive enemies
-        let aliveEnemies = allTanks.enumerated().filter { $0.offset != tankIndex && $0.element.isAlive }.count
+        // Count alive enemies using helper
+        let aliveEnemyCount = countAliveEnemies(allTanks: allTanks, tankIndex: tankIndex)
         
         // Retreat if heavily outnumbered and under threat
-        if aliveEnemies >= 2 && threatLevel >= .high {
+        if aliveEnemyCount >= 2 && threatLevel >= .high {
             return true
         }
         

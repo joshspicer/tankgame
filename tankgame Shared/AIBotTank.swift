@@ -206,10 +206,10 @@ struct AIBotTank {
             grid: grid,
             predictive: config.predictiveAiming
         ) {
-            // If we're already facing the right direction, we might want to stay put
+            // If we're already facing the right direction, consider holding position
             if tank.direction == shootDir {
-                // Small chance to hold position when lined up
-                if Double.random(in: 0...1) < 0.3 {
+                // Use configurable hold position chance based on difficulty
+                if Double.random(in: 0...1) < config.holdPositionChance {
                     return nil
                 }
             }

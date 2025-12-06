@@ -224,8 +224,10 @@ struct AITargeting {
             checkRow += offset.row
             checkCol += offset.col
             
-            // Safety check to avoid infinite loop
-            if abs(checkRow - from.row) > grid.count || abs(checkCol - from.col) > grid[0].count {
+            // Safety check to avoid infinite loop - use actual grid dimensions
+            let maxRowDelta = grid.count
+            let maxColDelta = grid.isEmpty ? 0 : grid[0].count
+            if abs(checkRow - from.row) > maxRowDelta || abs(checkCol - from.col) > maxColDelta {
                 break
             }
         }

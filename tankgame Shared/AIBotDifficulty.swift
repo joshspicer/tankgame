@@ -36,7 +36,8 @@ enum AIBotDifficulty: Int, Codable, CaseIterable {
                 coverSeekingEnabled: false, // No cover seeking
                 predictiveAiming: false,    // No predictive aiming
                 retreatEnabled: false,      // No retreat behavior
-                lookAheadDistance: 3        // Short look-ahead
+                lookAheadDistance: 3,       // Short look-ahead
+                holdPositionChance: 0.1     // Low chance to hold position when aligned
             )
         case .medium:
             return AIBotConfig(
@@ -49,7 +50,8 @@ enum AIBotDifficulty: Int, Codable, CaseIterable {
                 coverSeekingEnabled: false, // No cover seeking
                 predictiveAiming: false,    // No predictive aiming
                 retreatEnabled: true,       // Enable retreat behavior
-                lookAheadDistance: 5        // Medium look-ahead
+                lookAheadDistance: 5,       // Medium look-ahead
+                holdPositionChance: 0.3     // Moderate chance to hold position when aligned
             )
         case .hard:
             return AIBotConfig(
@@ -62,7 +64,8 @@ enum AIBotDifficulty: Int, Codable, CaseIterable {
                 coverSeekingEnabled: true,  // Enable cover seeking
                 predictiveAiming: true,     // Enable predictive aiming
                 retreatEnabled: true,       // Enable retreat behavior
-                lookAheadDistance: 8        // Long look-ahead (full grid)
+                lookAheadDistance: 8,       // Long look-ahead (full grid)
+                holdPositionChance: 0.5     // High chance to hold position when aligned for accurate shot
             )
         }
     }
@@ -99,4 +102,7 @@ struct AIBotConfig {
     
     /// How far ahead to scan for targets and threats
     let lookAheadDistance: Int
+    
+    /// Probability (0.0 - 1.0) of holding position when aligned with a target
+    let holdPositionChance: Double
 }

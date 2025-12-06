@@ -250,8 +250,15 @@ struct AIPathfinding {
         let aliveEnemies = enemies.filter { $0.isAlive }
         guard !aliveEnemies.isEmpty else { return nil }
         
-        let avgRow = aliveEnemies.map { $0.row }.reduce(0, +) / aliveEnemies.count
-        let avgCol = aliveEnemies.map { $0.col }.reduce(0, +) / aliveEnemies.count
+        // Calculate average position in a single pass
+        var totalRow = 0
+        var totalCol = 0
+        for enemy in aliveEnemies {
+            totalRow += enemy.row
+            totalCol += enemy.col
+        }
+        let avgRow = totalRow / aliveEnemies.count
+        let avgCol = totalCol / aliveEnemies.count
         
         // Find direction that maximizes distance from average enemy position
         var bestDirection: Direction?
