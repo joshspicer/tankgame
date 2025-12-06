@@ -84,6 +84,42 @@ enum AIBotDifficulty: Int, CaseIterable {
         case .hard: return true
         }
     }
+    
+    /// Chance to hold position when having line of sight (0.0-1.0)
+    var holdPositionChance: Double {
+        switch self {
+        case .easy: return 0.2
+        case .medium: return 0.3
+        case .hard: return 0.4
+        }
+    }
+    
+    /// Number of pursuit attempts before triggering flank behavior
+    var flankingThreshold: Int {
+        switch self {
+        case .easy: return 8
+        case .medium: return 5
+        case .hard: return 4
+        }
+    }
+    
+    /// Base chance to attempt flanking (0.0-1.0)
+    var flankingChance: Double {
+        switch self {
+        case .easy: return 0.15
+        case .medium: return 0.25
+        case .hard: return 0.35
+        }
+    }
+    
+    /// Chance to shoot at a lizard when in line of fire (0.0-1.0)
+    var lizardTargetChance: Double {
+        switch self {
+        case .easy: return 0.4
+        case .medium: return 0.5
+        case .hard: return 0.6
+        }
+    }
 }
 
 /// Represents a potential threat to the bot
@@ -183,7 +219,7 @@ struct AIBotTank {
         // Check if we should seek a better shooting position
         if difficulty.useCoverBehavior && hasLineOfSight(from: tank, to: target, grid: grid) {
             // We can see them - maybe hold position or get better angle
-            if Double.random(in: 0...1) < 0.4 {
+            if Double.random(in: 0...1) < difficulty.holdPositionChance {
                 return nil // Hold position and shoot
             }
         }
@@ -230,10 +266,15 @@ struct AIBotTank {
         return bestTarget
     }
     
-    /// Determine the general direction from one tank to another
+    /// Determine the general direction from one position to another
     private func directionTo(from: Tank, to: Tank) -> Direction {
-        let rowDiff = to.row - from.row
-        let colDiff = to.col - from.col
+        return directionBetween(fromRow: from.row, fromCol: from.col, toRow: to.row, toCol: to.col)
+    }
+    
+    /// Determine the general direction between two grid positions
+    private func directionBetween(fromRow: Int, fromCol: Int, toRow: Int, toCol: Int) -> Direction {
+        let rowDiff = toRow - fromRow
+        let colDiff = toCol - fromCol
         
         if abs(rowDiff) > abs(colDiff) {
             return rowDiff < 0 ? .up : .down
@@ -315,7 +356,7 @@ struct AIBotTank {
     private func detectLizardThreat(tank: Tank, lizard: Lizard) -> ThreatInfo? {
         let distance = abs(tank.row - lizard.row) + abs(tank.col - lizard.col)
         if distance <= 2 {
-            let dir = directionTo(from: Tank(row: lizard.row, col: lizard.col), to: tank)
+            let dir = directionBetween(fromRow: lizard.row, fromCol: lizard.col, toRow: tank.row, toCol: tank.col)
             return ThreatInfo(direction: dir, distance: distance, isProjectile: false)
         }
         return nil
@@ -362,8 +403,8 @@ struct AIBotTank {
         
         // Flank if we've been pursuing for a while without success
         // Or randomly based on difficulty
-        let shouldFlankDueToStuck = pursuitCounter > 5
-        let randomFlank = Double.random(in: 0...1) < 0.25
+        let shouldFlankDueToStuck = pursuitCounter > difficulty.flankingThreshold
+        let randomFlank = Double.random(in: 0...1) < difficulty.flankingChance
         
         return shouldFlankDueToStuck || randomFlank
     }
@@ -544,8 +585,8 @@ struct AIBotTank {
             // Check if there's a lizard here (bonus targets)
             for lizard in lizards where lizard.isAlive {
                 if lizard.row == checkRow && lizard.col == checkCol {
-                    // 60% chance to shoot at lizards
-                    return Double.random(in: 0...1) < 0.6
+                    // Chance to shoot at lizards based on difficulty
+                    return Double.random(in: 0...1) < difficulty.lizardTargetChance
                 }
             }
             
