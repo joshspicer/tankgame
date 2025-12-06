@@ -25,13 +25,12 @@ struct AIBotTank {
     /// Whether the bot should attempt to shoot this update
     var shouldShoot: Bool = false
     
-    /// Tracks the last known position of the target for predictive targeting
-    private var lastTargetRow: Int = -1
-    private var lastTargetCol: Int = -1
-    
     /// Counter for flanking behavior (hard mode)
     private var flankingCounter: Int = 0
     private var currentFlankDirection: Direction?
+    
+    /// Maximum number of update cycles before resetting flanking direction
+    private static let flankingResetThreshold: Int = 5
     
     init(tankIndex: Int, difficulty: AIBotDifficulty = AISettings.shared.difficulty) {
         self.tankIndex = tankIndex
@@ -81,10 +80,6 @@ struct AIBotTank {
             // No enemy found, wander randomly
             return wanderRandomly(tank: tank, grid: grid, allTanks: allTanks)
         }
-        
-        // Update last known target position
-        lastTargetRow = target.row
-        lastTargetCol = target.col
         
         // Priority 2: For hard mode, use flanking maneuvers
         if difficulty.usesFlankingManeuvers {
@@ -370,31 +365,37 @@ struct AIBotTank {
         return nil
     }
     
-    /// Attempt a flanking maneuver (hard mode only)
+    /// Attempt a flanking maneuver to approach the target from the side.
+    /// This makes the bot harder to hit by approaching perpendicular to the target's facing direction.
+    /// The flanking direction is maintained for several updates to create consistent movement patterns.
+    /// - Parameters:
+    ///   - tank: The bot's tank
+    ///   - target: The enemy tank being targeted
+    ///   - grid: The game grid
+    ///   - allTanks: All tanks in the game
+    /// - Returns: The direction to move for flanking, or nil if flanking isn't possible
     private mutating func attemptFlankingManeuver(tank: Tank, target: Tank, grid: [[GridCell]], allTanks: [Tank]) -> Direction? {
-        // Flanking: try to approach from the side or behind the target
-        
         flankingCounter += 1
         
-        // Reset flanking direction periodically
-        if flankingCounter > 5 {
+        // Reset flanking direction periodically to adapt to target movement
+        if flankingCounter > AIBotTank.flankingResetThreshold {
             flankingCounter = 0
             currentFlankDirection = nil
         }
         
-        // If we don't have a flanking direction, decide one
+        // If we don't have a flanking direction, decide one based on target's facing
         if currentFlankDirection == nil {
-            // Get the direction the target is facing
             let targetFacing = target.direction
             
-            // Try to move perpendicular to the target's facing direction
+            // Move perpendicular to the target's facing direction to approach from the side
             let perpendicularDirs: [Direction]
             switch targetFacing {
             case .up, .down:
                 perpendicularDirs = [.left, .right]
             case .left, .right:
                 perpendicularDirs = [.up, .down]
-            default:
+            case .upRight, .downRight, .downLeft, .upLeft:
+                // For diagonal directions, use all cardinal directions as options
                 perpendicularDirs = Direction.cardinalDirections
             }
             
@@ -407,7 +408,7 @@ struct AIBotTank {
             return flankDir
         }
         
-        // If flanking direction blocked, clear it
+        // If flanking direction blocked, clear it to try a different approach next time
         currentFlankDirection = nil
         return nil
     }
