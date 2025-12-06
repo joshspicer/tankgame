@@ -129,8 +129,8 @@ class GameSceneUpdateLoop {
             scene?.soundManager.playSound("shot.wav")
         }
         
-        // Update all bots
-        state.botManager.update(tanks: &state.tanks, grid: state.grid, projectiles: state.projectiles)
+        // Update all bots (passing lizards for enhanced threat detection)
+        state.botManager.update(tanks: &state.tanks, grid: state.grid, projectiles: state.projectiles, lizards: state.lizards)
     }
     
     private func handleRoundEnd() {

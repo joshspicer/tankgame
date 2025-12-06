@@ -16,6 +16,9 @@ class AIBotManager {
     /// Indices of tanks that are controlled by AI bots
     private(set) var botTankIndices: Set<Int> = []
     
+    /// Default difficulty for new bots
+    private var defaultDifficulty: AIBotDifficulty = .medium
+    
     /// Callback when a bot wants to shoot
     var onBotShoot: ((Int, Projectile) -> Void)?
     
@@ -23,13 +26,27 @@ class AIBotManager {
     var onBotMove: ((Int, Int, Int, Direction) -> Void)?
     
     /// Initialize the bot manager with specified bot tank indices
-    /// - Parameter botIndices: The indices of tanks to be controlled by AI
-    func initialize(botIndices: [Int]) {
+    /// - Parameters:
+    ///   - botIndices: The indices of tanks to be controlled by AI
+    ///   - difficulty: The difficulty level for all bots (default: .medium)
+    func initialize(botIndices: [Int], difficulty: AIBotDifficulty = .medium) {
         bots = []
         botTankIndices = Set(botIndices)
+        defaultDifficulty = difficulty
         
         for index in botIndices {
-            bots.append(AIBotTank(tankIndex: index))
+            bots.append(AIBotTank(tankIndex: index, difficulty: difficulty))
+        }
+    }
+    
+    /// Initialize the bot manager with varying difficulties for each bot
+    /// - Parameter botConfigs: Array of tuples containing (tankIndex, difficulty)
+    func initializeWithVaryingDifficulties(botConfigs: [(index: Int, difficulty: AIBotDifficulty)]) {
+        bots = []
+        botTankIndices = Set(botConfigs.map { $0.index })
+        
+        for config in botConfigs {
+            bots.append(AIBotTank(tankIndex: config.index, difficulty: config.difficulty))
         }
     }
     
@@ -38,18 +55,24 @@ class AIBotManager {
         return botTankIndices.contains(tankIndex)
     }
     
+    /// Get the difficulty of a specific bot
+    func getDifficulty(forTankIndex tankIndex: Int) -> AIBotDifficulty? {
+        return bots.first { $0.tankIndex == tankIndex }?.difficulty
+    }
+    
     /// Update all bots
     /// - Parameters:
     ///   - tanks: All tanks in the game
     ///   - grid: The game grid
     ///   - projectiles: Current projectiles
-    func update(tanks: inout [Tank], grid: [[GridCell]], projectiles: [Projectile]) {
+    ///   - lizards: Current lizards in the game (for avoidance on hard difficulty)
+    func update(tanks: inout [Tank], grid: [[GridCell]], projectiles: [Projectile], lizards: [Lizard] = []) {
         for i in bots.indices {
             let tankIndex = bots[i].tankIndex
             guard tankIndex < tanks.count && tanks[tankIndex].isAlive else { continue }
             
             // Get movement decision from bot (mutating call)
-            let direction = bots[i].update(tank: tanks[tankIndex], grid: grid, allTanks: tanks, projectiles: projectiles)
+            let direction = bots[i].update(tank: tanks[tankIndex], grid: grid, allTanks: tanks, projectiles: projectiles, lizards: lizards)
             
             if let direction = direction {
                 // Try to move the tank
@@ -70,7 +93,14 @@ class AIBotManager {
     func reset() {
         // Reinitialize bots with randomized counters
         let indices = Array(botTankIndices)
-        initialize(botIndices: indices)
+        initialize(botIndices: indices, difficulty: defaultDifficulty)
+    }
+    
+    /// Set the difficulty level for all bots
+    func setDifficulty(_ difficulty: AIBotDifficulty) {
+        defaultDifficulty = difficulty
+        let indices = Array(botTankIndices)
+        initialize(botIndices: indices, difficulty: difficulty)
     }
     
     /// Get the number of active bots

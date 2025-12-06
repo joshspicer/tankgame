@@ -53,6 +53,20 @@ enum Direction: Int, Codable, CaseIterable {
         }
     }
     
+    /// The opposite direction
+    var opposite: Direction {
+        switch self {
+        case .up: return .down
+        case .down: return .up
+        case .left: return .right
+        case .right: return .left
+        case .upRight: return .downLeft
+        case .downRight: return .upLeft
+        case .downLeft: return .upRight
+        case .upLeft: return .downRight
+        }
+    }
+    
     /// All cardinal (non-diagonal) directions
     static let cardinalDirections: [Direction] = [.up, .down, .left, .right]
 }
