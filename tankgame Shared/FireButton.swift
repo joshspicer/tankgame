@@ -16,22 +16,14 @@ class FireButton {
     
     /// Setup the fire button
     func setup(in scene: SKScene, at position: CGPoint) {
-        let newFireButton = SKShapeNode(circleOfRadius: 40)
+        let newFireButton = SKShapeNode(circleOfRadius: 35)
         newFireButton.position = position
-        newFireButton.fillColor = .red
-        newFireButton.strokeColor = .white
-        newFireButton.lineWidth = 3
-        newFireButton.alpha = 0.7
+        newFireButton.fillColor = .systemRed
+        newFireButton.strokeColor = .clear
+        newFireButton.lineWidth = 0
+        newFireButton.alpha = 0.6
         scene.addChild(newFireButton)
         buttonNode = newFireButton
-        
-        // Add fire label
-        let fireLabel = SKLabelNode(fontNamed: "Arial-BoldMT")
-        fireLabel.text = "FIRE"
-        fireLabel.fontSize = 14
-        fireLabel.fontColor = .white
-        fireLabel.verticalAlignmentMode = .center
-        newFireButton.addChild(fireLabel)
     }
     
     /// Get the button's position
@@ -49,7 +41,7 @@ class FireButton {
         let dy = location.y - button.position.y
         let distance = sqrt(dx * dx + dy * dy)
         
-        if distance < 50 {
+        if distance < 45 {
             onTap?()
             return true
         }
