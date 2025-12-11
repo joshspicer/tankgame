@@ -14,6 +14,11 @@ class JoystickController {
     private var joystickBase: SKShapeNode?
     private var joystickHandle: SKShapeNode?
     
+    // Constants
+    private let baseRadius: CGFloat = 40
+    private let handleRadius: CGFloat = 18
+    private let interactionRadius: CGFloat = 120
+    
     // State
     private(set) var isActive = false
     private var touchID: UITouch?
@@ -28,7 +33,7 @@ class JoystickController {
         scene.addChild(newJoystickNode)
         joystickNode = newJoystickNode
         
-        let newJoystickBase = SKShapeNode(circleOfRadius: 40)
+        let newJoystickBase = SKShapeNode(circleOfRadius: baseRadius)
         newJoystickBase.fillColor = .gray
         newJoystickBase.strokeColor = .clear
         newJoystickBase.lineWidth = 0
@@ -36,7 +41,7 @@ class JoystickController {
         newJoystickNode.addChild(newJoystickBase)
         joystickBase = newJoystickBase
         
-        let newJoystickHandle = SKShapeNode(circleOfRadius: 18)
+        let newJoystickHandle = SKShapeNode(circleOfRadius: handleRadius)
         newJoystickHandle.fillColor = .white
         newJoystickHandle.strokeColor = .clear
         newJoystickHandle.alpha = 0.7
@@ -61,8 +66,8 @@ class JoystickController {
         let dy = location.y - joystickCenter.y
         let distance = sqrt(dx * dx + dy * dy)
         
-        // Joystick area is 120 points radius
-        if distance < 120 {
+        // Check if touch is within interaction radius
+        if distance < interactionRadius {
             isActive = true
             touchID = touch
             // Process initial direction

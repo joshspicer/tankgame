@@ -12,11 +12,15 @@ class FireButton {
     private var buttonNode: SKShapeNode?
     var onTap: (() -> Void)?
     
+    // Constants
+    private let buttonRadius: CGFloat = 35
+    private let touchRadius: CGFloat = 45
+    
     init() {}
     
     /// Setup the fire button
     func setup(in scene: SKScene, at position: CGPoint) {
-        let newFireButton = SKShapeNode(circleOfRadius: 35)
+        let newFireButton = SKShapeNode(circleOfRadius: buttonRadius)
         newFireButton.position = position
         newFireButton.fillColor = .systemRed
         newFireButton.strokeColor = .clear
@@ -41,7 +45,7 @@ class FireButton {
         let dy = location.y - button.position.y
         let distance = sqrt(dx * dx + dy * dy)
         
-        if distance < 45 {
+        if distance < touchRadius {
             onTap?()
             return true
         }
