@@ -20,7 +20,7 @@ extension GameViewController {
         let playerCount = multiplayerCoordinator.playerCount
         let playerNames = multiplayerCoordinator.getConnectedPlayerNames()
         let namesText = playerNames.enumerated().map { "\($0.offset + 1). \($0.element)" }.joined(separator: "\n")
-        lobbyUI.connectedPlayersLabel.text = "Players (\(playerCount)/4)\n\(namesText)"
+        lobbyUI.connectedPlayersLabel.text = "Players (\(playerCount)/4)\n\n\(namesText)"
         
         if multiplayerManager.isHost {
             lobbyUI.startGameButton.isEnabled = playerCount >= 2

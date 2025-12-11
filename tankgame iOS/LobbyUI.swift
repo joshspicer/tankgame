@@ -85,7 +85,7 @@ class LobbyUI {
         lobbyView.addSubview(hostButton)
         
         // Join button
-        joinButton = createButton(title: "Join Game", backgroundColor: .systemBlue)
+        joinButton = createButton(title: "Join Game", backgroundColor: .systemGreen)
         joinButton.addTarget(self, action: #selector(joinButtonTapped), for: .touchUpInside)
         lobbyView.addSubview(joinButton)
         

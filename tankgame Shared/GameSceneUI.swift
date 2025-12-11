@@ -44,7 +44,7 @@ class GameSceneUI {
             scoreLabel?.text = "\(wins[0]) - \(wins[1])"
         } else {
             // For 3-4 players, show all scores
-            let scoreText = wins.enumerated().map { "\($0.offset+1):\($0.element)" }.joined(separator: " ")
+            let scoreText = wins.enumerated().map { "\($0.offset+1): \($0.element)" }.joined(separator: " ")
             scoreLabel?.text = scoreText
         }
     }
