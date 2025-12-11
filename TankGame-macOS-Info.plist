@@ -33,8 +33,6 @@
 	<string>Main</string>
 	<key>NSPrincipalClass</key>
 	<string>NSApplication</string>
-	<key>NSAppearance</key>
-	<string>NSAppearanceNameAqua</string>
 	<key>CrashReportingServerURL</key>
 	<string>https://tankgame.spicer.dev/crash</string>
 </dict>
