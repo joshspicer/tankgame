@@ -47,7 +47,20 @@ class GameScene: SKScene {
     }
     
     override func didMove(to view: SKView) {
-        backgroundColor = .darkGray
+        // Use adaptive background color that responds to dark mode
+        #if os(iOS) || os(tvOS)
+        if let bgColor = UIColor(named: "GameBackgroundColor") {
+            backgroundColor = SKColor(bgColor)
+        } else {
+            backgroundColor = .darkGray
+        }
+        #elseif os(macOS)
+        if let bgColor = NSColor(named: "GameBackgroundColor") {
+            backgroundColor = SKColor(bgColor)
+        } else {
+            backgroundColor = .darkGray
+        }
+        #endif
         setupComponents()
         setupScene()
         

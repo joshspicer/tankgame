@@ -54,6 +54,8 @@
 		<string>UIInterfaceOrientationLandscapeLeft</string>
 		<string>UIInterfaceOrientationLandscapeRight</string>
 	</array>
+	<key>UIUserInterfaceStyle</key>
+	<string>Automatic</string>
 	<key>CrashReportingServerURL</key>
 	<string>https://tankgame.spicer.dev/crash</string>
 </dict>
