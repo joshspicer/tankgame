@@ -47,20 +47,7 @@ class GameScene: SKScene {
     }
     
     override func didMove(to view: SKView) {
-        // Use adaptive background color that responds to dark mode
-        #if os(iOS) || os(tvOS)
-        if let bgColor = UIColor(named: "GameBackgroundColor") {
-            backgroundColor = SKColor(bgColor)
-        } else {
-            backgroundColor = .darkGray
-        }
-        #elseif os(macOS)
-        if let bgColor = NSColor(named: "GameBackgroundColor") {
-            backgroundColor = SKColor(bgColor)
-        } else {
-            backgroundColor = .darkGray
-        }
-        #endif
+        backgroundColor = adaptiveBackgroundColor()
         setupComponents()
         setupScene()
         
@@ -73,6 +60,20 @@ class GameScene: SKScene {
             renderLizards()
             updateScore()
         }
+    }
+    
+    /// Returns an adaptive background color that responds to dark mode
+    private func adaptiveBackgroundColor() -> SKColor {
+        #if os(iOS) || os(tvOS)
+        if let bgColor = UIColor(named: "GameBackgroundColor") {
+            return SKColor(bgColor)
+        }
+        #elseif os(macOS)
+        if let bgColor = NSColor(named: "GameBackgroundColor") {
+            return SKColor(bgColor)
+        }
+        #endif
+        return .darkGray
     }
     
     private func setupComponents() {
