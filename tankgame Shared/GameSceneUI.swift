@@ -7,6 +7,12 @@
 
 import SpriteKit
 
+#if os(iOS) || os(tvOS)
+import UIKit
+#elseif os(OSX)
+import AppKit
+#endif
+
 /// Manages UI elements in the game scene (status and score labels)
 class GameSceneUI {
     private var statusLabel: SKLabelNode?
@@ -16,9 +22,13 @@ class GameSceneUI {
     
     /// Setup UI elements
     func setup(in scene: SKScene, sceneSize: CGSize) {
+        // Get adaptive label color
+        let labelColor = DarkModeSupport.labelColor
+        
         // Create status label
         let newStatusLabel = SKLabelNode(fontNamed: "Arial-BoldMT")
         newStatusLabel.fontSize = 20
+        newStatusLabel.fontColor = labelColor
         newStatusLabel.position = CGPoint(x: sceneSize.width / 2, y: sceneSize.height - 50)
         newStatusLabel.text = "Waiting for game..."
         scene.addChild(newStatusLabel)
@@ -27,6 +37,7 @@ class GameSceneUI {
         // Create score label
         let newScoreLabel = SKLabelNode(fontNamed: "Arial")
         newScoreLabel.fontSize = 16
+        newScoreLabel.fontColor = labelColor
         newScoreLabel.position = CGPoint(x: sceneSize.width / 2, y: 30)
         newScoreLabel.text = "Score: 0 - 0"
         scene.addChild(newScoreLabel)
