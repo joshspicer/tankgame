@@ -22,7 +22,7 @@ class FireButton {
     func setup(in scene: SKScene, at position: CGPoint) {
         let newFireButton = SKShapeNode(circleOfRadius: buttonRadius)
         newFireButton.position = position
-        newFireButton.fillColor = .systemRed
+        newFireButton.fillColor = .red
         newFireButton.strokeColor = .clear
         newFireButton.lineWidth = 0
         newFireButton.alpha = 0.6
