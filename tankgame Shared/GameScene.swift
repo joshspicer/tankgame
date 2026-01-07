@@ -19,6 +19,7 @@ class GameScene: SKScene {
     // MARK: - Properties
     
     private let tileSize: CGFloat = 50
+    private var gridSize: Int = GameEngine.defaultGridSize
     private var gridNode: SKNode?
     private var playerNodes: [String: SKShapeNode] = [:]
     private var projectileNodes: [String: SKShapeNode] = [:]
@@ -156,8 +157,7 @@ class GameScene: SKScene {
             }
             
             // Update position
-            let gridSize = CGFloat(12) // TODO: Make dynamic
-            let totalSize = gridSize * tileSize
+            let totalSize = CGFloat(gridSize) * tileSize
             let startX = -totalSize / 2
             let startY = -totalSize / 2
             
@@ -203,8 +203,7 @@ class GameScene: SKScene {
             }
             
             // Update position
-            let gridSize = CGFloat(12)
-            let totalSize = gridSize * tileSize
+            let totalSize = CGFloat(gridSize) * tileSize
             let startX = -totalSize / 2
             let startY = -totalSize / 2
             

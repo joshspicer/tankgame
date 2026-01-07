@@ -10,6 +10,11 @@ import Foundation
 /// Main game engine that manages game state and rules
 class GameEngine {
     
+    // MARK: - Constants
+    
+    static let defaultGridSize = 12
+    static let defaultMaxPlayers = 6
+    
     // MARK: - Properties
     
     private(set) var grid: GameGrid
@@ -22,7 +27,7 @@ class GameEngine {
     
     // MARK: - Initialization
     
-    init(gridSize: Int = 12, maxPlayers: Int = 6) {
+    init(gridSize: Int = GameEngine.defaultGridSize, maxPlayers: Int = GameEngine.defaultMaxPlayers) {
         self.gridSize = gridSize
         self.maxPlayers = maxPlayers
         self.grid = GameGrid(size: gridSize)

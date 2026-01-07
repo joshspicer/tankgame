@@ -35,7 +35,7 @@ class GameViewController: UIViewController {
         super.viewDidLoad()
         
         // Initialize components
-        gameEngine = GameEngine(gridSize: 12, maxPlayers: 6)
+        gameEngine = GameEngine() // Uses default gridSize and maxPlayers
         networkManager = NetworkManager()
         networkManager.delegate = self
         localPlayerId = networkManager.myPeerIdString
