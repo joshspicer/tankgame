@@ -1,6 +1,18 @@
-# Tank Game - Refactored Architecture (v3)
+# Tank Game - Simplified Architecture (v4)
 
-This document describes the refactored codebase structure after further modularization for maximum parallelization and minimal merge conflicts.
+This document describes the simplified codebase structure after removing over-engineered Bluetooth connection management.
+
+## Simplification Changes (v4)
+
+The Bluetooth networking layer has been dramatically simplified by removing unnecessary complexity:
+- **Removed ReconnectionManager** (154 lines) - Auto-reconnection with exponential backoff was overkill
+- **Removed InvitationRetryManager** (173 lines) - Retry logic added unnecessary complexity
+- **Removed ConnectionHealthMonitor** (103 lines) - Ping/pong monitoring was over-engineered
+- **Removed ConnectionState** (56 lines) - Simplified state management
+- **Simplified MultiplayerManager** - Reduced from 397 to 224 lines (44% reduction)
+- **Total reduction**: 693 lines of code removed (12.9% of codebase)
+
+This makes the game a **REALLY simple Bluetooth game** as intended, while maintaining all core multiplayer functionality.
 
 ## Overview
 
@@ -61,13 +73,9 @@ Main game loop and coordination:
 - `GameSceneUpdateLoop.swift` - Game loop and update logic (uses ExplosionHandler)
 
 ### 7. Networking Layer
-Multiplayer communication:
-- `MultiplayerManager.swift` - Low-level MultipeerConnectivity wrapper
-- `MultiplayerCoordinator.swift` - High-level session and player management
-- `ReconnectionManager.swift` - Auto-reconnection logic
-- `InvitationRetryManager.swift` - Invitation retry logic
-- `ConnectionHealthMonitor.swift` - Connection health monitoring
-- `ConnectionState.swift` - Connection state enum
+Simple Bluetooth multiplayer communication:
+- `MultiplayerManager.swift` - Simplified MultipeerConnectivity wrapper
+- `MultiplayerCoordinator.swift` - Session and player management
 
 ### 8. UI Layer (iOS)
 User interface components:
