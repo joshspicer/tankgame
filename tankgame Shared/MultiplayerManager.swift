@@ -32,23 +32,27 @@ class MultiplayerManager: NSObject {
     weak var delegate: MultiplayerManagerDelegate?
     
     private let myPeerID: MCPeerID
-    private(set) var session: MCSession!
-    private var advertiser: MCNearbyServiceAdvertiser?
-    private var browser: MCNearbyServiceBrowser?
+    internal(set) var session: MCSession!
+    internal var advertiser: MCNearbyServiceAdvertiser?
+    internal var browser: MCNearbyServiceBrowser?
     
     var isHost: Bool = false
     var maxPlayers: Int = 4 // Can be 2, 3, or 4
     
     // Connection management components
-    private let reconnectionManager = ReconnectionManager()
-    private let invitationRetryManager = InvitationRetryManager()
-    private let connectionHealthMonitor = ConnectionHealthMonitor()
+    internal let reconnectionManager = ReconnectionManager()
+    internal let invitationRetryManager = InvitationRetryManager()
+    internal let connectionHealthMonitor = ConnectionHealthMonitor()
+    
+    // Delegate handlers
+    private var sessionDelegate: MultiplayerSession!
+    private var discoveryDelegate: MultiplayerDiscovery!
     
     // Track discovered peers for reconnection
-    private var discoveredPeers: [MCPeerID] = []
+    internal var discoveredPeers: [MCPeerID] = []
     
     // Connection state
-    private(set) var connectionState: ConnectionState = .disconnected {
+    internal(set) var connectionState: ConnectionState = .disconnected {
         didSet {
             DispatchQueue.main.async { [weak self] in
                 guard let self = self else { return }
@@ -77,7 +81,12 @@ class MultiplayerManager: NSObject {
         super.init()
         
         self.session = MCSession(peer: myPeerID, securityIdentity: nil, encryptionPreference: .required)
-        self.session.delegate = self
+        
+        // Initialize delegate handlers
+        self.sessionDelegate = MultiplayerSession(manager: self)
+        self.discoveryDelegate = MultiplayerDiscovery(manager: self)
+        
+        self.session.delegate = self.sessionDelegate
         
         setupConnectionManagers()
     }
@@ -121,7 +130,7 @@ class MultiplayerManager: NSObject {
         }
     }
     
-    private func updateConnectionState() {
+    internal func updateConnectionState() {
         let peerCount = session.connectedPeers.count
         if peerCount > 0 {
             connectionState = .connected(peerCount: peerCount + 1) // +1 for local player
@@ -138,7 +147,7 @@ class MultiplayerManager: NSObject {
     
     func startHosting() {
         advertiser = MCNearbyServiceAdvertiser(peer: myPeerID, discoveryInfo: nil, serviceType: Self.serviceType)
-        advertiser?.delegate = self
+        advertiser?.delegate = discoveryDelegate
         advertiser?.startAdvertisingPeer()
         connectionState = .advertising
         connectionHealthMonitor.startMonitoring()
@@ -154,7 +163,7 @@ class MultiplayerManager: NSObject {
     
     func startBrowsing() {
         browser = MCNearbyServiceBrowser(peer: myPeerID, serviceType: Self.serviceType)
-        browser?.delegate = self
+        browser?.delegate = discoveryDelegate
         browser?.startBrowsingForPeers()
         connectionState = .browsing
         connectionHealthMonitor.startMonitoring()
@@ -181,6 +190,25 @@ class MultiplayerManager: NSObject {
                 self?.invitePeer(peer)
             }
         )
+    }
+    
+    internal func attemptReconnection(to peerID: MCPeerID) {
+        if isHost {
+            // If we're the host, restart advertising to allow peer to reconnect
+            if advertiser == nil {
+                startHosting()
+            }
+        } else {
+            // If we're a client, restart browsing and look for the peer
+            if browser == nil {
+                startBrowsing()
+            }
+            
+            // If the peer is already discovered, invite them
+            if let foundPeer = discoveredPeers.first(where: { $0.displayName == peerID.displayName }) {
+                invitePeer(foundPeer)
+            }
+        }
     }
     
     // MARK: - Messaging
@@ -233,165 +261,5 @@ class MultiplayerManager: NSObject {
     
     var allPlayerNames: [String] {
         return [myPeerID.displayName] + session.connectedPeers.map { $0.displayName }
-    }
-}
-
-// MARK: - MCSessionDelegate
-
-extension MultiplayerManager: MCSessionDelegate {
-    func session(_ session: MCSession, peer peerID: MCPeerID, didChange state: MCSessionState) {
-        DispatchQueue.main.async { [weak self] in
-            guard let self = self else { return }
-            
-            switch state {
-            case .connected:
-                // Mark peer as known for future reconnection
-                self.reconnectionManager.markPeerAsKnown(peerID)
-                
-                // Cancel any pending reconnection attempts
-                self.reconnectionManager.cancelReconnection(for: peerID)
-                
-                // Mark invitation as successful
-                self.invitationRetryManager.invitationSucceeded(for: peerID)
-                
-                // Track connection health
-                self.connectionHealthMonitor.peerConnected(peerID)
-                
-                // Update connection state
-                self.updateConnectionState()
-                
-                self.delegate?.multiplayerManager(self, didConnectToPeer: peerID)
-                
-            case .notConnected:
-                // Stop tracking health for this peer
-                self.connectionHealthMonitor.peerDisconnected(peerID)
-                
-                // Attempt reconnection if enabled and appropriate
-                if self.autoReconnectEnabled && self.reconnectionManager.shouldAttemptReconnection(for: peerID) {
-                    self.reconnectionManager.scheduleReconnection(for: peerID) { [weak self] in
-                        self?.attemptReconnection(to: peerID)
-                    }
-                }
-                
-                // Update connection state
-                self.updateConnectionState()
-                
-                self.delegate?.multiplayerManager(self, didDisconnectFromPeer: peerID)
-                
-            case .connecting:
-                self.connectionState = .connecting(peerName: peerID.displayName)
-                self.delegate?.multiplayerManager(self, isConnectingToPeer: peerID)
-                
-            @unknown default:
-                break
-            }
-        }
-    }
-    
-    private func attemptReconnection(to peerID: MCPeerID) {
-        if isHost {
-            // If we're the host, restart advertising to allow peer to reconnect
-            if advertiser == nil {
-                startHosting()
-            }
-        } else {
-            // If we're a client, restart browsing and look for the peer
-            if browser == nil {
-                startBrowsing()
-            }
-            
-            // If the peer is already discovered, invite them
-            if let foundPeer = discoveredPeers.first(where: { $0.displayName == peerID.displayName }) {
-                invitePeer(foundPeer)
-            }
-        }
-    }
-    
-    func session(_ session: MCSession, didReceive data: Data, fromPeer peerID: MCPeerID) {
-        // Record response for health monitoring
-        connectionHealthMonitor.recordResponse(from: peerID)
-        
-        do {
-            let message = try JSONDecoder().decode(GameMessage.self, from: data)
-            DispatchQueue.main.async { [weak self] in
-                guard let self = self else { return }
-                self.delegate?.multiplayerManager(self, didReceiveMessage: message, from: peerID)
-            }
-        } catch {
-            print("Error decoding message: \(error.localizedDescription)")
-        }
-    }
-    
-    func session(_ session: MCSession, didReceive stream: InputStream, withName streamName: String, fromPeer peerID: MCPeerID) {
-        // Not used
-    }
-    
-    func session(_ session: MCSession, didStartReceivingResourceWithName resourceName: String, fromPeer peerID: MCPeerID, with progress: Progress) {
-        // Not used
-    }
-    
-    func session(_ session: MCSession, didFinishReceivingResourceWithName resourceName: String, fromPeer peerID: MCPeerID, at localURL: URL?, withError error: Error?) {
-        // Not used
-    }
-}
-
-// MARK: - MCNearbyServiceAdvertiserDelegate
-
-extension MultiplayerManager: MCNearbyServiceAdvertiserDelegate {
-    func advertiser(_ advertiser: MCNearbyServiceAdvertiser, didReceiveInvitationFromPeer peerID: MCPeerID, withContext context: Data?, invitationHandler: @escaping (Bool, MCSession?) -> Void) {
-        // Accept invitations if we have room (max 4 players total)
-        if session.connectedPeers.count < maxPlayers - 1 {
-            invitationHandler(true, session)
-        } else {
-            invitationHandler(false, nil)
-        }
-    }
-    
-    func advertiser(_ advertiser: MCNearbyServiceAdvertiser, didNotStartAdvertisingPeer error: Error) {
-        print("Error starting advertising: \(error.localizedDescription)")
-        connectionState = .disconnected
-        DispatchQueue.main.async { [weak self] in
-            guard let self = self else { return }
-            self.delegate?.multiplayerManager(self, didEncounterError: error)
-        }
-    }
-}
-
-// MARK: - MCNearbyServiceBrowserDelegate
-
-extension MultiplayerManager: MCNearbyServiceBrowserDelegate {
-    func browser(_ browser: MCNearbyServiceBrowser, foundPeer peerID: MCPeerID, withDiscoveryInfo info: [String : String]?) {
-        // Track discovered peers for reconnection
-        if !discoveredPeers.contains(where: { $0.displayName == peerID.displayName }) {
-            discoveredPeers.append(peerID)
-        }
-        
-        // If we're trying to reconnect to this peer, invite them
-        if reconnectionManager.isReconnecting(to: peerID) {
-            invitePeer(peerID)
-        }
-        
-        DispatchQueue.main.async { [weak self] in
-            guard let self = self else { return }
-            self.delegate?.multiplayerManager(self, didFindPeer: peerID)
-        }
-    }
-    
-    func browser(_ browser: MCNearbyServiceBrowser, lostPeer peerID: MCPeerID) {
-        discoveredPeers.removeAll { $0.displayName == peerID.displayName }
-        
-        DispatchQueue.main.async { [weak self] in
-            guard let self = self else { return }
-            self.delegate?.multiplayerManager(self, didLosePeer: peerID)
-        }
-    }
-    
-    func browser(_ browser: MCNearbyServiceBrowser, didNotStartBrowsingForPeers error: Error) {
-        print("Error starting browsing: \(error.localizedDescription)")
-        connectionState = .disconnected
-        DispatchQueue.main.async { [weak self] in
-            guard let self = self else { return }
-            self.delegate?.multiplayerManager(self, didEncounterError: error)
-        }
     }
 }
