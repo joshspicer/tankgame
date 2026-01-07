@@ -7,6 +7,10 @@
 
 import SpriteKit
 
+#if os(iOS) || os(tvOS)
+import UIKit
+#endif
+
 /// Protocol for input handling
 protocol InputDelegate: AnyObject {
     func inputDidRequestMove(direction: Direction)
@@ -59,6 +63,7 @@ final class InputController {
         self.joystickKnob = joystickKnob
     }
     
+    #if os(iOS) || os(tvOS)
     func handleTouchBegan(_ touch: UITouch, in scene: SKScene) {
         let location = touch.location(in: scene)
         let touchedNode = scene.atPoint(location)
@@ -135,6 +140,7 @@ final class InputController {
             return .left
         }
     }
+    #endif
 }
 
 extension CGPoint {

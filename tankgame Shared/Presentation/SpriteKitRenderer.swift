@@ -7,6 +7,12 @@
 
 import SpriteKit
 
+#if os(iOS) || os(tvOS)
+import UIKit
+#elseif os(macOS)
+import AppKit
+#endif
+
 /// Renders the game using SpriteKit
 final class SpriteKitRenderer: GameRenderer {
     
@@ -16,10 +22,18 @@ final class SpriteKitRenderer: GameRenderer {
     private var projectileNodes: [String: SKSpriteNode] = [:]
     
     private let cellSize: CGFloat = 60
+    
+    #if os(iOS) || os(tvOS)
     private let tankColors: [UIColor] = [
         .systemRed, .systemBlue, .systemGreen, 
         .systemOrange, .systemPurple, .systemPink
     ]
+    #elseif os(macOS)
+    private let tankColors: [NSColor] = [
+        .systemRed, .systemBlue, .systemGreen,
+        .systemOrange, .systemPurple, .systemPink
+    ]
+    #endif
     
     func setup(in scene: SKScene) {
         self.scene = scene

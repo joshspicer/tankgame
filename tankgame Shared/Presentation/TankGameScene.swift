@@ -102,6 +102,7 @@ final class TankGameScene: SKScene {
     
     // MARK: - Touch Handling
     
+    #if os(iOS) || os(tvOS)
     override func touchesBegan(_ touches: Set<UITouch>, with event: UIEvent?) {
         for touch in touches {
             inputController?.handleTouchBegan(touch, in: self)
@@ -125,6 +126,7 @@ final class TankGameScene: SKScene {
             inputController?.handleTouchEnded(touch, in: self)
         }
     }
+    #endif
 }
 
 // MARK: - InputDelegate
