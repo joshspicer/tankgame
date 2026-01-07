@@ -61,12 +61,9 @@ Main game loop and coordination:
 - `GameSceneUpdateLoop.swift` - Game loop and update logic (uses ExplosionHandler)
 
 ### 7. Networking Layer
-Multiplayer communication:
-- `MultiplayerManager.swift` - Low-level MultipeerConnectivity wrapper
+Simple Bluetooth multiplayer communication:
+- `MultiplayerManager.swift` - Simple MultipeerConnectivity wrapper for Bluetooth
 - `MultiplayerCoordinator.swift` - High-level session and player management
-- `ReconnectionManager.swift` - Auto-reconnection logic
-- `InvitationRetryManager.swift` - Invitation retry logic
-- `ConnectionHealthMonitor.swift` - Connection health monitoring
 - `ConnectionState.swift` - Connection state enum
 
 ### 8. UI Layer (iOS)

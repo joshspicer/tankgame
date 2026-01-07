@@ -6,8 +6,9 @@ See how copilot and I built it on the VS Code livestream. ([1](https://www.youtu
 
 ## Features
 
-- 🎮 Multiplayer gameplay via Bluetooth (MultipeerConnectivity)
-- 💥 Crash reporting with automatic GitHub issue creation (see [CRASH_REPORTING.md](CRASH_REPORTING.md))
+- 🎮 Simple Bluetooth multiplayer (2-4 players)
+- 🤖 Single player mode with AI bots
+- 💥 Fast-paced tank battles
 - 🎨 Modern visual styling
 - 🔊 Sound effects
 

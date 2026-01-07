@@ -7,9 +7,7 @@
 
 import UIKit
 import SpriteKit
-import GameplayKit
 import MultipeerConnectivity
-import Network
 
 /// Main view controller that coordinates the game experience
 class GameViewController: UIViewController {
