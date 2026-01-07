@@ -2,57 +2,32 @@
 //  Direction.swift
 //  tankgame Shared
 //
-//  Created by jospicer on 10/28/25.
+//  Cardinal directions for tank movement
 //
 
 import Foundation
 
-enum Direction: Int, Codable, CaseIterable {
-    case up = 0
-    case right = 1
-    case down = 2
-    case left = 3
-    case upRight = 4
-    case downRight = 5
-    case downLeft = 6
-    case upLeft = 7
+/// Cardinal directions for tank movement and shooting
+enum Direction: String, Codable {
+    case up, down, left, right
     
-    var angle: Double {
+    /// Get the position offset for this direction
+    var delta: (dx: Int, dy: Int) {
         switch self {
-        case .up: return 0
-        case .right: return .pi / 2
-        case .down: return .pi
-        case .left: return -.pi / 2
-        case .upRight: return .pi / 4
-        case .downRight: return 3 * .pi / 4
-        case .downLeft: return -.pi * 3 / 4
-        case .upLeft: return -.pi / 4
+        case .up: return (0, -1)
+        case .down: return (0, 1)
+        case .left: return (-1, 0)
+        case .right: return (1, 0)
         }
     }
     
-    var offset: (row: Int, col: Int) {
+    /// Rotate 90 degrees clockwise
+    var rotatedClockwise: Direction {
         switch self {
-        case .up: return (-1, 0)
-        case .down: return (1, 0)
-        case .left: return (0, -1)
-        case .right: return (0, 1)
-        case .upRight: return (-1, 1)
-        case .downRight: return (1, 1)
-        case .downLeft: return (1, -1)
-        case .upLeft: return (-1, -1)
+        case .up: return .right
+        case .right: return .down
+        case .down: return .left
+        case .left: return .up
         }
     }
-    
-    /// Whether this is a diagonal direction
-    var isDiagonal: Bool {
-        switch self {
-        case .upRight, .downRight, .downLeft, .upLeft:
-            return true
-        case .up, .down, .left, .right:
-            return false
-        }
-    }
-    
-    /// All cardinal (non-diagonal) directions
-    static let cardinalDirections: [Direction] = [.up, .down, .left, .right]
 }

@@ -2,166 +2,263 @@
 //  GameScene.swift
 //  tankgame Shared
 //
-//  Created by jospicer on 10/28/25.
+//  SpriteKit scene for rendering the game
 //
 
 import SpriteKit
 
-/// Main game scene that coordinates all game elements
+/// Main game scene that renders the game state
 class GameScene: SKScene {
     
-    // Game state
-    var gameState: GameState?
-    var onGameMessage: ((GameMessage) -> Void)?
+    // MARK: - Properties
     
-    // Constants
-    let tileSize: CGFloat = 64
-    let gridSize = 8
+    private let tileSize: CGFloat = 50
+    private var gridNode: SKNode?
+    private var playerNodes: [String: SKShapeNode] = [:]
+    private var projectileNodes: [String: SKShapeNode] = [:]
     
-    // Nodes
-    var gridNode: SKNode?
-    var tankNodes: [SKNode?] = [nil, nil, nil, nil] // Support up to 4 tanks
-    var projectilesNode: SKNode?
-    var lizardNode: SKNode?
+    // Input handling
+    private var joystickNode: SKShapeNode?
+    private var joystickKnob: SKShapeNode?
+    private var fireButton: SKLabelNode?
     
-    // Components
-    var renderer: GameSceneRenderer!
-    var soundManager: SoundManager!
-    var explosionEffects: ExplosionEffects!
-    var joystickController: JoystickController!
-    var fireButton: FireButton!
-    var ui: GameSceneUI!
+    // Callbacks
+    var onMove: ((Direction) -> Void)?
+    var onShoot: (() -> Void)?
     
-    #if os(iOS) || os(tvOS)
-    var inputHandler: GameSceneInputHandler!
-    #endif
-    private var updateLoop: GameSceneUpdateLoop!
-    
-    // Explosion state
-    var tankExploding: [Bool] = [false, false, false, false]
-    
-    class func newGameScene() -> GameScene {
-        let scene = GameScene(size: CGSize(width: 600, height: 800))
-        scene.scaleMode = .aspectFit
-        return scene
-    }
+    // MARK: - Initialization
     
     override func didMove(to view: SKView) {
         backgroundColor = .darkGray
-        setupComponents()
         setupScene()
+    }
+    
+    private func setupScene() {
+        // Create grid container
+        gridNode = SKNode()
+        gridNode?.position = CGPoint(x: size.width / 2, y: size.height / 2 + 100)
+        addChild(gridNode!)
         
-        // If startGame was called before didMove (e.g., for clients receiving roundStart),
-        // render the grid now that the scene has been set up
-        if gameState != nil {
-            renderGrid()
-            renderTanks()
-            renderProjectiles()
-            renderLizards()
-            updateScore()
+        // Create joystick
+        setupJoystick()
+        
+        // Create fire button
+        setupFireButton()
+    }
+    
+    private func setupJoystick() {
+        // Joystick base
+        joystickNode = SKShapeNode(circleOfRadius: 60)
+        joystickNode?.fillColor = .gray
+        joystickNode?.alpha = 0.5
+        joystickNode?.position = CGPoint(x: 100, y: 100)
+        addChild(joystickNode!)
+        
+        // Joystick knob
+        joystickKnob = SKShapeNode(circleOfRadius: 30)
+        joystickKnob?.fillColor = .white
+        joystickKnob?.position = .zero
+        joystickNode?.addChild(joystickKnob!)
+    }
+    
+    private func setupFireButton() {
+        fireButton = SKLabelNode(text: "🔥")
+        fireButton?.fontSize = 60
+        fireButton?.position = CGPoint(x: size.width - 80, y: 100)
+        fireButton?.name = "fireButton"
+        addChild(fireButton!)
+    }
+    
+    // MARK: - Rendering
+    
+    /// Render the game grid
+    func renderGrid(_ grid: GameGrid) {
+        gridNode?.removeAllChildren()
+        
+        let gridSize = grid.size
+        let totalSize = CGFloat(gridSize) * tileSize
+        let startX = -totalSize / 2
+        let startY = -totalSize / 2
+        
+        // Draw grid lines
+        for i in 0...gridSize {
+            let offset = CGFloat(i) * tileSize
+            
+            // Vertical line
+            let vPath = CGMutablePath()
+            vPath.move(to: CGPoint(x: startX + offset, y: startY))
+            vPath.addLine(to: CGPoint(x: startX + offset, y: startY + totalSize))
+            let vLine = SKShapeNode(path: vPath)
+            vLine.strokeColor = .darkGray
+            gridNode?.addChild(vLine)
+            
+            // Horizontal line
+            let hPath = CGMutablePath()
+            hPath.move(to: CGPoint(x: startX, y: startY + offset))
+            hPath.addLine(to: CGPoint(x: startX + totalSize, y: startY + offset))
+            let hLine = SKShapeNode(path: hPath)
+            hLine.strokeColor = .darkGray
+            gridNode?.addChild(hLine)
+        }
+        
+        // Draw walls
+        for wall in grid.walls {
+            let x = startX + CGFloat(wall.x) * tileSize + tileSize / 2
+            let y = startY + CGFloat(wall.y) * tileSize + tileSize / 2
+            
+            let wallNode = SKShapeNode(rectOf: CGSize(width: tileSize - 2, height: tileSize - 2))
+            wallNode.fillColor = .brown
+            wallNode.strokeColor = .black
+            wallNode.position = CGPoint(x: x, y: y)
+            gridNode?.addChild(wallNode)
         }
     }
     
-    private func setupComponents() {
-        renderer = GameSceneRenderer(tileSize: tileSize, gridSize: gridSize)
-        soundManager = SoundManager(scene: self)
-        explosionEffects = ExplosionEffects(tileSize: tileSize)
-        joystickController = JoystickController()
-        fireButton = FireButton()
-        ui = GameSceneUI()
-        #if os(iOS) || os(tvOS)
-        inputHandler = GameSceneInputHandler(scene: self)
-        #endif
-        updateLoop = GameSceneUpdateLoop(scene: self)
+    /// Render players
+    func renderPlayers(_ players: [Player], localPlayerId: String) {
+        guard let gridNode = gridNode else { return }
+        
+        // Remove dead player nodes
+        let playerIds = Set(players.map { $0.id })
+        for (id, node) in playerNodes where !playerIds.contains(id) {
+            node.removeFromParent()
+            playerNodes.removeValue(forKey: id)
+        }
+        
+        // Update or create player nodes
+        for (index, player) in players.enumerated() where player.isAlive {
+            let node: SKShapeNode
+            
+            if let existing = playerNodes[player.id] {
+                node = existing
+            } else {
+                // Create new player node
+                node = SKShapeNode(circleOfRadius: tileSize / 2.5)
+                node.fillColor = getPlayerColor(index: index)
+                node.strokeColor = .white
+                node.lineWidth = 2
+                
+                // Add direction indicator
+                let indicator = SKShapeNode(rectOf: CGSize(width: tileSize / 3, height: tileSize / 6))
+                indicator.fillColor = .white
+                indicator.position = CGPoint(x: 0, y: tileSize / 3)
+                indicator.name = "direction"
+                node.addChild(indicator)
+                
+                gridNode.addChild(node)
+                playerNodes[player.id] = node
+            }
+            
+            // Update position
+            let gridSize = CGFloat(12) // TODO: Make dynamic
+            let totalSize = gridSize * tileSize
+            let startX = -totalSize / 2
+            let startY = -totalSize / 2
+            
+            let x = startX + CGFloat(player.position.x) * tileSize + tileSize / 2
+            let y = startY + CGFloat(player.position.y) * tileSize + tileSize / 2
+            node.position = CGPoint(x: x, y: y)
+            
+            // Update direction indicator
+            if let indicator = node.childNode(withName: "direction") {
+                switch player.direction {
+                case .up: indicator.zRotation = 0
+                case .right: indicator.zRotation = -.pi / 2
+                case .down: indicator.zRotation = .pi
+                case .left: indicator.zRotation = .pi / 2
+                }
+            }
+        }
     }
     
-    func setupScene() {
-        GameSceneSetup.setupScene(in: self)
+    /// Render projectiles
+    func renderProjectiles(_ projectiles: [Projectile]) {
+        guard let gridNode = gridNode else { return }
+        
+        // Remove old projectile nodes
+        let projectileIds = Set(projectiles.map { $0.id })
+        for (id, node) in projectileNodes where !projectileIds.contains(id) {
+            node.removeFromParent()
+            projectileNodes.removeValue(forKey: id)
+        }
+        
+        // Update or create projectile nodes
+        for projectile in projectiles {
+            let node: SKShapeNode
+            
+            if let existing = projectileNodes[projectile.id] {
+                node = existing
+            } else {
+                node = SKShapeNode(circleOfRadius: tileSize / 8)
+                node.fillColor = .yellow
+                node.strokeColor = .orange
+                gridNode.addChild(node)
+                projectileNodes[projectile.id] = node
+            }
+            
+            // Update position
+            let gridSize = CGFloat(12)
+            let totalSize = gridSize * tileSize
+            let startX = -totalSize / 2
+            let startY = -totalSize / 2
+            
+            let x = startX + CGFloat(projectile.position.x) * tileSize + tileSize / 2
+            let y = startY + CGFloat(projectile.position.y) * tileSize + tileSize / 2
+            node.position = CGPoint(x: x, y: y)
+        }
     }
     
-    func startGame(with state: GameState) {
-        self.gameState = state
-        tankExploding = Array(repeating: false, count: state.tanks.count)
-        renderGrid()
-        renderTanks()
-        renderLizards()
-        updateScore()
-        ui.updateStatus("Fight!")
+    /// Get color for player based on index
+    private func getPlayerColor(index: Int) -> UIColor {
+        let colors: [UIColor] = [.blue, .red, .green, .purple, .orange, .cyan]
+        return colors[index % colors.count]
     }
     
-    func renderGrid() {
-        guard let state = gameState, let grid = gridNode else { return }
-        renderer.renderGrid(state.grid, in: grid)
-    }
+    // MARK: - Input Handling
     
-    func renderTanks() {
-        guard let state = gameState else { return }
-        renderer.renderTanks(state.tanks, tankExploding: tankExploding, in: tankNodes)
-    }
-    
-    func renderTanksWithSmoothing() {
-        guard let state = gameState else { return }
-        renderer.renderTanksWithSmoothing(state.tanks, tankExploding: tankExploding, in: tankNodes, duration: 0.08)
-    }
-    
-    func renderProjectiles() {
-        guard let state = gameState, let projectiles = projectilesNode else { return }
-        renderer.renderProjectiles(state.projectiles, in: projectiles)
-    }
-    
-    func renderLizards() {
-        guard let state = gameState, let lizards = lizardNode else { return }
-        renderer.renderLizards(state.lizards, in: lizards)
-    }
-    
-    func renderLizardsWithSmoothing() {
-        guard let state = gameState, let lizards = lizardNode else { return }
-        renderer.renderLizardsWithSmoothing(state.lizards, in: lizards, duration: 0.1)
-    }
-    
-    func updateScore() {
-        guard let state = gameState else { return }
-        ui.updateScore(wins: state.wins)
-    }
-    
-    func showRoundEnd(winner: Int?) {
-        guard let state = gameState else { return }
-        ui.showRoundEnd(winner: winner, localPlayerIndex: state.localPlayerIndex)
-    }
-    
-    override func update(_ currentTime: TimeInterval) {
-        updateLoop.update(currentTime)
-    }
-}
-
-#if os(iOS) || os(tvOS)
-// Touch-based event handling
-extension GameScene {
-
     override func touchesBegan(_ touches: Set<UITouch>, with event: UIEvent?) {
-        inputHandler.handleTouchesBegan(touches, with: event)
+        guard let touch = touches.first else { return }
+        let location = touch.location(in: self)
+        
+        // Check fire button
+        if fireButton?.contains(location) == true {
+            onShoot?()
+        }
     }
     
     override func touchesMoved(_ touches: Set<UITouch>, with event: UIEvent?) {
-        inputHandler.handleTouchesMoved(touches)
+        guard let touch = touches.first else { return }
+        guard let joystickNode = joystickNode, let joystickKnob = joystickKnob else { return }
+        
+        let location = touch.location(in: self)
+        
+        // Check if touching joystick area
+        let distance = hypot(location.x - joystickNode.position.x, location.y - joystickNode.position.y)
+        if distance < 100 {
+            // Calculate direction
+            let dx = location.x - joystickNode.position.x
+            let dy = location.y - joystickNode.position.y
+            
+            // Update knob position (clamped)
+            let maxDistance: CGFloat = 40
+            let clampedDistance = min(distance, maxDistance)
+            let angle = atan2(dy, dx)
+            joystickKnob.position = CGPoint(x: cos(angle) * clampedDistance, y: sin(angle) * clampedDistance)
+            
+            // Determine direction
+            let absX = abs(dx)
+            let absY = abs(dy)
+            
+            if absX > absY {
+                onMove?(dx > 0 ? .right : .left)
+            } else if absY > absX {
+                onMove?(dy > 0 ? .up : .down)
+            }
+        }
     }
     
     override func touchesEnded(_ touches: Set<UITouch>, with event: UIEvent?) {
-        inputHandler.handleTouchesEnded(touches)
-    }
-    
-    override func touchesCancelled(_ touches: Set<UITouch>, with event: UIEvent?) {
-        touchesEnded(touches, with: event)
+        // Reset joystick
+        joystickKnob?.position = .zero
     }
 }
-#endif
-
-#if os(OSX)
-// Mouse-based event handling
-extension GameScene {
-    override func mouseDown(with event: NSEvent) {
-        // macOS support can be added later
-    }
-}
-#endif
-
