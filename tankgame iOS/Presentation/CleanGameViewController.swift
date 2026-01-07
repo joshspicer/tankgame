@@ -289,14 +289,12 @@ extension CleanGameViewController: NetworkAdapterDelegate {
             updatePlayersLabel()
             
         case .playerMove(let playerID, let direction, _):
-            // Apply remote player movement
-            guard var session = coordinator.session else { return }
-            _ = PlayerActionUseCase().moveTank(playerID: playerID, direction: direction, in: &session)
+            // Remote player movement
+            coordinator.handleRemoteMove(playerID: playerID, direction: direction)
             
         case .playerFire(let playerID, let timestamp):
-            // Apply remote player fire
-            guard var session = coordinator.session else { return }
-            _ = PlayerActionUseCase().fireTank(playerID: playerID, currentTime: timestamp, in: &session)
+            // Remote player fire
+            coordinator.handleRemoteFire(playerID: playerID, currentTime: timestamp)
             
         default:
             break

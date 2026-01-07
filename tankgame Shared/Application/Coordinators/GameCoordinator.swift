@@ -158,6 +158,42 @@ final class GameCoordinator {
         return success
     }
     
+    // MARK: - Remote Actions (from network)
+    
+    func handleRemoteMove(playerID: PlayerID, direction: Direction) -> Bool {
+        guard var session = session else { return false }
+        
+        let success = playerActionUseCase.moveTank(
+            playerID: playerID,
+            direction: direction,
+            in: &session
+        )
+        
+        if success {
+            self.session = session
+            onSessionUpdated?(session)
+        }
+        
+        return success
+    }
+    
+    func handleRemoteFire(playerID: PlayerID, currentTime: TimeInterval) -> Bool {
+        guard var session = session else { return false }
+        
+        let success = playerActionUseCase.fireTank(
+            playerID: playerID,
+            currentTime: currentTime,
+            in: &session
+        )
+        
+        if success {
+            self.session = session
+            onSessionUpdated?(session)
+        }
+        
+        return success
+    }
+    
     // MARK: - Networking
     
     func setNetworkAdapter(_ adapter: NetworkAdapter) {
