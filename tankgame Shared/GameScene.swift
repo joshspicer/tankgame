@@ -7,6 +7,12 @@
 
 import SpriteKit
 
+#if os(iOS) || os(tvOS)
+import UIKit
+#elseif os(macOS)
+import AppKit
+#endif
+
 /// Main game scene that renders the game state
 class GameScene: SKScene {
     
@@ -209,8 +215,8 @@ class GameScene: SKScene {
     }
     
     /// Get color for player based on index
-    private func getPlayerColor(index: Int) -> UIColor {
-        let colors: [UIColor] = [.blue, .red, .green, .purple, .orange, .cyan]
+    private func getPlayerColor(index: Int) -> SKColor {
+        let colors: [SKColor] = [.blue, .red, .green, .purple, .orange, .cyan]
         return colors[index % colors.count]
     }
     

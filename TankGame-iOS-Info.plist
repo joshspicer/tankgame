@@ -28,8 +28,8 @@
 	<string>Connect with nearby players for multiplayer games</string>
 	<key>NSBonjourServices</key>
 	<array>
-		<string>_tankgame._tcp</string>
-		<string>_tankgame._udp</string>
+		<string>_tankgame-v2._tcp</string>
+		<string>_tankgame-v2._udp</string>
 	</array>
 	<key>NSLocalNetworkUsageDescription</key>
 	<string>Find nearby players for multiplayer.</string>

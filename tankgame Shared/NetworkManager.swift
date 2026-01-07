@@ -8,6 +8,12 @@
 import Foundation
 import MultipeerConnectivity
 
+#if os(iOS) || os(tvOS)
+import UIKit
+#elseif os(macOS)
+import AppKit
+#endif
+
 /// Delegate for network events
 protocol NetworkManagerDelegate: AnyObject {
     func networkManager(_ manager: NetworkManager, didReceiveMessage: NetworkMessage, from peerId: String)
@@ -36,7 +42,11 @@ class NetworkManager: NSObject {
     
     override init() {
         // Create persistent peer ID
+        #if os(iOS) || os(tvOS)
         let deviceName = UIDevice.current.name
+        #elseif os(macOS)
+        let deviceName = Host.current().localizedName ?? "Mac"
+        #endif
         self.myPeerId = MCPeerID(displayName: deviceName)
         
         super.init()
