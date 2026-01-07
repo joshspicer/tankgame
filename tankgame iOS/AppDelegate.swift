@@ -23,7 +23,12 @@ class AppDelegate: UIResponder, UIApplicationDelegate {
         // CrashReporterTests.printInfo()
         #endif
         
-        // Override point for customization after application launch.
+        // Setup window with new clean architecture
+        window = UIWindow(frame: UIScreen.main.bounds)
+        let viewController = CleanGameViewController()
+        window?.rootViewController = viewController
+        window?.makeKeyAndVisible()
+        
         return true
     }
 
