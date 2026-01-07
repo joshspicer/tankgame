@@ -14,16 +14,14 @@ class AppDelegate: UIResponder, UIApplicationDelegate {
 
 
     func application(_ application: UIApplication, didFinishLaunchingWithOptions launchOptions: [UIApplication.LaunchOptionsKey: Any]?) -> Bool {
-        // Initialize crash reporter
-        CrashReporter.shared.install()
+        // Create window
+        window = UIWindow(frame: UIScreen.main.bounds)
         
-        #if DEBUG
-        // To test crash reporting in debug builds, uncomment one of these:
-        // CrashReporterTests.createSampleCrashReport()
-        // CrashReporterTests.printInfo()
-        #endif
+        // Set root view controller
+        let rootVC = NewGameViewController()
+        window?.rootViewController = rootVC
+        window?.makeKeyAndVisible()
         
-        // Override point for customization after application launch.
         return true
     }
 
