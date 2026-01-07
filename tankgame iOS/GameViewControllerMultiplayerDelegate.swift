@@ -108,14 +108,7 @@ extension GameViewController: MultiplayerManagerDelegate {
         case .connected:
             lobbyUI.activityIndicator.stopAnimating()
             updateConnectedPlayersUI()
-        case .reconnecting:
-            lobbyUI.activityIndicator.startAnimating()
         }
-    }
-    
-    func multiplayerManager(_ manager: MultiplayerManager, isAttemptingReconnection attempt: Int, maxAttempts: Int, toPeer peerID: MCPeerID) {
-        lobbyUI.statusLabel.text = "Reconnecting to \(peerID.displayName) (attempt \(attempt)/\(maxAttempts))..."
-        lobbyUI.activityIndicator.startAnimating()
     }
     
     // MARK: - Helper Methods

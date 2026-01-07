@@ -14,7 +14,6 @@ enum ConnectionState: Equatable {
     case advertising
     case connecting(peerName: String)
     case connected(peerCount: Int)
-    case reconnecting(attempt: Int, maxAttempts: Int)
     
     var description: String {
         switch self {
@@ -28,8 +27,6 @@ enum ConnectionState: Equatable {
             return "Connecting to \(peerName)..."
         case .connected(let peerCount):
             return "Connected (\(peerCount) player\(peerCount == 1 ? "" : "s"))"
-        case .reconnecting(let attempt, let maxAttempts):
-            return "Reconnecting (attempt \(attempt)/\(maxAttempts))..."
         }
     }
     
@@ -42,13 +39,6 @@ enum ConnectionState: Equatable {
     
     var isConnecting: Bool {
         if case .connecting = self {
-            return true
-        }
-        return false
-    }
-    
-    var isReconnecting: Bool {
-        if case .reconnecting = self {
             return true
         }
         return false
