@@ -6,6 +6,7 @@
 
 import Foundation
 import Combine
+import UIKit
 
 /// View model using MVVM and Observer patterns
 final class GameViewModel: ObservableObject {

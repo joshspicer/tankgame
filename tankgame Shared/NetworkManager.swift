@@ -7,6 +7,12 @@
 import Foundation
 import MultipeerConnectivity
 
+#if os(iOS) || os(tvOS)
+import UIKit
+#elseif os(macOS)
+import AppKit
+#endif
+
 /// Network protocol - Strategy pattern
 protocol NetworkManagerProtocol: AnyObject {
     var delegate: NetworkManagerDelegate? { get set }
@@ -43,7 +49,14 @@ final class BluetoothNetworkManager: NSObject, NetworkManagerProtocol {
            let saved = try? NSKeyedUnarchiver.unarchivedObject(ofClass: MCPeerID.self, from: data) {
             peerID = saved
         } else {
-            peerID = MCPeerID(displayName: UIDevice.current.name)
+            #if os(iOS) || os(tvOS)
+            let deviceName = UIDevice.current.name
+            #elseif os(macOS)
+            let deviceName = Host.current().localizedName ?? "Mac"
+            #else
+            let deviceName = "Device"
+            #endif
+            peerID = MCPeerID(displayName: deviceName)
             if let data = try? NSKeyedArchiver.archivedData(withRootObject: peerID, requiringSecureCoding: true) {
                 UserDefaults.standard.set(data, forKey: "peerID")
             }
