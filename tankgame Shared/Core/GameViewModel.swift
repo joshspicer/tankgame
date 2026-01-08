@@ -8,6 +8,12 @@ import Foundation
 import Combine
 import MultipeerConnectivity
 
+#if os(iOS) || os(tvOS)
+import UIKit
+#elseif os(macOS)
+import AppKit
+#endif
+
 @MainActor
 class GameViewModel: ObservableObject {
     @Published var gameState: GameState?
@@ -137,7 +143,8 @@ class GameViewModel: ObservableObject {
         Task { @MainActor in
             switch message {
             case .start(let seed, let playerCount, let assignments):
-                let localIndex = assignments[UIDevice.current.name] ?? 1
+                let deviceName = self.getDeviceName()
+                let localIndex = assignments[deviceName] ?? 1
                 gameState = GameState.generate(seed: seed, playerCount: playerCount, localIndex: localIndex)
                 gamePhase = .playing
                 startGameLoop()
@@ -153,6 +160,16 @@ class GameViewModel: ObservableObject {
                 break // Handle ready state
             }
         }
+    }
+    
+    private func getDeviceName() -> String {
+        #if os(iOS) || os(tvOS)
+        return UIDevice.current.name
+        #elseif os(macOS)
+        return Host.current().localizedName ?? "Mac"
+        #else
+        return "Unknown"
+        #endif
     }
     
     func disconnect() {
