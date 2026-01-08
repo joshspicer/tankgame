@@ -2,48 +2,43 @@
 //  Tank.swift
 //  tankgame Shared
 //
-//  Created by jospicer on 10/28/25.
-//
+//  Tank entity with minimal code
 
 import Foundation
 
-struct Tank: Codable {
-    var row: Int
-    var col: Int
+struct Tank: GameEntity, Codable {
+    var position: Position
     var direction: Direction
-    var isAlive: Bool
-    
-    init(row: Int, col: Int, direction: Direction = .down) {
-        self.row = row
-        self.col = col
+    var isAlive: Bool = true
+    let playerIndex: Int
+
+    init(position: Position, direction: Direction, playerIndex: Int) {
+        self.position = position
         self.direction = direction
-        self.isAlive = true
+        self.playerIndex = playerIndex
     }
-    
-    mutating func move(in direction: Direction, grid: [[GridCell]]) -> Bool {
-        let offset = direction.offset
-        let newRow = row + offset.row
-        let newCol = col + offset.col
-        
-        // Check bounds
-        guard newRow >= 0, newRow < grid.count,
-              newCol >= 0, newCol < grid[0].count else {
+
+    mutating func update(in context: GameContext) {
+        // Tank movement handled by player input, not auto-update
+    }
+
+    mutating func move(in grid: [[Cell]]) -> Bool {
+        let delta = direction.delta
+        let newPos = Position(row: position.row + delta.row, col: position.col + delta.col)
+
+        guard newPos.isValid(), grid[newPos.row][newPos.col] == .empty else {
             return false
         }
-        
-        // Check if cell is empty
-        guard grid[newRow][newCol] == .empty else {
-            return false
-        }
-        
-        row = newRow
-        col = newCol
-        self.direction = direction
+
+        position = newPos
         return true
     }
-    
-    func shoot() -> Projectile {
-        let offset = direction.offset
-        return Projectile(row: row + offset.row, col: col + offset.col, direction: direction)
+
+    func createProjectile() -> Projectile {
+        let delta = direction.delta
+        return Projectile(
+            position: Position(row: position.row + delta.row, col: position.col + delta.col),
+            direction: direction
+        )
     }
 }
