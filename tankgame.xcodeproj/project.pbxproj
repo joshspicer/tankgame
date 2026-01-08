@@ -7,6 +7,14 @@
 	objects = {
 
 /* Begin PBXFileReference section */
+		712E7C59DF0F4AD0A1133D04 /* AppCoordinator.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "AppCoordinator.swift"; sourceTree = "<group>"; };
+		28640B0FF3D64A6799BD5AFD /* NetworkService.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "NetworkService.swift"; sourceTree = "<group>"; };
+		C192B6561CA54AF99CED2007 /* GameEngine.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "GameEngine.swift"; sourceTree = "<group>"; };
+		D3EAC8BD02424479B75F6E20 /* GameEntities.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "GameEntities.swift"; sourceTree = "<group>"; };
+		34C96FCF7A674BDEAEDFECE9 /* GameRenderer.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "GameRenderer.swift"; sourceTree = "<group>"; };
+		2286818B7F5E4D13A1BC972B /* TankGameScene.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "TankGameScene.swift"; sourceTree = "<group>"; };
+		5DF191B5BD2340A594AEBB77 /* MainViewController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "MainViewController.swift"; sourceTree = "<group>"; };
+		8F53EBB3ADCD432386E9E29E /* LobbyView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "LobbyView.swift"; sourceTree = "<group>"; };
 		0AEBC8162EB14C4300890CC1 /* Tank Game.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = "Tank Game.app"; sourceTree = BUILT_PRODUCTS_DIR; };
 		0AEBC8272EB14C4300890CC1 /* Tank Game.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = "Tank Game.app"; sourceTree = BUILT_PRODUCTS_DIR; };
 		0AEBC8372EB14C4300890CC1 /* Tank Game.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = "Tank Game.app"; sourceTree = BUILT_PRODUCTS_DIR; };
@@ -215,6 +223,14 @@
 		0AEBC8082EB14C4000890CC1 = {
 			isa = PBXGroup;
 			children = (
+				712E7C59DF0F4AD0A1133D04 /* AppCoordinator.swift */,
+				28640B0FF3D64A6799BD5AFD /* NetworkService.swift */,
+				C192B6561CA54AF99CED2007 /* GameEngine.swift */,
+				D3EAC8BD02424479B75F6E20 /* GameEntities.swift */,
+				34C96FCF7A674BDEAEDFECE9 /* GameRenderer.swift */,
+				2286818B7F5E4D13A1BC972B /* TankGameScene.swift */,
+				5DF191B5BD2340A594AEBB77 /* MainViewController.swift */,
+				8F53EBB3ADCD432386E9E29E /* LobbyView.swift */,
 				0AEBC80D2EB14C4100890CC1 /* tankgame Shared */,
 				0AEBC8182EB14C4300890CC1 /* tankgame iOS */,
 				0AEBC8282EB14C4300890CC1 /* tankgame tvOS */,
@@ -373,6 +389,14 @@
 			isa = PBXSourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				00EE262ED68244E39D2E7CC7 /* AppCoordinator.swift in Sources */,
+				101B3D8251EC40CC8B5AB96C /* NetworkService.swift in Sources */,
+				52817140E0994FE0966952BD /* GameEngine.swift in Sources */,
+				52036E2A140D4C468EB8841E /* GameEntities.swift in Sources */,
+				C8C3BD0936DC4266A8AD80FE /* GameRenderer.swift in Sources */,
+				37CE179184614376854A4D07 /* TankGameScene.swift in Sources */,
+				7C8168A5F24C41E395DA122D /* MainViewController.swift in Sources */,
+				C44ED404090448A2996F5900 /* LobbyView.swift in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -734,3 +758,11 @@
 	};
 	rootObject = 0AEBC8092EB14C4000890CC1 /* Project object */;
 }
+		00EE262ED68244E39D2E7CC7 /* AppCoordinator.swift in Sources */ = {isa = PBXBuildFile; fileRef = 712E7C59DF0F4AD0A1133D04 /* AppCoordinator.swift */; };
+		101B3D8251EC40CC8B5AB96C /* NetworkService.swift in Sources */ = {isa = PBXBuildFile; fileRef = 28640B0FF3D64A6799BD5AFD /* NetworkService.swift */; };
+		52817140E0994FE0966952BD /* GameEngine.swift in Sources */ = {isa = PBXBuildFile; fileRef = C192B6561CA54AF99CED2007 /* GameEngine.swift */; };
+		52036E2A140D4C468EB8841E /* GameEntities.swift in Sources */ = {isa = PBXBuildFile; fileRef = D3EAC8BD02424479B75F6E20 /* GameEntities.swift */; };
+		C8C3BD0936DC4266A8AD80FE /* GameRenderer.swift in Sources */ = {isa = PBXBuildFile; fileRef = 34C96FCF7A674BDEAEDFECE9 /* GameRenderer.swift */; };
+		37CE179184614376854A4D07 /* TankGameScene.swift in Sources */ = {isa = PBXBuildFile; fileRef = 2286818B7F5E4D13A1BC972B /* TankGameScene.swift */; };
+		7C8168A5F24C41E395DA122D /* MainViewController.swift in Sources */ = {isa = PBXBuildFile; fileRef = 5DF191B5BD2340A594AEBB77 /* MainViewController.swift */; };
+		C44ED404090448A2996F5900 /* LobbyView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 8F53EBB3ADCD432386E9E29E /* LobbyView.swift */; };
