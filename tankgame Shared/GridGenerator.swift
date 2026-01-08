@@ -7,17 +7,33 @@
 
 import Foundation
 
+enum GridGenerationMode {
+    case randomWalls    // Original random wall placement
+    case maze           // Procedurally generated maze
+}
+
 struct GridGenerator {
-    static func generate(seed: UInt32) -> [[GridCell]] {
+    /// Generate a grid with the specified generation mode
+    static func generate(seed: UInt32, mode: GridGenerationMode = .maze) -> [[GridCell]] {
+        switch mode {
+        case .randomWalls:
+            return generateRandomWalls(seed: seed)
+        case .maze:
+            return MazeGenerator.generate(seed: seed)
+        }
+    }
+
+    /// Original random wall generation algorithm
+    private static func generateRandomWalls(seed: UInt32) -> [[GridCell]] {
         var rng = SeededRandomNumberGenerator(seed: seed)
         var grid = Array(repeating: Array(repeating: GridCell.empty, count: 8), count: 8)
-        
+
         // Keep spawn corners clear (top-left and bottom-right)
         let protectedCells: Set<String> = [
             "0,0", "0,1", "1,0", "1,1", // Top-left spawn area
             "6,6", "6,7", "7,6", "7,7"  // Bottom-right spawn area
         ]
-        
+
         // Keep the border paths clear (row 0, row 7, col 0, col 7)
         let borderCells: Set<String> = {
             var cells = Set<String>()
@@ -31,10 +47,10 @@ struct GridGenerator {
             }
             return cells
         }()
-        
+
         // Generate random wall density between 15% and 30%
         let wallDensity = 0.15 + (rng.nextDouble() * 0.15)
-        
+
         // Add random walls with variable density only to interior cells
         for row in 0..<8 {
             for col in 0..<8 {
@@ -44,7 +60,7 @@ struct GridGenerator {
                 }
             }
         }
-        
+
         return grid
     }
 }
