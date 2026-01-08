@@ -75,7 +75,8 @@ final class LobbyViewModel: ObservableObject {
         let gameState = GameState(
             grid: GameState.generateGrid(seed: seed),
             tanks: tanks,
-            localPlayerId: networkRepo.localPlayer.id
+            localPlayerId: networkRepo.localPlayer.id,
+            playerIds: playerIds
         )
 
         // Notify clients
@@ -138,7 +139,8 @@ extension LobbyViewModel: NetworkRepositoryDelegate {
                 let gameState = GameState(
                     grid: GameState.generateGrid(seed: seed),
                     tanks: tanks,
-                    localPlayerId: networkRepo.localPlayer.id
+                    localPlayerId: networkRepo.localPlayer.id,
+                    playerIds: players
                 )
 
                 onStartGame?(gameState)

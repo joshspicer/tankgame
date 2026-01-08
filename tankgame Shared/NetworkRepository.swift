@@ -7,6 +7,13 @@
 
 import Foundation
 import MultipeerConnectivity
+#if os(iOS)
+import UIKit
+#elseif os(macOS)
+import AppKit
+#elseif os(tvOS)
+import UIKit
+#endif
 
 protocol NetworkRepositoryDelegate: AnyObject {
     func networkRepository(_ repo: NetworkRepository, didFindPeer peer: Player)
@@ -33,7 +40,13 @@ final class NetworkRepository: NSObject {
 
     override init() {
         // Use device name as peer ID
+        #if os(iOS) || os(tvOS)
         self.myPeerID = MCPeerID(displayName: UIDevice.current.name)
+        #elseif os(macOS)
+        self.myPeerID = MCPeerID(displayName: Host.current().localizedName ?? "Mac")
+        #else
+        self.myPeerID = MCPeerID(displayName: "Player")
+        #endif
         super.init()
 
         self.session = MCSession(peer: myPeerID, securityIdentity: nil, encryptionPreference: .required)

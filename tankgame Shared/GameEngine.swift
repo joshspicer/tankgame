@@ -46,7 +46,7 @@ final class GameEngine {
 
         let tank = state.tanks[index]
         let offset = tank.direction.offset
-        var bullet = Bullet(
+        let bullet = Bullet(
             position: Position(row: tank.position.row + offset.row, col: tank.position.col + offset.col),
             direction: tank.direction
         )
@@ -125,12 +125,11 @@ final class GameEngine {
     }
 
     private func playerIndex(for playerId: String) -> Int {
-        // This should be maintained by the game coordinator
-        // For now, we'll use a simple mapping
-        return state.tanks.firstIndex(where: { String($0.id) == playerId }) ?? 0
+        return state.playerIds.firstIndex(of: playerId) ?? 0
     }
 
     private func playerIdForIndex(_ index: Int) -> String {
-        return String(index)
+        guard index < state.playerIds.count else { return "" }
+        return state.playerIds[index]
     }
 }

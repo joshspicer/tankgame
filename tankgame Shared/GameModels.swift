@@ -34,10 +34,16 @@ struct Tank: Codable, Identifiable {
     var isAlive: Bool = true
 }
 
-struct Bullet: Codable, Identifiable {
-    let id = UUID()
+struct Bullet: Codable {
+    let id: String
     var position: Position
     var direction: Direction
+
+    init(position: Position, direction: Direction) {
+        self.id = UUID().uuidString
+        self.position = position
+        self.direction = direction
+    }
 
     mutating func advance() {
         let offset = direction.offset
@@ -79,6 +85,7 @@ struct GameState {
     var bullets: [Bullet] = []
     var scores: [String: Int] = [:] // playerId -> wins
     var localPlayerId: String
+    var playerIds: [String] // Array of player IDs corresponding to tank indices
 
     static let gridSize = 8
     static let spawnPositions: [(row: Int, col: Int, direction: Direction)] = [
