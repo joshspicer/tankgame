@@ -62,12 +62,19 @@ Main game loop and coordination:
 
 ### 7. Networking Layer
 Multiplayer communication:
-- `MultiplayerManager.swift` - Low-level MultipeerConnectivity wrapper
+- `MultiplayerManager.swift` - Low-level MultipeerConnectivity wrapper with TURN configuration
 - `MultiplayerCoordinator.swift` - High-level session and player management
 - `ReconnectionManager.swift` - Auto-reconnection logic
 - `InvitationRetryManager.swift` - Invitation retry logic
 - `ConnectionHealthMonitor.swift` - Connection health monitoring
 - `ConnectionState.swift` - Connection state enum
+
+**TURN Relay Infrastructure** (NAT traversal support):
+- `NetworkTransport.swift` - Protocol abstracting transport mechanisms (MultipeerConnectivity, WebRTC)
+- `MultipeerTransport.swift` - MultipeerConnectivity adapter conforming to NetworkTransport
+- `WebRTCTransport.swift` - WebRTC transport stub for TURN relay (requires WebRTC SDK)
+- `TURNConfiguration.swift` - ICE server configuration (STUN/TURN servers)
+- `TURNConnectionManager.swift` - Orchestrates fallback from direct to TURN relay connections
 
 ### 8. UI Layer (iOS)
 User interface components:
