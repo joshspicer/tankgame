@@ -11,7 +11,7 @@ This guide explains how to switch from the old 55-file implementation to the new
 The new implementation is ready to use. The AppDelegate has been updated to bootstrap the new SwiftUI architecture.
 
 **Files to use:**
-- `tankgame Shared/Core/*.swift` (4 files - Models, NetworkManager, GameViewModel, MinimalGameScene)
+- `tankgame Shared/*.swift` (4 files - Models, NetworkManager, GameViewModel, MinimalGameScene)
 - `tankgame iOS/ContentView.swift`
 - `tankgame iOS/GameView.swift`
 - `tankgame iOS/LobbyView.swift`
@@ -243,7 +243,7 @@ func testGameUpdate() {
 If you want to completely remove old code:
 
 1. **Keep** these directories:
-   - `tankgame Shared/Core/` (new implementation)
+   - `tankgame Shared/` (new implementation - Models, NetworkManager, GameViewModel, MinimalGameScene)
    - `tankgame iOS/` (updated with new views)
    - `tankgame Shared/Assets.xcassets`
    - `tankgame Shared/Actions.sks`, `GameScene.sks` (if needed)

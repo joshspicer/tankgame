@@ -154,11 +154,10 @@ Player Input
 ```
 tankgame/
 ├── 📁 tankgame Shared/
-│   ├── 📁 Core/                    ← NEW: Minimal implementation
-│   │   ├── 📄 Models.swift         (180 lines)
-│   │   ├── 📄 NetworkManager.swift (110 lines)
-│   │   ├── 📄 GameViewModel.swift  (170 lines)
-│   │   └── 📄 MinimalGameScene.swift (210 lines)
+│   ├── 📄 Models.swift             (180 lines) ← NEW
+│   ├── 📄 NetworkManager.swift     (110 lines) ← NEW
+│   ├── 📄 GameViewModel.swift      (170 lines) ← NEW
+│   ├── 📄 MinimalGameScene.swift   (210 lines) ← NEW
 │   │
 │   ├── 📁 (Old files still present) ← Legacy: Can be removed
 │   │   ├── GameScene.swift

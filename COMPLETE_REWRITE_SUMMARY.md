@@ -260,11 +260,10 @@ The codebase is now:
 ```
 tankgame/
 ├── tankgame Shared/
-│   └── Core/                      # New minimal implementation
-│       ├── Models.swift           # 180 lines - All data structures
-│       ├── NetworkManager.swift   # 110 lines - Networking
-│       ├── GameViewModel.swift    # 170 lines - Coordination
-│       └── MinimalGameScene.swift # 210 lines - Rendering
+│   ├── GameViewModel.swift        (170 lines) ✅
+│   ├── NetworkManager.swift       (110 lines) ✅
+│   ├── Models.swift               (180 lines) ✅
+│   ├── MinimalGameScene.swift     (210 lines) ✅
 │
 ├── tankgame iOS/
 │   ├── AppDelegate.swift          # 20 lines - Updated for SwiftUI

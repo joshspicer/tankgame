@@ -18,7 +18,7 @@ This is a **complete rewrite** of the Tank Game with **excellent design patterns
 
 ## File Structure (~912 lines total)
 
-### Core Layer (`tankgame Shared/Core/`)
+### Core Layer (`tankgame Shared/`)
 
 #### 1. **Models.swift** (~180 lines)
 Pure Swift value types for game data:

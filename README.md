@@ -25,10 +25,10 @@ See how copilot and I built it on the VS Code livestream. ([1](https://www.youtu
 ### New Minimal Implementation (912 lines across 8 files)
 
 **Core Components:**
-- `tankgame Shared/Core/Models.swift` - All game data structures
-- `tankgame Shared/Core/NetworkManager.swift` - Actor-based networking  
-- `tankgame Shared/Core/GameViewModel.swift` - MVVM coordinator
-- `tankgame Shared/Core/MinimalGameScene.swift` - SpriteKit renderer
+- `tankgame Shared/Models.swift` - All game data structures
+- `tankgame Shared/NetworkManager.swift` - Actor-based networking  
+- `tankgame Shared/GameViewModel.swift` - MVVM coordinator
+- `tankgame Shared/MinimalGameScene.swift` - SpriteKit renderer
 
 **UI Components:**
 - `tankgame iOS/ContentView.swift` - Main SwiftUI coordinator
