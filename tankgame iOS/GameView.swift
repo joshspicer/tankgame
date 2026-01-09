@@ -46,7 +46,7 @@ struct GameView: View {
         .onAppear {
             setupScene()
         }
-        .onChange(of: viewModel.gameState) { _, newState in
+        .onChange(of: viewModel.gameState) { newState in
             if let state = newState {
                 scene?.render(state: state)
             }
@@ -56,11 +56,11 @@ struct GameView: View {
     private func setupScene() {
         let newScene = MinimalGameScene(size: CGSize(width: 600, height: 800))
         newScene.scaleMode = .aspectFill
-        newScene.onMove = { direction in
-            viewModel.move(direction)
+        newScene.onMove = { (direction: Direction) -> Void in
+            self.viewModel.move(direction)
         }
-        newScene.onShoot = {
-            viewModel.shoot()
+        newScene.onShoot = { () -> Void in
+            self.viewModel.shoot()
         }
         scene = newScene
     }
