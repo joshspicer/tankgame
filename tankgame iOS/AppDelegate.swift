@@ -21,6 +21,9 @@ class AppDelegate: UIResponder, UIApplicationDelegate {
         // To test crash reporting in debug builds, uncomment one of these:
         // CrashReporterTests.createSampleCrashReport()
         // CrashReporterTests.printInfo()
+        
+        // To run tank unit tests in debug builds, uncomment:
+        // TankTests.runAllTests()
         #endif
         
         // Override point for customization after application launch.
