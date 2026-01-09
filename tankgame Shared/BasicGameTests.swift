@@ -37,9 +37,14 @@ class BasicGameTests {
         print("✓ Projectile created at position (\(projectile.row), \(projectile.col))")
         print("✓ Projectile direction: \(projectile.direction)")
         
-        assert(projectile.row == 4, "Projectile should be one row above tank")
-        assert(projectile.col == 5, "Projectile should be in same column as tank")
-        assert(projectile.direction == .up, "Projectile direction should match tank")
+        // Calculate expected position based on tank direction
+        let offset = tank.direction.offset
+        let expectedRow = tank.row + offset.row
+        let expectedCol = tank.col + offset.col
+        
+        assert(projectile.row == expectedRow, "Projectile row should be \(expectedRow)")
+        assert(projectile.col == expectedCol, "Projectile col should be \(expectedCol)")
+        assert(projectile.direction == tank.direction, "Projectile direction should match tank")
         
         print("✓ All projectile creation tests passed")
     }
