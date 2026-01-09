@@ -10,6 +10,7 @@
 		0AEBC8162EB14C4300890CC1 /* Tank Game.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = "Tank Game.app"; sourceTree = BUILT_PRODUCTS_DIR; };
 		0AEBC8272EB14C4300890CC1 /* Tank Game.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = "Tank Game.app"; sourceTree = BUILT_PRODUCTS_DIR; };
 		0AEBC8372EB14C4300890CC1 /* Tank Game.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = "Tank Game.app"; sourceTree = BUILT_PRODUCTS_DIR; };
+		0AEBC8602EB14C4400890CC1 /* Tank Game Tests.xctest */ = {isa = PBXFileReference; explicitFileType = wrapper.cfbundle; includeInIndex = 0; path = "Tank Game Tests.xctest"; sourceTree = BUILT_PRODUCTS_DIR; };
 /* End PBXFileReference section */
 
 /* Begin PBXFileSystemSynchronizedBuildFileExceptionSet section */
@@ -185,6 +186,11 @@
 			path = "tankgame macOS";
 			sourceTree = "<group>";
 		};
+		0AEBC8612EB14C4400890CC1 /* tankgame Tests */ = {
+			isa = PBXFileSystemSynchronizedRootGroup;
+			path = "tankgame Tests";
+			sourceTree = "<group>";
+		};
 /* End PBXFileSystemSynchronizedRootGroup section */
 
 /* Begin PBXFrameworksBuildPhase section */
@@ -209,6 +215,13 @@
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
+		0AEBC85D2EB14C4400890CC1 /* Frameworks */ = {
+			isa = PBXFrameworksBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
 /* End PBXFrameworksBuildPhase section */
 
 /* Begin PBXGroup section */
@@ -219,6 +232,7 @@
 				0AEBC8182EB14C4300890CC1 /* tankgame iOS */,
 				0AEBC8282EB14C4300890CC1 /* tankgame tvOS */,
 				0AEBC8382EB14C4300890CC1 /* tankgame macOS */,
+				0AEBC8612EB14C4400890CC1 /* tankgame Tests */,
 				0AEBC8172EB14C4300890CC1 /* Products */,
 			);
 			sourceTree = "<group>";
@@ -229,6 +243,7 @@
 				0AEBC8162EB14C4300890CC1 /* Tank Game.app */,
 				0AEBC8272EB14C4300890CC1 /* Tank Game.app */,
 				0AEBC8372EB14C4300890CC1 /* Tank Game.app */,
+				0AEBC8602EB14C4400890CC1 /* Tank Game Tests.xctest */,
 			);
 			name = Products;
 			sourceTree = "<group>";
@@ -302,6 +317,29 @@
 			productReference = 0AEBC8372EB14C4300890CC1 /* Tank Game.app */;
 			productType = "com.apple.product-type.application";
 		};
+		0AEBC85F2EB14C4400890CC1 /* tankgame Tests */ = {
+			isa = PBXNativeTarget;
+			buildConfigurationList = 0AEBC8632EB14C4400890CC1 /* Build configuration list for PBXNativeTarget "tankgame Tests" */;
+			buildPhases = (
+				0AEBC85C2EB14C4400890CC1 /* Sources */,
+				0AEBC85D2EB14C4400890CC1 /* Frameworks */,
+				0AEBC85E2EB14C4400890CC1 /* Resources */,
+			);
+			buildRules = (
+			);
+			dependencies = (
+				0AEBC8622EB14C4400890CC1 /* PBXTargetDependency */,
+			);
+			fileSystemSynchronizedGroups = (
+				0AEBC8612EB14C4400890CC1 /* tankgame Tests */,
+			);
+			name = "tankgame Tests";
+			packageProductDependencies = (
+			);
+			productName = "tankgame Tests";
+			productReference = 0AEBC8602EB14C4400890CC1 /* Tank Game Tests.xctest */;
+			productType = "com.apple.product-type.bundle.unit-test";
+		};
 /* End PBXNativeTarget section */
 
 /* Begin PBXProject section */
@@ -320,6 +358,10 @@
 					};
 					0AEBC8362EB14C4300890CC1 = {
 						CreatedOnToolsVersion = 26.0.1;
+					};
+					0AEBC85F2EB14C4400890CC1 = {
+						CreatedOnToolsVersion = 26.0.1;
+						TestTargetID = 0AEBC8152EB14C4300890CC1;
 					};
 				};
 			};
@@ -340,6 +382,7 @@
 				0AEBC8152EB14C4300890CC1 /* tankgame iOS */,
 				0AEBC8262EB14C4300890CC1 /* tankgame tvOS */,
 				0AEBC8362EB14C4300890CC1 /* tankgame macOS */,
+				0AEBC85F2EB14C4400890CC1 /* tankgame Tests */,
 			);
 		};
 /* End PBXProject section */
@@ -360,6 +403,13 @@
 			runOnlyForDeploymentPostprocessing = 0;
 		};
 		0AEBC8352EB14C4300890CC1 /* Resources */ = {
+			isa = PBXResourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+		0AEBC85E2EB14C4400890CC1 /* Resources */ = {
 			isa = PBXResourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
@@ -390,7 +440,32 @@
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
+		0AEBC85C2EB14C4400890CC1 /* Sources */ = {
+			isa = PBXSourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
 /* End PBXSourcesBuildPhase section */
+
+/* Begin PBXTargetDependency section */
+		0AEBC8622EB14C4400890CC1 /* PBXTargetDependency */ = {
+			isa = PBXTargetDependency;
+			target = 0AEBC8152EB14C4300890CC1 /* tankgame iOS */;
+			targetProxy = 0AEBC8642EB14C4400890CC1 /* PBXContainerItemProxy */;
+		};
+/* End PBXTargetDependency section */
+
+/* Begin PBXContainerItemProxy section */
+		0AEBC8642EB14C4400890CC1 /* PBXContainerItemProxy */ = {
+			isa = PBXContainerItemProxy;
+			containerPortal = 0AEBC8092EB14C4000890CC1 /* Project object */;
+			proxyType = 1;
+			remoteGlobalIDString = 0AEBC8152EB14C4300890CC1;
+			remoteInfo = "tankgame iOS";
+		};
+/* End PBXContainerItemProxy section */
 
 /* Begin XCBuildConfiguration section */
 		0AEBC84E2EB14C4300890CC1 /* Debug */ = {
@@ -691,6 +766,45 @@
 			};
 			name = Release;
 		};
+		0AEBC8652EB14C4400890CC1 /* Debug */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				CODE_SIGN_STYLE = Automatic;
+				CURRENT_PROJECT_VERSION = 1;
+				DEVELOPMENT_TEAM = N7C8DEK852;
+				GENERATE_INFOPLIST_FILE = YES;
+				IPHONEOS_DEPLOYMENT_TARGET = 18.0;
+				MARKETING_VERSION = 1.0;
+				PRODUCT_BUNDLE_IDENTIFIER = "com.joshspicer.tankgame.tests";
+				PRODUCT_NAME = "$(TARGET_NAME)";
+				SDKROOT = iphoneos;
+				SWIFT_EMIT_LOC_STRINGS = NO;
+				SWIFT_VERSION = 5.0;
+				TARGETED_DEVICE_FAMILY = "1,2";
+				TEST_HOST = "$(BUILT_PRODUCTS_DIR)/Tank Game.app/$(BUNDLE_EXECUTABLE_FOLDER_PATH)/Tank Game";
+			};
+			name = Debug;
+		};
+		0AEBC8662EB14C4400890CC1 /* Release */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				CODE_SIGN_STYLE = Automatic;
+				CURRENT_PROJECT_VERSION = 1;
+				DEVELOPMENT_TEAM = N7C8DEK852;
+				GENERATE_INFOPLIST_FILE = YES;
+				IPHONEOS_DEPLOYMENT_TARGET = 18.0;
+				MARKETING_VERSION = 1.0;
+				PRODUCT_BUNDLE_IDENTIFIER = "com.joshspicer.tankgame.tests";
+				PRODUCT_NAME = "$(TARGET_NAME)";
+				SDKROOT = iphoneos;
+				SWIFT_EMIT_LOC_STRINGS = NO;
+				SWIFT_VERSION = 5.0;
+				TARGETED_DEVICE_FAMILY = "1,2";
+				TEST_HOST = "$(BUILT_PRODUCTS_DIR)/Tank Game.app/$(BUNDLE_EXECUTABLE_FOLDER_PATH)/Tank Game";
+				VALIDATE_PRODUCT = YES;
+			};
+			name = Release;
+		};
 /* End XCBuildConfiguration section */
 
 /* Begin XCConfigurationList section */
@@ -726,6 +840,15 @@
 			buildConfigurations = (
 				0AEBC8562EB14C4300890CC1 /* Debug */,
 				0AEBC8572EB14C4300890CC1 /* Release */,
+			);
+			defaultConfigurationIsVisible = 0;
+			defaultConfigurationName = Release;
+		};
+		0AEBC8632EB14C4400890CC1 /* Build configuration list for PBXNativeTarget "tankgame Tests" */ = {
+			isa = XCConfigurationList;
+			buildConfigurations = (
+				0AEBC8652EB14C4400890CC1 /* Debug */,
+				0AEBC8662EB14C4400890CC1 /* Release */,
 			);
 			defaultConfigurationIsVisible = 0;
 			defaultConfigurationName = Release;
