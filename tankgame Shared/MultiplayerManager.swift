@@ -43,7 +43,11 @@ class MultiplayerManager: NSObject {
     private let reconnectionManager = ReconnectionManager()
     private let invitationRetryManager = InvitationRetryManager()
     private let connectionHealthMonitor = ConnectionHealthMonitor()
-    
+
+    // TURN configuration and management
+    private var turnSettings: TURNSettings = .disabled
+    private var turnConnectionManager: TURNConnectionManager?
+
     // Track discovered peers for reconnection
     private var discoveredPeers: [MCPeerID] = []
     
@@ -59,7 +63,49 @@ class MultiplayerManager: NSObject {
     
     /// Auto-reconnection enabled flag
     var autoReconnectEnabled: Bool = true
-    
+
+    // MARK: - TURN Configuration
+
+    /// Configure TURN settings for fallback relay connections
+    /// - Parameter settings: TURN settings including server configuration
+    func configureTURN(_ settings: TURNSettings) {
+        self.turnSettings = settings
+        if settings.enableTURNFallback {
+            self.turnConnectionManager = TURNConnectionManager(settings: settings)
+            setupTURNCallbacks()
+        } else {
+            self.turnConnectionManager = nil
+        }
+    }
+
+    /// Get current TURN settings
+    var currentTURNSettings: TURNSettings {
+        return turnSettings
+    }
+
+    /// Check if TURN is configured and enabled
+    var isTURNEnabled: Bool {
+        return turnSettings.enableTURNFallback && turnConnectionManager != nil
+    }
+
+    private func setupTURNCallbacks() {
+        turnConnectionManager?.onFallbackToTURN = { [weak self] in
+            guard let self = self else { return }
+            print("Falling back to TURN relay connection...")
+            // Future: Start WebRTC transport with TURN
+        }
+
+        turnConnectionManager?.onConnectionSuccess = { [weak self] transportType in
+            guard let self = self else { return }
+            print("Connection established via \(transportType)")
+        }
+
+        turnConnectionManager?.onConnectionFailed = { [weak self] transportType, error in
+            guard let self = self else { return }
+            print("Connection failed via \(transportType): \(error.localizedDescription)")
+        }
+    }
+
     override init() {
         // Generate or retrieve persistent peer ID
         let peerID: MCPeerID
