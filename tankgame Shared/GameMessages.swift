@@ -15,5 +15,6 @@ enum GameMessage: Codable {
     case playerShoot(playerIndex: Int, projectile: Projectile)
     case playerHit(playerIndex: Int)
     case readyForNextRound(playerIndex: Int)
+    case nearbyInteractionToken(peerName: String, tokenData: Data)
     case startGame // Host signals game start
 }

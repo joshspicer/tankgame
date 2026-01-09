@@ -56,6 +56,7 @@ extension GameViewController {
         lobbyUI.reset()
         lobbyUI.peerTableView.reloadData()
         multiplayerManager.isHost = false
+        lobbyUI.updateNearbyStatus("Nearby link idle")
     }
     
     func handleStartGameTapped() {

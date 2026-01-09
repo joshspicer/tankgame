@@ -27,6 +27,7 @@ class LobbyUI {
     private(set) var connectedPlayersLabel: UILabel!
     private(set) var statusLabel: UILabel!
     private(set) var instructionsLabel: UILabel!
+    private(set) var nearbyStatusLabel: UILabel!
     private(set) var emptyStateLabel: UILabel!
     private(set) var activityIndicator: UIActivityIndicatorView!
     
@@ -93,6 +94,16 @@ class LobbyUI {
         instructionsLabel.textColor = .tertiaryLabel
         instructionsLabel.translatesAutoresizingMaskIntoConstraints = false
         lobbyView.addSubview(instructionsLabel)
+        
+        // Nearby connectivity status label
+        nearbyStatusLabel = UILabel()
+        nearbyStatusLabel.text = "Nearby link idle"
+        nearbyStatusLabel.font = .systemFont(ofSize: 14, weight: .medium)
+        nearbyStatusLabel.textAlignment = .center
+        nearbyStatusLabel.numberOfLines = 0
+        nearbyStatusLabel.textColor = .systemTeal
+        nearbyStatusLabel.translatesAutoresizingMaskIntoConstraints = false
+        lobbyView.addSubview(nearbyStatusLabel)
         
         // Single Player button (with AI bots)
         singlePlayerButton = createButton(title: "Single Player", backgroundColor: .systemOrange, icon: "🤖")
@@ -256,7 +267,11 @@ class LobbyUI {
             instructionsLabel.leadingAnchor.constraint(equalTo: lobbyView.leadingAnchor, constant: 30),
             instructionsLabel.trailingAnchor.constraint(equalTo: lobbyView.trailingAnchor, constant: -30),
             
-            singlePlayerButton.topAnchor.constraint(equalTo: instructionsLabel.bottomAnchor, constant: 30),
+            nearbyStatusLabel.topAnchor.constraint(equalTo: instructionsLabel.bottomAnchor, constant: 8),
+            nearbyStatusLabel.leadingAnchor.constraint(equalTo: lobbyView.leadingAnchor, constant: 30),
+            nearbyStatusLabel.trailingAnchor.constraint(equalTo: lobbyView.trailingAnchor, constant: -30),
+            
+            singlePlayerButton.topAnchor.constraint(equalTo: nearbyStatusLabel.bottomAnchor, constant: 30),
             singlePlayerButton.centerXAnchor.constraint(equalTo: lobbyView.centerXAnchor),
             singlePlayerButton.widthAnchor.constraint(equalToConstant: 240),
             singlePlayerButton.heightAnchor.constraint(equalToConstant: 56),
@@ -391,6 +406,12 @@ class LobbyUI {
         statusLabel.text = "Single Player Mode\nSelect number of AI opponents"
     }
     
+    /// Update nearby connectivity status
+    func updateNearbyStatus(_ text: String) {
+        nearbyStatusLabel.text = text
+        nearbyStatusLabel.isHidden = false
+    }
+    
     /// Reset lobby to initial state
     func reset() {
         singlePlayerButton.isHidden = false
@@ -406,6 +427,8 @@ class LobbyUI {
         emptyStateLabel.isHidden = true
         activityIndicator.stopAnimating()
         statusLabel.text = "Choose an option to start"
+        nearbyStatusLabel.text = "Nearby link idle"
+        nearbyStatusLabel.isHidden = false
         updateSpriteModeButton()
     }
 }

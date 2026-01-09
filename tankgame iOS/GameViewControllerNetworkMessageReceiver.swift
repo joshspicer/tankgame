@@ -27,6 +27,12 @@ extension GameViewController {
             multiplayerCoordinator.markPlayerReady(playerIndex)
             checkAndStartNextRound()
             
+        case .nearbyInteractionToken(let peerName, let tokenData):
+            if #available(iOS 16.0, *) {
+                nearbyConnectivityManager?.handleTokenMessage(from: peerName, tokenData: tokenData)
+            }
+            lobbyUI.updateNearbyStatus("Precision token received from \(peerName)")
+            
         case .playerHit, .startGame, .playerJoined:
             break
         }

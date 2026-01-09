@@ -18,6 +18,8 @@ class GameViewController: UIViewController {
     var multiplayerManager: MultiplayerManager!
     var multiplayerCoordinator: MultiplayerCoordinator!
     var permissionManager: PermissionManager!
+    @available(iOS 16.0, *)
+    var nearbyConnectivityManager: NearbyConnectivityManager?
     
     // UI components
     var lobbyUI: LobbyUI!
@@ -41,6 +43,23 @@ class GameViewController: UIViewController {
         
         // Setup UI
         setupLobby()
+        
+        if #available(iOS 16.0, *), NearbyConnectivityManager.isSupported {
+            nearbyConnectivityManager = NearbyConnectivityManager(
+                localPeerName: multiplayerManager.session.myPeerID.displayName,
+                sendMessage: { [weak self] message, reliability in
+                    self?.multiplayerManager.sendMessage(message, reliability: reliability)
+                }
+            )
+            nearbyConnectivityManager?.onStatusChanged = { [weak self] status in
+                DispatchQueue.main.async {
+                    self?.lobbyUI.updateNearbyStatus(status)
+                }
+            }
+            lobbyUI.updateNearbyStatus("Nearby link ready for precision discovery")
+        } else {
+            lobbyUI.updateNearbyStatus("Nearby Interaction not available on this device")
+        }
         
         // Request permissions on first launch
         permissionManager.requestPermissionsIfNeeded()
@@ -97,4 +116,3 @@ class GameViewController: UIViewController {
         return true
     }
 }
-

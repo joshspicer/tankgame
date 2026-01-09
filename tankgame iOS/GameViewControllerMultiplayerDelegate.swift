@@ -33,10 +33,18 @@ extension GameViewController: MultiplayerManagerDelegate {
         } else {
             lobbyUI.statusLabel.text = "Connected! Waiting for host to start game..."
         }
+        
+        if #available(iOS 16.0, *) {
+            nearbyConnectivityManager?.handlePeerConnected(peerID)
+        }
     }
     
     func multiplayerManager(_ manager: MultiplayerManager, didDisconnectFromPeer peerID: MCPeerID) {
         multiplayerCoordinator.removeConnectedPeer(peerID)
+        
+        if #available(iOS 16.0, *) {
+            nearbyConnectivityManager?.handlePeerDisconnected(peerID)
+        }
         
         // During game - show reconnection status if auto-reconnect is active
         // The actual return-to-lobby is handled by didChangeConnectionState when state becomes .disconnected
