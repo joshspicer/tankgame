@@ -1,2 +1,56 @@
+# Xcode user-specific files
 .xcuserstate
+*.xcuserstate
+xcuserdata/
+*.xcuserdatad
+
+# macOS files
 .DS_Store
+.AppleDouble
+.LSOverride
+._*
+
+# Xcode build files
+build/
+DerivedData/
+*.pbxuser
+*.mode1v3
+*.mode2v3
+*.perspectivev3
+*.moved-aside
+!default.pbxuser
+!default.mode1v3
+!default.mode2v3
+!default.perspectivev3
+
+# Temporary files
+*.swp
+*.swo
+*~
+.tmp/
+
+# CocoaPods (if used in future)
+Pods/
+Podfile.lock
+
+# Carthage (if used in future)
+Carthage/Build/
+
+# Swift Package Manager
+.swiftpm/
+.build/
+
+# Playgrounds
+timeline.xctimeline
+playground.xcworkspace
+
+# Code coverage
+*.gcda
+*.gcno
+*.profdata
+*.profraw
+
+# App packaging
+*.ipa
+*.dSYM.zip
+*.dSYM
