@@ -12,16 +12,17 @@ import MultipeerConnectivity
 extension GameViewController: MultiplayerManagerDelegate {
     func multiplayerManager(_ manager: MultiplayerManager, didFindPeer peerID: MCPeerID) {
         multiplayerCoordinator.addDiscoveredPeer(peerID)
-        lobbyUI.statusLabel.text = "Found \(multiplayerCoordinator.discoveredPeers.count) game\(multiplayerCoordinator.discoveredPeers.count == 1 ? "" : "s"). Tap to join."
+        updateSearchStatusText()
     }
     
     func multiplayerManager(_ manager: MultiplayerManager, didLosePeer peerID: MCPeerID) {
         multiplayerCoordinator.removeDiscoveredPeer(peerID)
-        if multiplayerCoordinator.discoveredPeers.isEmpty {
-            lobbyUI.statusLabel.text = "Searching for nearby games..."
-        } else {
-            lobbyUI.statusLabel.text = "Found \(multiplayerCoordinator.discoveredPeers.count) game\(multiplayerCoordinator.discoveredPeers.count == 1 ? "" : "s"). Tap to join."
-        }
+        updateSearchStatusText()
+    }
+    
+    private func updateSearchStatusText() {
+        let count = multiplayerCoordinator.discoveredPeers.count
+        lobbyUI.statusLabel.text = count == 0 ? "Searching for nearby games..." : "Found \(count) game\(count == 1 ? "" : "s"). Tap to join."
     }
     
     func multiplayerManager(_ manager: MultiplayerManager, didConnectToPeer peerID: MCPeerID) {
@@ -55,61 +56,37 @@ extension GameViewController: MultiplayerManagerDelegate {
     }
     
     func multiplayerManager(_ manager: MultiplayerManager, didEncounterError error: Error) {
-        if permissionManager.isRequesting {
-            return
-        }
-        
+        guard !permissionManager.isRequesting else { return }
         lobbyUI.activityIndicator.stopAnimating()
         
-        let alert = UIAlertController(
-            title: "Unable to Start Multiplayer",
-            message: "Could not start multiplayer session. This is likely because:\n\n• Local Network permission was denied\n• Bluetooth permission was denied\n\nTo fix:\n1. Open Settings app\n2. Go to Privacy & Security → Local Network\n3. Find Tank Game and turn it ON\n4. Also check Bluetooth permissions\n5. Return here and try again\n\nTechnical error: \(error.localizedDescription)",
-            preferredStyle: .alert
-        )
+        let alert = UIAlertController(title: "Unable to Start Multiplayer", message: "Could not start multiplayer session. This is likely because:\n\n• Local Network permission was denied\n• Bluetooth permission was denied\n\nTo fix:\n1. Open Settings app\n2. Go to Privacy & Security → Local Network\n3. Find Tank Game and turn it ON\n4. Also check Bluetooth permissions\n5. Return here and try again\n\nTechnical error: \(error.localizedDescription)", preferredStyle: .alert)
         
         alert.addAction(UIAlertAction(title: "Open Settings", style: .default) { _ in
             if let settingsURL = URL(string: UIApplication.openSettingsURLString) {
                 UIApplication.shared.open(settingsURL)
             }
         })
-        
-        alert.addAction(UIAlertAction(title: "Try Again", style: .default) { [weak self] _ in
-            self?.lobbyUI.reset()
-        })
-        
-        alert.addAction(UIAlertAction(title: "Cancel", style: .cancel) { [weak self] _ in
-            self?.lobbyUI.reset()
-        })
-        
+        alert.addAction(UIAlertAction(title: "Try Again", style: .default) { [weak self] _ in self?.lobbyUI.reset() })
+        alert.addAction(UIAlertAction(title: "Cancel", style: .cancel) { [weak self] _ in self?.lobbyUI.reset() })
         present(alert, animated: true)
     }
     
     func multiplayerManager(_ manager: MultiplayerManager, didChangeConnectionState state: ConnectionState) {
-        // Update UI based on connection state
         lobbyUI.statusLabel.text = state.description
         
         switch state {
         case .disconnected:
             lobbyUI.activityIndicator.stopAnimating()
-            
-            // If game was in progress and we're now disconnected (e.g., reconnection failed),
-            // return to lobby with an alert
             if gameState != nil {
                 DispatchQueue.main.async { [weak self] in
-                    guard let self = self else { return }
-                    self.returnToLobbyWithDisconnectAlert()
+                    self?.returnToLobbyWithDisconnectAlert()
                 }
             }
-            
-        case .browsing, .advertising:
-            lobbyUI.activityIndicator.startAnimating()
-        case .connecting:
+        case .browsing, .advertising, .connecting, .reconnecting:
             lobbyUI.activityIndicator.startAnimating()
         case .connected:
             lobbyUI.activityIndicator.stopAnimating()
             updateConnectedPlayersUI()
-        case .reconnecting:
-            lobbyUI.activityIndicator.startAnimating()
         }
     }
     
