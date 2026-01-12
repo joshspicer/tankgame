@@ -33,24 +33,7 @@ enum ConnectionState: Equatable {
         }
     }
     
-    var isConnected: Bool {
-        if case .connected = self {
-            return true
-        }
-        return false
-    }
-    
-    var isConnecting: Bool {
-        if case .connecting = self {
-            return true
-        }
-        return false
-    }
-    
-    var isReconnecting: Bool {
-        if case .reconnecting = self {
-            return true
-        }
-        return false
-    }
+    var isConnected: Bool { if case .connected = self { return true } else { return false } }
+    var isConnecting: Bool { if case .connecting = self { return true } else { return false } }
+    var isReconnecting: Bool { if case .reconnecting = self { return true } else { return false } }
 }
