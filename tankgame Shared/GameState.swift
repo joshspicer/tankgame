@@ -97,71 +97,42 @@ final class GameState {
     }
     
     func updateProjectiles() {
-        var activeProjectiles: [Projectile] = []
-        
-        for var projectile in projectiles {
-            projectile.advance()
+        projectiles = projectiles.compactMap { projectile in
+            var p = projectile
+            p.advance()
             
-            // Check if out of bounds or hit wall
-            if projectile.isOutOfBounds(gridSize: 8) || projectile.hits(grid: grid) {
-                continue // Remove this projectile
+            // Remove if out of bounds or hit wall
+            guard !p.isOutOfBounds(gridSize: 8) && !p.hits(grid: grid) else { return nil }
+            
+            // Check for tank hits
+            for i in 0..<tanks.count where p.hits(tank: tanks[i]) {
+                tanks[i].isAlive = false
+                return nil
             }
             
-            // Check if hit any tank
-            var hitTank = false
-            for i in 0..<tanks.count {
-                if projectile.hits(tank: tanks[i]) {
-                    tanks[i].isAlive = false
-                    hitTank = true
-                    break
-                }
+            // Check for lizard hits
+            for i in 0..<lizards.count where lizards[i].isAlive && p.hitsLizard(lizards[i]) {
+                lizards[i].isAlive = false
+                return nil
             }
             
-            if hitTank {
-                continue
-            }
-            
-            // Check if hit any lizard
-            var hitLizard = false
-            for i in 0..<lizards.count {
-                if lizards[i].isAlive && projectile.hitsLizard(lizards[i]) {
-                    lizards[i].isAlive = false
-                    hitLizard = true
-                    break
-                }
-            }
-            
-            if hitLizard {
-                continue
-            }
-            
-            activeProjectiles.append(projectile)
+            return p
         }
-        
-        projectiles = activeProjectiles
     }
     
     /// Update all lizards' AI behavior
     func updateLizards() {
-        for i in 0..<lizards.count {
-            if lizards[i].isAlive {
-                // Create a grid that includes tank positions as obstacles
-                var obstacleGrid = grid
-                for tank in tanks where tank.isAlive {
-                    if tank.row >= 0 && tank.row < obstacleGrid.count &&
-                       tank.col >= 0 && tank.col < obstacleGrid[0].count {
-                        obstacleGrid[tank.row][tank.col] = .wall
-                    }
-                }
-                // Also treat other lizards as obstacles
-                for (j, otherLizard) in lizards.enumerated() where j != i && otherLizard.isAlive {
-                    if otherLizard.row >= 0 && otherLizard.row < obstacleGrid.count &&
-                       otherLizard.col >= 0 && otherLizard.col < obstacleGrid[0].count {
-                        obstacleGrid[otherLizard.row][otherLizard.col] = .wall
-                    }
-                }
-                _ = lizards[i].update(grid: obstacleGrid)
+        for i in lizards.indices where lizards[i].isAlive {
+            var obstacleGrid = grid
+            // Mark tanks as obstacles
+            for tank in tanks where tank.isAlive && tank.row >= 0 && tank.row < grid.count && tank.col >= 0 && tank.col < grid[0].count {
+                obstacleGrid[tank.row][tank.col] = .wall
             }
+            // Mark other lizards as obstacles
+            for (j, lizard) in lizards.enumerated() where j != i && lizard.isAlive && lizard.row >= 0 && lizard.row < grid.count && lizard.col >= 0 && lizard.col < grid[0].count {
+                obstacleGrid[lizard.row][lizard.col] = .wall
+            }
+            _ = lizards[i].update(grid: obstacleGrid)
         }
     }
     
