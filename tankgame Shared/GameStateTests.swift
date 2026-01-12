@@ -109,17 +109,18 @@ class GameStateTests {
         print("\n=== Testing Tank Movement ===")
         
         let gameState = GameState(seed: 12345, playerCount: 2, localPlayerIndex: 0)
-        var tank = gameState.tanks[0]
+        let tank = gameState.tanks[0]
         
         let initialRow = tank.row
         let initialCol = tank.col
         print("Initial tank position: (\(initialRow), \(initialCol))")
         
         // Try to move the tank (movement depends on grid layout)
-        let moved = tank.move(in: .right, grid: gameState.grid)
+        var testTank = tank  // Create a copy to test movement
+        let moved = testTank.move(in: .right, grid: gameState.grid)
         
         if moved {
-            print("✓ Tank moved to (\(tank.row), \(tank.col))")
+            print("✓ Tank can move to (\(testTank.row), \(testTank.col))")
         } else {
             print("⚠ Tank couldn't move (blocked by wall)")
         }

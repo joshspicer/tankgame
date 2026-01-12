@@ -45,8 +45,10 @@ If you have the XcodeBuildMCP tools installed, you can launch two simulators:
 
 1. Build the app:
    ```bash
-   xcodebuild -project tankgame.xcodeproj -scheme tankgame-iOS -destination 'platform=iOS Simulator,name=iPhone 15' build
+   xcodebuild -project tankgame.xcodeproj -scheme <scheme-name> -destination 'platform=iOS Simulator,name=iPhone 15' build
    ```
+   
+   Note: Replace `<scheme-name>` with the actual scheme name from your project (e.g., `tankgame iOS` or similar).
 
 2. Launch first simulator instance:
    ```bash
