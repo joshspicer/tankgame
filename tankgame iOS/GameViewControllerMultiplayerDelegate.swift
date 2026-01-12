@@ -59,8 +59,23 @@ extension GameViewController: MultiplayerManagerDelegate {
         guard !permissionManager.isRequesting else { return }
         lobbyUI.activityIndicator.stopAnimating()
         
-        let alert = UIAlertController(title: "Unable to Start Multiplayer", message: "Could not start multiplayer session. This is likely because:\n\n• Local Network permission was denied\n• Bluetooth permission was denied\n\nTo fix:\n1. Open Settings app\n2. Go to Privacy & Security → Local Network\n3. Find Tank Game and turn it ON\n4. Also check Bluetooth permissions\n5. Return here and try again\n\nTechnical error: \(error.localizedDescription)", preferredStyle: .alert)
+        let message = """
+            Could not start multiplayer session. This is likely because:
+            
+            • Local Network permission was denied
+            • Bluetooth permission was denied
+            
+            To fix:
+            1. Open Settings app
+            2. Go to Privacy & Security → Local Network
+            3. Find Tank Game and turn it ON
+            4. Also check Bluetooth permissions
+            5. Return here and try again
+            
+            Technical error: \(error.localizedDescription)
+            """
         
+        let alert = UIAlertController(title: "Unable to Start Multiplayer", message: message, preferredStyle: .alert)
         alert.addAction(UIAlertAction(title: "Open Settings", style: .default) { _ in
             if let settingsURL = URL(string: UIApplication.openSettingsURLString) {
                 UIApplication.shared.open(settingsURL)

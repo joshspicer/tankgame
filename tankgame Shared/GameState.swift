@@ -122,14 +122,18 @@ final class GameState {
     
     /// Update all lizards' AI behavior
     func updateLizards() {
+        func isValid(_ row: Int, _ col: Int) -> Bool {
+            row >= 0 && row < grid.count && col >= 0 && col < grid[0].count
+        }
+        
         for i in lizards.indices where lizards[i].isAlive {
             var obstacleGrid = grid
             // Mark tanks as obstacles
-            for tank in tanks where tank.isAlive && tank.row >= 0 && tank.row < grid.count && tank.col >= 0 && tank.col < grid[0].count {
+            for tank in tanks where tank.isAlive && isValid(tank.row, tank.col) {
                 obstacleGrid[tank.row][tank.col] = .wall
             }
             // Mark other lizards as obstacles
-            for (j, lizard) in lizards.enumerated() where j != i && lizard.isAlive && lizard.row >= 0 && lizard.row < grid.count && lizard.col >= 0 && lizard.col < grid[0].count {
+            for (j, lizard) in lizards.enumerated() where j != i && lizard.isAlive && isValid(lizard.row, lizard.col) {
                 obstacleGrid[lizard.row][lizard.col] = .wall
             }
             _ = lizards[i].update(grid: obstacleGrid)

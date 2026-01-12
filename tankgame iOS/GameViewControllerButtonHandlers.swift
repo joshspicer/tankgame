@@ -11,10 +11,14 @@ import MultipeerConnectivity
 /// Handles button tap events for GameViewController
 extension GameViewController {
     
+    private var initialModeButtons: [UIView?] {
+        [lobbyUI.hostButton, lobbyUI.joinButton, lobbyUI.singlePlayerButton, lobbyUI.instructionsLabel]
+    }
+    
     func handleHostTapped() {
         isSinglePlayerMode = false
         multiplayerManager.isHost = true
-        [lobbyUI.hostButton, lobbyUI.joinButton, lobbyUI.singlePlayerButton, lobbyUI.instructionsLabel].forEach { $0?.isHidden = true }
+        initialModeButtons.forEach { $0?.isHidden = true }
         [lobbyUI.cancelButton, lobbyUI.connectedPlayersView, lobbyUI.startGameButton].forEach { $0?.isHidden = false }
         lobbyUI.activityIndicator.startAnimating()
         lobbyUI.statusLabel.text = "Hosting game...\nWaiting for players to join (2-4 players)"
@@ -24,7 +28,7 @@ extension GameViewController {
     
     func handleJoinTapped() {
         isSinglePlayerMode = false
-        [lobbyUI.hostButton, lobbyUI.joinButton, lobbyUI.singlePlayerButton, lobbyUI.instructionsLabel].forEach { $0?.isHidden = true }
+        initialModeButtons.forEach { $0?.isHidden = true }
         [lobbyUI.cancelButton, lobbyUI.peerTableView].forEach { $0?.isHidden = false }
         lobbyUI.activityIndicator.startAnimating()
         lobbyUI.statusLabel.text = "Searching for nearby games..."
