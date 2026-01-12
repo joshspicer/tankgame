@@ -8,9 +8,7 @@
 import SpriteKit
 
 /// Handles rendering of tanks with animations
-class TankRenderer {
-    let tileSize: CGFloat
-    let gridSize: Int
+class TankRenderer: BaseRenderer {
     
     // Tank colors for up to 4 players
     let tankColors: [SKColor] = [.blue, .red, .green, .orange]
@@ -19,11 +17,10 @@ class TankRenderer {
     private let tankSpriteRenderer: TankSpriteRenderer
     private let dolphinSpriteRenderer: DolphinSpriteRenderer
     
-    init(tileSize: CGFloat, gridSize: Int) {
-        self.tileSize = tileSize
-        self.gridSize = gridSize
+    override init(tileSize: CGFloat, gridSize: Int) {
         self.tankSpriteRenderer = TankSpriteRenderer(tileSize: tileSize)
         self.dolphinSpriteRenderer = DolphinSpriteRenderer(tileSize: tileSize)
+        super.init(tileSize: tileSize, gridSize: gridSize)
     }
     
     /// Render all tanks
@@ -34,8 +31,7 @@ class TankRenderer {
             
             let tank = tanks[i]
             if tank.isAlive || tankExploding[i] {
-                let color = tankColors[i]
-                let tankSprite = createTankNode(color: color, direction: tank.direction)
+                let tankSprite = createTankNode(color: tankColors[i], direction: tank.direction)
                 tankSprite.position = gridPosition(row: tank.row, col: tank.col)
                 tankNode.addChild(tankSprite)
             }
@@ -51,27 +47,10 @@ class TankRenderer {
             if tank.isAlive || tankExploding[i] {
                 let targetPosition = gridPosition(row: tank.row, col: tank.col)
                 
-                // If tank sprite exists, animate to new position
                 if let tankSprite = tankNode.children.first {
-                    // Animate position
-                    let moveAction = SKAction.move(to: targetPosition, duration: duration)
-                    moveAction.timingMode = .easeOut
-                    tankSprite.run(moveAction)
-                    
-                    // Animate rotation smoothly
-                    let currentRotation = tankSprite.zRotation
-                    let targetRotation = CGFloat(tank.direction.angle)
-                    let rotationDiff = shortestRotationDifference(from: currentRotation, to: targetRotation)
-                    
-                    if abs(rotationDiff) > 0.01 {
-                        let rotateAction = SKAction.rotate(byAngle: rotationDiff, duration: duration)
-                        rotateAction.timingMode = .easeOut
-                        tankSprite.run(rotateAction)
-                    }
+                    animateSpriteMovement(tankSprite, to: targetPosition, rotation: CGFloat(tank.direction.angle), duration: duration)
                 } else {
-                    // Create new sprite if doesn't exist
-                    let color = tankColors[i]
-                    let tankSprite = createTankNode(color: color, direction: tank.direction)
+                    let tankSprite = createTankNode(color: tankColors[i], direction: tank.direction)
                     tankSprite.position = targetPosition
                     tankNode.addChild(tankSprite)
                 }
@@ -79,14 +58,6 @@ class TankRenderer {
                 tankNode.removeAllChildren()
             }
         }
-    }
-    
-    /// Calculate the shortest rotation difference between two angles
-    private func shortestRotationDifference(from: CGFloat, to: CGFloat) -> CGFloat {
-        var diff = to - from
-        while diff > .pi { diff -= 2 * .pi }
-        while diff < -.pi { diff += 2 * .pi }
-        return diff
     }
     
     /// Create a tank sprite node based on current sprite mode
@@ -97,13 +68,5 @@ class TankRenderer {
         case .tank:
             return tankSpriteRenderer.createTankNode(color: color, direction: direction)
         }
-    }
-    
-    /// Convert grid coordinates to scene position
-    func gridPosition(row: Int, col: Int) -> CGPoint {
-        return CGPoint(
-            x: CGFloat(col) * tileSize + tileSize / 2,
-            y: CGFloat(gridSize - 1 - row) * tileSize + tileSize / 2
-        )
     }
 }
