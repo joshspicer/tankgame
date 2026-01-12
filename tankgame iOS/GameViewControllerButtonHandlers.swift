@@ -53,8 +53,9 @@ extension GameViewController {
     
     func handleStartGameTapped() {
         if isSinglePlayerMode {
-            let totalPlayers = 1 + lobbyUI.botCount
-            let botIndices = Array(1...lobbyUI.botCount)
+            let botCount = max(1, lobbyUI.botCount)
+            let totalPlayers = 1 + botCount
+            let botIndices = Array(1...botCount)
             startGame(playerCount: totalPlayers, localPlayerIndex: 0, botIndices: botIndices)
         } else {
             let playerCount = multiplayerCoordinator.playerCount
