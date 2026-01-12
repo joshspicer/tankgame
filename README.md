@@ -11,3 +11,7 @@ See how copilot and I built it on the VS Code livestream. ([1](https://www.youtu
 - 🎨 Modern visual styling
 - 🔊 Sound effects
 
+## Testing
+
+For information about testing the game, including how to run two simulators for multiplayer testing, see [TESTING.md](TESTING.md).
+
