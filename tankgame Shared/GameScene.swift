@@ -76,7 +76,47 @@ class GameScene: SKScene {
     }
     
     func setupScene() {
-        GameSceneSetup.setupScene(in: self)
+        // Create grid container (centered)
+        let newGridNode = SKNode()
+        let gridOffset = CGPoint(
+            x: (size.width - CGFloat(gridSize) * tileSize) / 2,
+            y: (size.height - CGFloat(gridSize) * tileSize) / 2 + 50
+        )
+        newGridNode.position = gridOffset
+        addChild(newGridNode)
+        gridNode = newGridNode
+
+        // Create projectiles container
+        let newProjectilesNode = SKNode()
+        newProjectilesNode.position = gridOffset
+        addChild(newProjectilesNode)
+        projectilesNode = newProjectilesNode
+
+        // Create lizard container
+        let newLizardNode = SKNode()
+        newLizardNode.position = gridOffset
+        newLizardNode.zPosition = 5 // Above grid, below tanks
+        addChild(newLizardNode)
+        lizardNode = newLizardNode
+
+        // Create tank nodes for all possible players
+        for i in 0..<4 {
+            let tankNode = SKNode()
+            tankNode.position = gridOffset
+            tankNode.zPosition = 10 // Above lizards
+            addChild(tankNode)
+            tankNodes[i] = tankNode
+        }
+
+        // Setup UI components
+        joystickController.setup(in: self, at: CGPoint(x: 80, y: 100))
+        fireButton.setup(in: self, at: CGPoint(x: size.width - 80, y: 100))
+        ui.setup(in: self, sceneSize: size)
+
+        // Setup fire button callback
+        fireButton.onTap = { [weak self] in
+            self?.inputHandler.handleShoot()
+        }
     }
     
     func startGame(with state: GameState) {
