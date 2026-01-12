@@ -8,7 +8,7 @@
 import SpriteKit
 
 /// Handles rendering of lizards with animations
-class LizardRenderer {
+class LizardRenderer: GridPositionConvertible {
     let tileSize: CGFloat
     let gridSize: Int
     
@@ -61,7 +61,7 @@ class LizardRenderer {
                 // Animate rotation
                 let currentRotation = sprite.zRotation
                 let targetRotation = CGFloat(lizard.direction.angle)
-                let rotationDiff = shortestRotationDifference(from: currentRotation, to: targetRotation)
+                let rotationDiff = RenderingUtilities.shortestRotationDifference(from: currentRotation, to: targetRotation)
                 
                 if abs(rotationDiff) > 0.01 {
                     let rotateAction = SKAction.rotate(byAngle: rotationDiff, duration: duration)
@@ -72,21 +72,5 @@ class LizardRenderer {
                 spriteIndex += 1
             }
         }
-    }
-    
-    /// Calculate the shortest rotation difference between two angles
-    private func shortestRotationDifference(from: CGFloat, to: CGFloat) -> CGFloat {
-        var diff = to - from
-        while diff > .pi { diff -= 2 * .pi }
-        while diff < -.pi { diff += 2 * .pi }
-        return diff
-    }
-    
-    /// Convert grid coordinates to scene position
-    func gridPosition(row: Int, col: Int) -> CGPoint {
-        return CGPoint(
-            x: CGFloat(col) * tileSize + tileSize / 2,
-            y: CGFloat(gridSize - 1 - row) * tileSize + tileSize / 2
-        )
     }
 }

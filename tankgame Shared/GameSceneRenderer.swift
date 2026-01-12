@@ -68,10 +68,10 @@ class GameSceneRenderer {
     func renderLizardsWithSmoothing(_ lizards: [Lizard], in lizardNode: SKNode, duration: TimeInterval) {
         lizardRenderer.renderLizardsWithSmoothing(lizards, in: lizardNode, duration: duration)
     }
-    
+
     // MARK: - Helper Methods
-    
-    /// Convert grid coordinates to scene position
+
+    /// Convert grid coordinates to scene position (delegates to GridRenderer)
     func gridPosition(row: Int, col: Int) -> CGPoint {
         return gridRenderer.gridPosition(row: row, col: col)
     }

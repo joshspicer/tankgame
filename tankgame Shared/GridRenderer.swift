@@ -8,7 +8,7 @@
 import SpriteKit
 
 /// Handles rendering of the game grid
-class GridRenderer {
+class GridRenderer: GridPositionConvertible {
     let tileSize: CGFloat
     let gridSize: Int
     
@@ -29,13 +29,5 @@ class GridRenderer {
                 gridNode.addChild(tile)
             }
         }
-    }
-    
-    /// Convert grid coordinates to scene position
-    func gridPosition(row: Int, col: Int) -> CGPoint {
-        return CGPoint(
-            x: CGFloat(col) * tileSize + tileSize / 2,
-            y: CGFloat(gridSize - 1 - row) * tileSize + tileSize / 2
-        )
     }
 }

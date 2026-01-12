@@ -8,7 +8,7 @@
 import SpriteKit
 
 /// Handles rendering of projectiles with animations
-class ProjectileRenderer {
+class ProjectileRenderer: GridPositionConvertible {
     let tileSize: CGFloat
     let gridSize: Int
     
@@ -48,13 +48,5 @@ class ProjectileRenderer {
             
             projectilesNode.addChild(bullet)
         }
-    }
-    
-    /// Convert grid coordinates to scene position
-    func gridPosition(row: Int, col: Int) -> CGPoint {
-        return CGPoint(
-            x: CGFloat(col) * tileSize + tileSize / 2,
-            y: CGFloat(gridSize - 1 - row) * tileSize + tileSize / 2
-        )
     }
 }

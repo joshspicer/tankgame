@@ -8,7 +8,7 @@
 import SpriteKit
 
 /// Handles rendering of tanks with animations
-class TankRenderer {
+class TankRenderer: GridPositionConvertible {
     let tileSize: CGFloat
     let gridSize: Int
     
@@ -61,7 +61,7 @@ class TankRenderer {
                     // Animate rotation smoothly
                     let currentRotation = tankSprite.zRotation
                     let targetRotation = CGFloat(tank.direction.angle)
-                    let rotationDiff = shortestRotationDifference(from: currentRotation, to: targetRotation)
+                    let rotationDiff = RenderingUtilities.shortestRotationDifference(from: currentRotation, to: targetRotation)
                     
                     if abs(rotationDiff) > 0.01 {
                         let rotateAction = SKAction.rotate(byAngle: rotationDiff, duration: duration)
@@ -80,15 +80,7 @@ class TankRenderer {
             }
         }
     }
-    
-    /// Calculate the shortest rotation difference between two angles
-    private func shortestRotationDifference(from: CGFloat, to: CGFloat) -> CGFloat {
-        var diff = to - from
-        while diff > .pi { diff -= 2 * .pi }
-        while diff < -.pi { diff += 2 * .pi }
-        return diff
-    }
-    
+
     /// Create a tank sprite node based on current sprite mode
     private func createTankNode(color: SKColor, direction: Direction) -> SKNode {
         switch GameSettings.shared.spriteMode {
@@ -97,13 +89,5 @@ class TankRenderer {
         case .tank:
             return tankSpriteRenderer.createTankNode(color: color, direction: direction)
         }
-    }
-    
-    /// Convert grid coordinates to scene position
-    func gridPosition(row: Int, col: Int) -> CGPoint {
-        return CGPoint(
-            x: CGFloat(col) * tileSize + tileSize / 2,
-            y: CGFloat(gridSize - 1 - row) * tileSize + tileSize / 2
-        )
     }
 }
