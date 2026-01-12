@@ -96,5 +96,387 @@ class GameViewController: UIViewController {
     override var prefersStatusBarHidden: Bool {
         return true
     }
+    
+    // MARK: - Button Handlers
+    
+    func handleHostTapped() {
+        isSinglePlayerMode = false
+        multiplayerManager.isHost = true
+        lobbyUI.hostButton.isHidden = true
+        lobbyUI.joinButton.isHidden = true
+        lobbyUI.singlePlayerButton.isHidden = true
+        lobbyUI.instructionsLabel.isHidden = true
+        lobbyUI.cancelButton.isHidden = false
+        lobbyUI.connectedPlayersView.isHidden = false
+        lobbyUI.startGameButton.isHidden = false
+        lobbyUI.activityIndicator.startAnimating()
+        lobbyUI.statusLabel.text = "Hosting game...\nWaiting for players to join (2-4 players)"
+        updateConnectedPlayersUI()
+        multiplayerManager.startHosting()
+    }
+    
+    func handleJoinTapped() {
+        isSinglePlayerMode = false
+        lobbyUI.hostButton.isHidden = true
+        lobbyUI.joinButton.isHidden = true
+        lobbyUI.singlePlayerButton.isHidden = true
+        lobbyUI.instructionsLabel.isHidden = true
+        lobbyUI.cancelButton.isHidden = false
+        lobbyUI.activityIndicator.startAnimating()
+        lobbyUI.statusLabel.text = "Searching for nearby games..."
+        lobbyUI.peerTableView.isHidden = false
+        updatePeerListUI()
+        multiplayerManager.startBrowsing()
+    }
+    
+    func handleSinglePlayerTapped() {
+        isSinglePlayerMode = true
+        lobbyUI.showSinglePlayerMode()
+    }
+    
+    func handleCancelTapped() {
+        isSinglePlayerMode = false
+        multiplayerManager.stopHosting()
+        multiplayerManager.stopBrowsing()
+        multiplayerCoordinator.clearAll()
+        lobbyUI.reset()
+        lobbyUI.peerTableView.reloadData()
+        multiplayerManager.isHost = false
+    }
+    
+    func handleStartGameTapped() {
+        if isSinglePlayerMode {
+            let botCount = lobbyUI.botCount
+            let totalPlayers = 1 + botCount
+            var botIndices: [Int] = []
+            for i in 1...botCount {
+                botIndices.append(i)
+            }
+            startGameWithBots(playerCount: totalPlayers, localPlayerIndex: 0, botIndices: botIndices)
+        } else {
+            let playerCount = multiplayerCoordinator.playerCount
+            if playerCount < 2 {
+                let alert = UIAlertController(title: "Not Enough Players", message: "You need at least 2 players to start the game.", preferredStyle: .alert)
+                alert.addAction(UIAlertAction(title: "OK", style: .default))
+                present(alert, animated: true)
+                return
+            }
+            let playerAssignments = multiplayerCoordinator.assignPlayerIndices()
+            startGame(playerCount: playerCount, localPlayerIndex: 0, playerAssignments: playerAssignments)
+        }
+    }
+    
+    // MARK: - UI Updates
+    
+    func updateUI() {
+        lobbyUI.peerTableView.reloadData()
+        updatePeerListUI()
+        updateConnectedPlayersUI()
+    }
+    
+    func updateConnectedPlayersUI() {
+        let playerCount = multiplayerCoordinator.playerCount
+        let playerNames = multiplayerCoordinator.getConnectedPlayerNames()
+        let namesText = playerNames.enumerated().map { "P\($0.offset + 1): \($0.element)" }.joined(separator: "\n")
+        lobbyUI.connectedPlayersLabel.text = "Connected Players (\(playerCount)/4):\n\n\(namesText)"
+        if multiplayerManager.isHost {
+            lobbyUI.startGameButton.isEnabled = playerCount >= 2
+            lobbyUI.startGameButton.alpha = playerCount >= 2 ? 1.0 : 0.5
+        }
+    }
+    
+    func updatePeerListUI() {
+        if multiplayerCoordinator.discoveredPeers.isEmpty {
+            lobbyUI.peerTableView.isHidden = true
+            lobbyUI.emptyStateLabel.isHidden = false
+        } else {
+            lobbyUI.peerTableView.isHidden = false
+            lobbyUI.emptyStateLabel.isHidden = true
+        }
+    }
+    
+    // MARK: - Game Management
+    
+    func startGame(playerCount: Int, localPlayerIndex: Int, playerAssignments: [String: Int]) {
+        lobbyUI.lobbyView.isHidden = true
+        if skView == nil {
+            let newSKView = SKView(frame: view.bounds)
+            newSKView.autoresizingMask = [.flexibleWidth, .flexibleHeight]
+            view.insertSubview(newSKView, at: 0)
+            skView = newSKView
+        }
+        let seed = UInt32.random(in: 0...UInt32.max)
+        gameState = GameState(seed: seed, playerCount: playerCount, localPlayerIndex: localPlayerIndex)
+        multiplayerManager.sendMessage(.roundStart(seed: seed, playerCount: playerCount, hostPlayerIndex: localPlayerIndex, playerAssignments: playerAssignments))
+        let scene = GameScene.newGameScene()
+        scene.startGame(with: gameState!)
+        scene.onGameMessage = { [weak self] message in
+            self?.handleGameMessage(message)
+        }
+        gameScene = scene
+        skView?.presentScene(scene)
+        skView?.ignoresSiblingOrder = true
+        skView?.showsFPS = true
+        skView?.showsNodeCount = true
+    }
+    
+    func startGameWithBots(playerCount: Int, localPlayerIndex: Int, botIndices: [Int]) {
+        lobbyUI.lobbyView.isHidden = true
+        if skView == nil {
+            let newSKView = SKView(frame: view.bounds)
+            newSKView.autoresizingMask = [.flexibleWidth, .flexibleHeight]
+            view.insertSubview(newSKView, at: 0)
+            skView = newSKView
+        }
+        let seed = UInt32.random(in: 0...UInt32.max)
+        gameState = GameState(seed: seed, playerCount: playerCount, localPlayerIndex: localPlayerIndex, botIndices: botIndices)
+        let scene = GameScene.newGameScene()
+        scene.startGame(with: gameState!)
+        scene.onGameMessage = { [weak self] message in
+            self?.handleGameMessage(message)
+        }
+        gameScene = scene
+        skView?.presentScene(scene)
+        skView?.ignoresSiblingOrder = true
+        skView?.showsFPS = true
+        skView?.showsNodeCount = true
+    }
+    
+    func checkAndStartNextRound() {
+        guard let state = gameState else { return }
+        if isSinglePlayerMode {
+            DispatchQueue.main.asyncAfter(deadline: .now() + 0.5) { [weak self] in
+                self?.startNextRound()
+            }
+            return
+        }
+        if multiplayerCoordinator.isAllPlayersReady(totalPlayers: state.tanks.count) {
+            multiplayerCoordinator.resetReadyPlayers()
+            DispatchQueue.main.asyncAfter(deadline: .now() + 0.5) { [weak self] in
+                self?.startNextRound()
+            }
+        } else if multiplayerCoordinator.readyPlayers.contains(state.localPlayerIndex) {
+            multiplayerManager.sendMessage(.readyForNextRound(playerIndex: state.localPlayerIndex))
+        }
+    }
+    
+    func startNextRound() {
+        guard let currentState = gameState else { return }
+        let seed = UInt32.random(in: 0...UInt32.max)
+        currentState.reset(seed: seed)
+        gameScene?.startGame(with: currentState)
+        if !isSinglePlayerMode {
+            var playerAssignments: [String: Int] = [:]
+            playerAssignments[multiplayerManager.session.myPeerID.displayName] = currentState.localPlayerIndex
+            for (peer, index) in multiplayerCoordinator.peerToPlayerIndex {
+                playerAssignments[peer.displayName] = index
+            }
+            multiplayerManager.sendMessage(.roundStart(seed: seed, playerCount: currentState.tanks.count, hostPlayerIndex: currentState.localPlayerIndex, playerAssignments: playerAssignments))
+        }
+    }
+    
+    // MARK: - Message Handling
+    
+    func handleGameMessage(_ message: GameMessage) {
+        guard let state = gameState else { return }
+        switch message {
+        case .playerMove(let playerIndex, let row, let col, let direction):
+            multiplayerManager.sendMessage(.playerMove(playerIndex: playerIndex, row: row, col: col, direction: direction))
+        case .playerShoot(let playerIndex, let projectile):
+            multiplayerManager.sendMessage(.playerShoot(playerIndex: playerIndex, projectile: projectile))
+        case .readyForNextRound(let playerIndex):
+            multiplayerCoordinator.markPlayerReady(playerIndex)
+            checkAndStartNextRound()
+        default:
+            break
+        }
+    }
+    
+    func handleReceivedMessage(_ message: GameMessage, from peerID: MCPeerID) {
+        switch message {
+        case .roundStart(let seed, let playerCount, let hostPlayerIndex, let playerAssignments):
+            handleRoundStartMessage(seed: seed, playerCount: playerCount, hostPlayerIndex: hostPlayerIndex, playerAssignments: playerAssignments)
+        case .playerMove(let playerIndex, let row, let col, let direction):
+            handlePlayerMoveMessage(playerIndex: playerIndex, row: row, col: col, direction: direction)
+        case .playerShoot(let playerIndex, let projectile):
+            handlePlayerShootMessage(projectile: projectile)
+        case .readyForNextRound(let playerIndex):
+            multiplayerCoordinator.markPlayerReady(playerIndex)
+            checkAndStartNextRound()
+        case .playerHit, .startGame, .playerJoined:
+            break
+        }
+    }
+    
+    private func handleRoundStartMessage(seed: UInt32, playerCount: Int, hostPlayerIndex: Int, playerAssignments: [String: Int]) {
+        if gameState == nil {
+            let myName = multiplayerManager.session.myPeerID.displayName
+            let localPlayerIndex = playerAssignments[myName] ?? 1
+            gameState = GameState(seed: seed, playerCount: playerCount, localPlayerIndex: localPlayerIndex)
+            DispatchQueue.main.async { [weak self] in
+                guard let self = self, let state = self.gameState else { return }
+                self.lobbyUI.lobbyView.isHidden = true
+                if self.skView == nil {
+                    let newSKView = SKView(frame: self.view.bounds)
+                    newSKView.autoresizingMask = [.flexibleWidth, .flexibleHeight]
+                    self.view.insertSubview(newSKView, at: 0)
+                    self.skView = newSKView
+                }
+                let scene = GameScene.newGameScene()
+                scene.startGame(with: state)
+                scene.onGameMessage = { [weak self] msg in
+                    self?.handleGameMessage(msg)
+                }
+                self.gameScene = scene
+                self.skView?.presentScene(scene)
+                self.skView?.ignoresSiblingOrder = true
+                self.skView?.showsFPS = true
+                self.skView?.showsNodeCount = true
+            }
+        } else {
+            guard let state = gameState else { return }
+            state.reset(seed: seed)
+            gameScene?.startGame(with: state)
+        }
+    }
+    
+    private func handlePlayerMoveMessage(playerIndex: Int, row: Int, col: Int, direction: Direction) {
+        if let state = gameState, playerIndex < state.tanks.count {
+            state.tanks[playerIndex].row = row
+            state.tanks[playerIndex].col = col
+            state.tanks[playerIndex].direction = direction
+            gameScene?.renderTanks()
+        }
+    }
+    
+    private func handlePlayerShootMessage(projectile: Projectile) {
+        gameState?.projectiles.append(projectile)
+        gameScene?.renderProjectiles()
+    }
+    
+    private func returnToLobbyWithDisconnectAlert() {
+        view.subviews.forEach { $0.removeFromSuperview() }
+        viewDidLoad()
+        let alert = UIAlertController(title: "Connection Lost", message: "Unable to reconnect. Returning to lobby.", preferredStyle: .alert)
+        alert.addAction(UIAlertAction(title: "OK", style: .default))
+        present(alert, animated: true)
+    }
+}
+
+// MARK: - MultiplayerManagerDelegate
+
+extension GameViewController: MultiplayerManagerDelegate {
+    func multiplayerManager(_ manager: MultiplayerManager, didFindPeer peerID: MCPeerID) {
+        multiplayerCoordinator.addDiscoveredPeer(peerID)
+        lobbyUI.statusLabel.text = "Found \(multiplayerCoordinator.discoveredPeers.count) game\(multiplayerCoordinator.discoveredPeers.count == 1 ? "" : "s"). Tap to join."
+    }
+    
+    func multiplayerManager(_ manager: MultiplayerManager, didLosePeer peerID: MCPeerID) {
+        multiplayerCoordinator.removeDiscoveredPeer(peerID)
+        if multiplayerCoordinator.discoveredPeers.isEmpty {
+            lobbyUI.statusLabel.text = "Searching for nearby games..."
+        } else {
+            lobbyUI.statusLabel.text = "Found \(multiplayerCoordinator.discoveredPeers.count) game\(multiplayerCoordinator.discoveredPeers.count == 1 ? "" : "s"). Tap to join."
+        }
+    }
+    
+    func multiplayerManager(_ manager: MultiplayerManager, didConnectToPeer peerID: MCPeerID) {
+        multiplayerCoordinator.addConnectedPeer(peerID)
+        lobbyUI.activityIndicator.stopAnimating()
+        if multiplayerManager.isHost {
+            lobbyUI.statusLabel.text = "Player joined: \(peerID.displayName)"
+        } else {
+            lobbyUI.statusLabel.text = "Connected! Waiting for host to start game..."
+        }
+    }
+    
+    func multiplayerManager(_ manager: MultiplayerManager, didDisconnectFromPeer peerID: MCPeerID) {
+        multiplayerCoordinator.removeConnectedPeer(peerID)
+        if gameState != nil && multiplayerManager.connectionState.isReconnecting {
+            lobbyUI.statusLabel.text = "Reconnecting to \(peerID.displayName)..."
+        }
+    }
+    
+    func multiplayerManager(_ manager: MultiplayerManager, isConnectingToPeer peerID: MCPeerID) {
+        lobbyUI.statusLabel.text = "Connecting to \(peerID.displayName)..."
+        lobbyUI.activityIndicator.startAnimating()
+    }
+    
+    func multiplayerManager(_ manager: MultiplayerManager, didReceiveMessage message: GameMessage, from peerID: MCPeerID) {
+        handleReceivedMessage(message, from: peerID)
+    }
+    
+    func multiplayerManager(_ manager: MultiplayerManager, didEncounterError error: Error) {
+        if permissionManager.isRequesting {
+            return
+        }
+        lobbyUI.activityIndicator.stopAnimating()
+        let alert = UIAlertController(title: "Unable to Start Multiplayer", message: "Could not start multiplayer session. This is likely because:\n\n• Local Network permission was denied\n• Bluetooth permission was denied\n\nTo fix:\n1. Open Settings app\n2. Go to Privacy & Security → Local Network\n3. Find Tank Game and turn it ON\n4. Also check Bluetooth permissions\n5. Return here and try again\n\nTechnical error: \(error.localizedDescription)", preferredStyle: .alert)
+        alert.addAction(UIAlertAction(title: "Open Settings", style: .default) { _ in
+            if let settingsURL = URL(string: UIApplication.openSettingsURLString) {
+                UIApplication.shared.open(settingsURL)
+            }
+        })
+        alert.addAction(UIAlertAction(title: "Try Again", style: .default) { [weak self] _ in
+            self?.lobbyUI.reset()
+        })
+        alert.addAction(UIAlertAction(title: "Cancel", style: .cancel) { [weak self] _ in
+            self?.lobbyUI.reset()
+        })
+        present(alert, animated: true)
+    }
+    
+    func multiplayerManager(_ manager: MultiplayerManager, didChangeConnectionState state: ConnectionState) {
+        lobbyUI.statusLabel.text = state.description
+        switch state {
+        case .disconnected:
+            lobbyUI.activityIndicator.stopAnimating()
+            if gameState != nil {
+                DispatchQueue.main.async { [weak self] in
+                    guard let self = self else { return }
+                    self.returnToLobbyWithDisconnectAlert()
+                }
+            }
+        case .browsing, .advertising:
+            lobbyUI.activityIndicator.startAnimating()
+        case .connecting:
+            lobbyUI.activityIndicator.startAnimating()
+        case .connected:
+            lobbyUI.activityIndicator.stopAnimating()
+            updateConnectedPlayersUI()
+        case .reconnecting:
+            lobbyUI.activityIndicator.startAnimating()
+        }
+    }
+    
+    func multiplayerManager(_ manager: MultiplayerManager, isAttemptingReconnection attempt: Int, maxAttempts: Int, toPeer peerID: MCPeerID) {
+        lobbyUI.statusLabel.text = "Reconnecting to \(peerID.displayName) (attempt \(attempt)/\(maxAttempts))..."
+        lobbyUI.activityIndicator.startAnimating()
+    }
+}
+
+// MARK: - UITableViewDelegate, UITableViewDataSource
+
+extension GameViewController: UITableViewDelegate, UITableViewDataSource {
+    func tableView(_ tableView: UITableView, numberOfRowsInSection section: Int) -> Int {
+        return multiplayerCoordinator.discoveredPeers.count
+    }
+    
+    func tableView(_ tableView: UITableView, cellForRowAt indexPath: IndexPath) -> UITableViewCell {
+        let cell = tableView.dequeueReusableCell(withIdentifier: "PeerCell", for: indexPath)
+        let peer = multiplayerCoordinator.discoveredPeers[indexPath.row]
+        cell.textLabel?.text = "📱 \(peer.displayName)"
+        cell.textLabel?.font = .systemFont(ofSize: 16, weight: .medium)
+        cell.accessoryType = .disclosureIndicator
+        return cell
+    }
+    
+    func tableView(_ tableView: UITableView, didSelectRowAt indexPath: IndexPath) {
+        let peer = multiplayerCoordinator.discoveredPeers[indexPath.row]
+        multiplayerManager.invitePeer(peer)
+        lobbyUI.statusLabel.text = "Connecting to \(peer.displayName)..."
+        lobbyUI.activityIndicator.startAnimating()
+        tableView.deselectRow(at: indexPath, animated: true)
+    }
 }
 
