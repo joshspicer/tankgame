@@ -234,7 +234,7 @@ class GameScene: SKScene {
         state.botManager.onBotShoot = { [weak self, weak state] tankIndex, projectile in
             state?.projectiles.append(projectile)
             self?.renderProjectiles()
-            self?.soundManager.playSound("shot.wav")
+            self?.soundManager.playSound("shoot.wav")
         }
         
         state.botManager.update(tanks: &state.tanks, grid: state.grid, projectiles: state.projectiles)
