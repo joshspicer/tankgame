@@ -71,11 +71,13 @@ class RetryManager {
     // MARK: - Public Methods
     
     /// Mark a peer as known (for reconnection eligibility)
+    /// Note: Uses displayName as the key since MCPeerID instances change across sessions
     func markPeerAsKnown(_ peerID: MCPeerID) {
         knownPeers.insert(peerID.displayName)
     }
     
     /// Check if retry should be attempted for this peer
+    /// Note: Matches by displayName since MCPeerID instances are not persistent
     func shouldAttemptRetry(for peerID: MCPeerID, requireKnownPeer: Bool = false) -> Bool {
         if requireKnownPeer && !knownPeers.contains(peerID.displayName) {
             return false
