@@ -7,6 +7,7 @@ creates GitHub issues with the crash details.
 """
 
 from flask import Flask, request, jsonify
+from werkzeug.exceptions import BadRequest
 import os
 import requests
 import json
@@ -145,13 +146,27 @@ def receive_crash_report():
     """
     try:
         # Get crash data from request
-        crash_data = request.get_json()
+        try:
+            crash_data = request.get_json()
+        except BadRequest:
+            logger.warning("Received invalid JSON in crash report")
+            return jsonify({
+                'success': False,
+                'error': 'Invalid JSON payload'
+            }), 400
         
         if not crash_data:
             logger.warning("Received empty crash data")
             return jsonify({
                 'success': False,
                 'error': 'No crash data provided'
+            }), 400
+        
+        if not isinstance(crash_data, dict):
+            logger.warning("Crash data must be a JSON object")
+            return jsonify({
+                'success': False,
+                'error': 'Crash data must be a JSON object'
             }), 400
         
         # Log the crash report
