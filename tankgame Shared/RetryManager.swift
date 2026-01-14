@@ -11,6 +11,13 @@ import MultipeerConnectivity
 /// Generic retry manager that handles both reconnection and invitation retry logic
 class RetryManager {
     
+    // MARK: - Constants
+    
+    private static let invitationTimeout: TimeInterval = 30.0
+    private static let retryCheckDelay: TimeInterval = 2.0
+    private static let maxInvitationAttempts = 3
+    private static let maxReconnectionAttempts = 5
+    
     // MARK: - Configuration
     
     struct Configuration {
@@ -20,18 +27,21 @@ class RetryManager {
         let useExponentialBackoff: Bool
         
         static let reconnection = Configuration(
-            maxAttempts: 5,
+            maxAttempts: RetryManager.maxReconnectionAttempts,
             baseDelay: 1.0,
             maxDelay: 30.0,
             useExponentialBackoff: true
         )
         
-        static let invitation = Configuration(
-            maxAttempts: 3,
-            baseDelay: 32.0, // invitationTimeout + retryCheckDelay
-            maxDelay: 32.0,
-            useExponentialBackoff: false
-        )
+        static let invitation: Configuration = {
+            let totalDelay = RetryManager.invitationTimeout + RetryManager.retryCheckDelay
+            return Configuration(
+                maxAttempts: RetryManager.maxInvitationAttempts,
+                baseDelay: totalDelay,
+                maxDelay: totalDelay,
+                useExponentialBackoff: false
+            )
+        }()
     }
     
     // MARK: - State
@@ -82,12 +92,18 @@ class RetryManager {
     }
     
     /// Schedule a retry attempt
-    func scheduleRetry(for peerID: MCPeerID, action: @escaping () -> Void) {
+    /// - Parameters:
+    ///   - peerID: The peer to retry for
+    ///   - action: The action to execute
+    ///   - incrementAttempts: Whether to increment the attempt counter (default: true)
+    func scheduleRetry(for peerID: MCPeerID, incrementAttempts: Bool = true, action: @escaping () -> Void) {
         let key = peerID.displayName
         
         // Update retry info
         var info = retryInfos[key] ?? RetryInfo(peerID: peerID)
-        info.attempts += 1
+        if incrementAttempts {
+            info.attempts += 1
+        }
         info.lastAttempt = Date()
         info.isActive = true
         retryInfos[key] = info
@@ -95,8 +111,10 @@ class RetryManager {
         // Calculate delay
         let delay = calculateDelay(for: info.attempts)
         
-        // Notify callback
-        onRetryAttempt?(peerID, info.attempts, config.maxAttempts)
+        // Notify callback only if incrementing (actual retry attempt)
+        if incrementAttempts {
+            onRetryAttempt?(peerID, info.attempts, config.maxAttempts)
+        }
         
         // Cancel existing work item
         workItems[key]?.cancel()

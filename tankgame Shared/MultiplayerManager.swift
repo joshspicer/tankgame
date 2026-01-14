@@ -174,14 +174,31 @@ class MultiplayerManager: NSObject {
         connectionState = .connecting(peerName: peerID.displayName)
         browser?.invitePeer(peerID, to: session, withContext: nil, timeout: 30)
         
-        // Schedule invitation retry check
-        invitationRetryManager.scheduleRetry(for: peerID) { [weak self] in
+        // Only schedule initial retry check if not already scheduled
+        if !invitationRetryManager.isRetrying(for: peerID) {
+            scheduleInvitationRetryCheck(for: peerID)
+        }
+    }
+    
+    private func scheduleInvitationRetryCheck(for peerID: MCPeerID) {
+        // For invitations, don't increment attempts on the initial scheduling (it's not a retry yet)
+        let isInitialCheck = !invitationRetryManager.isRetrying(for: peerID)
+        
+        invitationRetryManager.scheduleRetry(for: peerID, incrementAttempts: !isInitialCheck) { [weak self] in
             guard let self = self else { return }
+            
             // Check if connection was established
             if self.session.connectedPeers.contains(where: { $0.displayName == peerID.displayName }) {
                 self.invitationRetryManager.cancelRetry(for: peerID)
-            } else if self.invitationRetryManager.shouldAttemptRetry(for: peerID) {
-                self.invitePeer(peerID)
+                return
+            }
+            
+            // Check if we should retry
+            if self.invitationRetryManager.shouldAttemptRetry(for: peerID) {
+                // Retry the invitation
+                self.browser?.invitePeer(peerID, to: self.session, withContext: nil, timeout: 30)
+                // Schedule the next retry check (this will increment attempts)
+                self.scheduleInvitationRetryCheck(for: peerID)
             } else {
                 self.invitationRetryManager.markRetryFailed(for: peerID)
             }
