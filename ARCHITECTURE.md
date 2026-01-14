@@ -64,8 +64,7 @@ Main game loop and coordination:
 Multiplayer communication:
 - `MultiplayerManager.swift` - Low-level MultipeerConnectivity wrapper
 - `MultiplayerCoordinator.swift` - High-level session and player management
-- `ReconnectionManager.swift` - Auto-reconnection logic
-- `InvitationRetryManager.swift` - Invitation retry logic
+- `RetryManager.swift` - Unified retry logic for both reconnection and invitation retries
 - `ConnectionHealthMonitor.swift` - Connection health monitoring
 - `ConnectionState.swift` - Connection state enum
 
