@@ -60,34 +60,9 @@ extension GameViewController {
     
     func handleStartGameTapped() {
         if isSinglePlayerMode {
-            // Start single player game with AI bots
-            let botCount = lobbyUI.botCount
-            let totalPlayers = 1 + botCount // Player + bots
-            
-            // Bot indices start from 1 (player is 0)
-            var botIndices: [Int] = []
-            for i in 1...botCount {
-                botIndices.append(i)
-            }
-            
-            startGameWithBots(playerCount: totalPlayers, localPlayerIndex: 0, botIndices: botIndices)
+            initiateSinglePlayerGame()
         } else {
-            // Multiplayer mode
-            let playerCount = multiplayerCoordinator.playerCount
-            
-            if playerCount < 2 {
-                let alert = UIAlertController(
-                    title: "Not Enough Players",
-                    message: "You need at least 2 players to start the game.",
-                    preferredStyle: .alert
-                )
-                alert.addAction(UIAlertAction(title: "OK", style: .default))
-                present(alert, animated: true)
-                return
-            }
-            
-            let playerAssignments = multiplayerCoordinator.assignPlayerIndices()
-            startGame(playerCount: playerCount, localPlayerIndex: 0, playerAssignments: playerAssignments)
+            initiateMultiplayerGame()
         }
     }
 }
