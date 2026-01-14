@@ -10,4 +10,9 @@ See how copilot and I built it on the VS Code livestream. ([1](https://www.youtu
 - 💥 Crash reporting with automatic GitHub issue creation (see [CRASH_REPORTING.md](CRASH_REPORTING.md))
 - 🎨 Modern visual styling
 - 🔊 Sound effects
+- 🧪 Comprehensive unit tests for game logic (see [TESTING.md](TESTING.md))
+
+## Testing
+
+The project includes comprehensive unit tests for core game logic. See [TESTING.md](TESTING.md) for test details and [TESTING_SETUP.md](TESTING_SETUP.md) for instructions on adding the test target to Xcode.
 
