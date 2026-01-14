@@ -7,6 +7,7 @@ See how copilot and I built it on the VS Code livestream. ([1](https://www.youtu
 ## Features
 
 - 🎮 Multiplayer gameplay via Bluetooth (MultipeerConnectivity)
+- 🤖 Single player mode with AI bots
 - 💥 Crash reporting with automatic GitHub issue creation (see [CRASH_REPORTING.md](CRASH_REPORTING.md))
 - 🎨 Modern visual styling
 - 🔊 Sound effects
