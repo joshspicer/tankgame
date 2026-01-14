@@ -33,15 +33,12 @@ class RetryManager {
             useExponentialBackoff: true
         )
         
-        static let invitation: Configuration = {
-            let totalDelay = RetryManager.invitationTimeout + RetryManager.retryCheckDelay
-            return Configuration(
-                maxAttempts: RetryManager.maxInvitationAttempts,
-                baseDelay: totalDelay,
-                maxDelay: totalDelay,
-                useExponentialBackoff: false
-            )
-        }()
+        static let invitation = Configuration(
+            maxAttempts: RetryManager.maxInvitationAttempts,
+            baseDelay: RetryManager.invitationTimeout + RetryManager.retryCheckDelay,
+            maxDelay: RetryManager.invitationTimeout + RetryManager.retryCheckDelay,
+            useExponentialBackoff: false
+        )
     }
     
     // MARK: - State
@@ -123,7 +120,8 @@ class RetryManager {
         let workItem = DispatchWorkItem { [weak self] in
             guard let self = self,
                   let currentInfo = self.retryInfos[key],
-                  currentInfo.isActive else { return }
+                  currentInfo.isActive,
+                  currentInfo.attempts <= self.config.maxAttempts else { return }
             action()
         }
         
