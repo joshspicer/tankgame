@@ -58,30 +58,23 @@ extension GameViewController: MultiplayerManagerDelegate {
         if permissionManager.isRequesting {
             return
         }
-        
+
         lobbyUI.activityIndicator.stopAnimating()
-        
-        let alert = UIAlertController(
-            title: "Unable to Start Multiplayer",
-            message: "Could not start multiplayer session. This is likely because:\n\n• Local Network permission was denied\n• Bluetooth permission was denied\n\nTo fix:\n1. Open Settings app\n2. Go to Privacy & Security → Local Network\n3. Find Tank Game and turn it ON\n4. Also check Bluetooth permissions\n5. Return here and try again\n\nTechnical error: \(error.localizedDescription)",
-            preferredStyle: .alert
-        )
-        
-        alert.addAction(UIAlertAction(title: "Open Settings", style: .default) { _ in
-            if let settingsURL = URL(string: UIApplication.openSettingsURLString) {
-                UIApplication.shared.open(settingsURL)
+
+        presentMultiplayerErrorAlert(
+            error: error,
+            onOpenSettings: {
+                if let settingsURL = URL(string: UIApplication.openSettingsURLString) {
+                    UIApplication.shared.open(settingsURL)
+                }
+            },
+            onTryAgain: { [weak self] in
+                self?.lobbyUI.reset()
+            },
+            onCancel: { [weak self] in
+                self?.lobbyUI.reset()
             }
-        })
-        
-        alert.addAction(UIAlertAction(title: "Try Again", style: .default) { [weak self] _ in
-            self?.lobbyUI.reset()
-        })
-        
-        alert.addAction(UIAlertAction(title: "Cancel", style: .cancel) { [weak self] _ in
-            self?.lobbyUI.reset()
-        })
-        
-        present(alert, animated: true)
+        )
     }
     
     func multiplayerManager(_ manager: MultiplayerManager, didChangeConnectionState state: ConnectionState) {
@@ -119,17 +112,11 @@ extension GameViewController: MultiplayerManagerDelegate {
     }
     
     // MARK: - Helper Methods
-    
+
     private func returnToLobbyWithDisconnectAlert() {
         view.subviews.forEach { $0.removeFromSuperview() }
         viewDidLoad()
-        
-        let alert = UIAlertController(
-            title: "Connection Lost",
-            message: "Unable to reconnect. Returning to lobby.",
-            preferredStyle: .alert
-        )
-        alert.addAction(UIAlertAction(title: "OK", style: .default))
-        present(alert, animated: true)
+
+        presentConnectionLostAlert()
     }
 }
