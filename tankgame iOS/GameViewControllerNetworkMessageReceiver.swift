@@ -36,32 +36,15 @@ extension GameViewController {
         if gameState == nil {
             let myName = multiplayerManager.session.myPeerID.displayName
             let localPlayerIndex = playerAssignments[myName] ?? 1
-            
+
             gameState = GameState(seed: seed, playerCount: playerCount, localPlayerIndex: localPlayerIndex)
-            
+
             DispatchQueue.main.async { [weak self] in
                 guard let self = self, let state = self.gameState else { return }
-                
+
                 self.lobbyUI.lobbyView.isHidden = true
-                
-                if self.skView == nil {
-                    let newSKView = SKView(frame: self.view.bounds)
-                    newSKView.autoresizingMask = [.flexibleWidth, .flexibleHeight]
-                    self.view.insertSubview(newSKView, at: 0)
-                    self.skView = newSKView
-                }
-                
-                let scene = GameScene.newGameScene()
-                scene.startGame(with: state)
-                scene.onGameMessage = { [weak self] msg in
-                    self?.handleGameMessage(msg)
-                }
-                self.gameScene = scene
-                
-                self.skView?.presentScene(scene)
-                self.skView?.ignoresSiblingOrder = true
-                self.skView?.showsFPS = true
-                self.skView?.showsNodeCount = true
+                self.setupSKViewIfNeeded()
+                self.presentGameScene(with: state)
             }
         } else {
             guard let state = gameState else { return }

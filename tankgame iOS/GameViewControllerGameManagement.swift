@@ -14,60 +14,26 @@ extension GameViewController {
     
     func startGame(playerCount: Int, localPlayerIndex: Int, playerAssignments: [String: Int]) {
         lobbyUI.lobbyView.isHidden = true
-        
-        // Create SKView if needed
-        if skView == nil {
-            let newSKView = SKView(frame: view.bounds)
-            newSKView.autoresizingMask = [.flexibleWidth, .flexibleHeight]
-            view.insertSubview(newSKView, at: 0)
-            skView = newSKView
-        }
-        
+
+        setupSKViewIfNeeded()
+
         let seed = UInt32.random(in: 0...UInt32.max)
         gameState = GameState(seed: seed, playerCount: playerCount, localPlayerIndex: localPlayerIndex)
-        
+
         multiplayerManager.sendMessage(.roundStart(seed: seed, playerCount: playerCount, hostPlayerIndex: localPlayerIndex, playerAssignments: playerAssignments))
-        
-        let scene = GameScene.newGameScene()
-        scene.startGame(with: gameState!)
-        scene.onGameMessage = { [weak self] message in
-            self?.handleGameMessage(message)
-        }
-        
-        gameScene = scene
-        
-        skView?.presentScene(scene)
-        skView?.ignoresSiblingOrder = true
-        skView?.showsFPS = true
-        skView?.showsNodeCount = true
+
+        presentGameScene(with: gameState!)
     }
     
     func startGameWithBots(playerCount: Int, localPlayerIndex: Int, botIndices: [Int]) {
         lobbyUI.lobbyView.isHidden = true
-        
-        // Create SKView if needed
-        if skView == nil {
-            let newSKView = SKView(frame: view.bounds)
-            newSKView.autoresizingMask = [.flexibleWidth, .flexibleHeight]
-            view.insertSubview(newSKView, at: 0)
-            skView = newSKView
-        }
-        
+
+        setupSKViewIfNeeded()
+
         let seed = UInt32.random(in: 0...UInt32.max)
         gameState = GameState(seed: seed, playerCount: playerCount, localPlayerIndex: localPlayerIndex, botIndices: botIndices)
-        
-        let scene = GameScene.newGameScene()
-        scene.startGame(with: gameState!)
-        scene.onGameMessage = { [weak self] message in
-            self?.handleGameMessage(message)
-        }
-        
-        gameScene = scene
-        
-        skView?.presentScene(scene)
-        skView?.ignoresSiblingOrder = true
-        skView?.showsFPS = true
-        skView?.showsNodeCount = true
+
+        presentGameScene(with: gameState!)
     }
     
     func checkAndStartNextRound() {
