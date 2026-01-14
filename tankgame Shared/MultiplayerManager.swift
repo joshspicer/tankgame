@@ -40,8 +40,8 @@ class MultiplayerManager: NSObject {
     var maxPlayers: Int = 4 // Can be 2, 3, or 4
     
     // Connection management components
-    private let reconnectionManager = ReconnectionManager()
-    private let invitationRetryManager = InvitationRetryManager()
+    private let reconnectionManager = RetryManager(configuration: .reconnection)
+    private let invitationRetryManager = RetryManager(configuration: .invitation)
     private let connectionHealthMonitor = ConnectionHealthMonitor()
     
     // Track discovered peers for reconnection
@@ -84,31 +84,34 @@ class MultiplayerManager: NSObject {
     
     private func setupConnectionManagers() {
         // Setup reconnection manager callbacks
-        reconnectionManager.onReconnectionAttempt = { [weak self] peerID, attempt, maxAttempts in
+        reconnectionManager.onRetryAttempt = { [weak self] peerID, attempt, maxAttempts in
             guard let self = self else { return }
             self.connectionState = .reconnecting(attempt: attempt, maxAttempts: maxAttempts)
             self.delegate?.multiplayerManager(self, isAttemptingReconnection: attempt, maxAttempts: maxAttempts, toPeer: peerID)
         }
         
-        reconnectionManager.onReconnectionFailed = { [weak self] peerID in
+        reconnectionManager.onRetryFailed = { [weak self] peerID in
             guard let self = self else { return }
             self.connectionState = .disconnected
         }
         
-        reconnectionManager.onReconnectionSucceeded = { [weak self] peerID in
+        reconnectionManager.onRetrySucceeded = { [weak self] peerID in
             guard let self = self else { return }
             self.updateConnectionState()
         }
         
         // Setup invitation retry manager callbacks
-        invitationRetryManager.onInvitationFailed = { [weak self] peerID, error in
+        invitationRetryManager.onRetryFailed = { [weak self] peerID in
             guard let self = self else { return }
-            if let error = error {
-                self.delegate?.multiplayerManager(self, didEncounterError: error)
-            }
+            let error = NSError(
+                domain: "MultiplayerManager",
+                code: -1,
+                userInfo: [NSLocalizedDescriptionKey: "Failed to connect to \(peerID.displayName)"]
+            )
+            self.delegate?.multiplayerManager(self, didEncounterError: error)
         }
         
-        invitationRetryManager.onInvitationSucceeded = { [weak self] peerID in
+        invitationRetryManager.onRetrySucceeded = { [weak self] peerID in
             guard let self = self else { return }
             self.reconnectionManager.markPeerAsKnown(peerID)
         }
@@ -171,16 +174,18 @@ class MultiplayerManager: NSObject {
         connectionState = .connecting(peerName: peerID.displayName)
         browser?.invitePeer(peerID, to: session, withContext: nil, timeout: 30)
         
-        // Track invitation for retry
-        invitationRetryManager.trackInvitation(
-            to: peerID,
-            checkConnection: { [weak self] peer in
-                self?.session.connectedPeers.contains(where: { $0.displayName == peer.displayName }) ?? false
-            },
-            retryAction: { [weak self] peer in
-                self?.invitePeer(peer)
+        // Schedule invitation retry check
+        invitationRetryManager.scheduleRetry(for: peerID) { [weak self] in
+            guard let self = self else { return }
+            // Check if connection was established
+            if self.session.connectedPeers.contains(where: { $0.displayName == peerID.displayName }) {
+                self.invitationRetryManager.cancelRetry(for: peerID)
+            } else if self.invitationRetryManager.shouldAttemptRetry(for: peerID) {
+                self.invitePeer(peerID)
+            } else {
+                self.invitationRetryManager.markRetryFailed(for: peerID)
             }
-        )
+        }
     }
     
     // MARK: - Messaging
@@ -204,8 +209,8 @@ class MultiplayerManager: NSObject {
         session.disconnect()
         stopHosting()
         stopBrowsing()
-        reconnectionManager.cancelAllReconnections()
-        invitationRetryManager.cancelAllInvitations()
+        reconnectionManager.cancelAllRetries()
+        invitationRetryManager.cancelAllRetries()
         connectionHealthMonitor.stopMonitoring()
         connectionState = .disconnected
     }
@@ -249,10 +254,10 @@ extension MultiplayerManager: MCSessionDelegate {
                 self.reconnectionManager.markPeerAsKnown(peerID)
                 
                 // Cancel any pending reconnection attempts
-                self.reconnectionManager.cancelReconnection(for: peerID)
+                self.reconnectionManager.cancelRetry(for: peerID)
                 
                 // Mark invitation as successful
-                self.invitationRetryManager.invitationSucceeded(for: peerID)
+                self.invitationRetryManager.cancelRetry(for: peerID)
                 
                 // Track connection health
                 self.connectionHealthMonitor.peerConnected(peerID)
@@ -267,8 +272,8 @@ extension MultiplayerManager: MCSessionDelegate {
                 self.connectionHealthMonitor.peerDisconnected(peerID)
                 
                 // Attempt reconnection if enabled and appropriate
-                if self.autoReconnectEnabled && self.reconnectionManager.shouldAttemptReconnection(for: peerID) {
-                    self.reconnectionManager.scheduleReconnection(for: peerID) { [weak self] in
+                if self.autoReconnectEnabled && self.reconnectionManager.shouldAttemptRetry(for: peerID, requireKnownPeer: true) {
+                    self.reconnectionManager.scheduleRetry(for: peerID) { [weak self] in
                         self?.attemptReconnection(to: peerID)
                     }
                 }
@@ -367,7 +372,7 @@ extension MultiplayerManager: MCNearbyServiceBrowserDelegate {
         }
         
         // If we're trying to reconnect to this peer, invite them
-        if reconnectionManager.isReconnecting(to: peerID) {
+        if reconnectionManager.isRetrying(for: peerID) {
             invitePeer(peerID)
         }
         
