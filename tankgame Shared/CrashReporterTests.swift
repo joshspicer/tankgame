@@ -84,7 +84,13 @@ class CrashReporterTests {
         print("=== Quick Crash Reporter Test ===")
         
         // Test 1: Verify crash reporter exists
-        print("✓ CrashReporter singleton exists")
+        let crashReporter = CrashReporter.shared
+        if crashReporter !== nil {
+            print("✓ CrashReporter singleton exists")
+        } else {
+            print("✗ CrashReporter singleton is nil")
+            return
+        }
         
         // Test 2: Check crash reports directory
         guard let appSupport = FileManager.default.urls(for: .applicationSupportDirectory, in: .userDomainMask).first else {
@@ -96,11 +102,11 @@ class CrashReporterTests {
         print("✓ Crash reports directory exists: \(dirExists)")
         
         // Test 3: Get crash reports count
-        let reports = CrashReporter.shared.getAllCrashReports()
+        let reports = crashReporter.getAllCrashReports()
         print("✓ Found \(reports.count) crash report(s)")
         
         // Test 4: Test export (should return nil if no reports)
-        let exported = CrashReporter.shared.exportCrashReports()
+        let exported = crashReporter.exportCrashReports()
         if exported != nil {
             print("✓ Export function works (has reports)")
         } else {
