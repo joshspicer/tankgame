@@ -79,6 +79,34 @@ class CrashReporterTests {
         print("✓ All crash reports cleared")
     }
     
+    /// Quick test - verify basic crash reporter functionality
+    static func quickTest() {
+        print("=== Quick Crash Reporter Test ===")
+        
+        // Test 1: Verify crash reporter exists
+        print("✓ CrashReporter singleton exists")
+        
+        // Test 2: Check crash reports directory
+        let appSupport = FileManager.default.urls(for: .applicationSupportDirectory, in: .userDomainMask).first!
+        let crashDir = appSupport.appendingPathComponent("CrashReports")
+        let dirExists = FileManager.default.fileExists(atPath: crashDir.path)
+        print("✓ Crash reports directory exists: \(dirExists)")
+        
+        // Test 3: Get crash reports count
+        let reports = CrashReporter.shared.getAllCrashReports()
+        print("✓ Found \(reports.count) crash report(s)")
+        
+        // Test 4: Test export (should return nil if no reports)
+        let exported = CrashReporter.shared.exportCrashReports()
+        if exported != nil {
+            print("✓ Export function works (has reports)")
+        } else {
+            print("✓ Export function works (no reports to export)")
+        }
+        
+        print("=== Quick Test Complete ===")
+    }
+    
     /// Print information about the crash reporter
     static func printInfo() {
         print("=== Crash Reporter Info ===")

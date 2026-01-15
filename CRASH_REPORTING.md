@@ -118,6 +118,9 @@ CrashReporterTests.createSampleCrashReport()
 
 ```swift
 #if DEBUG
+// Quick test - verify basic crash reporter functionality
+CrashReporterTests.quickTest()
+
 // Print crash reporter info and list all crash reports
 CrashReporterTests.printInfo()
 
