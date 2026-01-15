@@ -83,14 +83,9 @@ class CrashReporterTests {
     static func quickTest() {
         print("=== Quick Crash Reporter Test ===")
         
-        // Test 1: Verify crash reporter exists
+        // Test 1: Access crash reporter singleton
         let crashReporter = CrashReporter.shared
-        if crashReporter !== nil {
-            print("✓ CrashReporter singleton exists")
-        } else {
-            print("✗ CrashReporter singleton is nil")
-            return
-        }
+        print("✓ CrashReporter singleton accessed")
         
         // Test 2: Check crash reports directory
         guard let appSupport = FileManager.default.urls(for: .applicationSupportDirectory, in: .userDomainMask).first else {
