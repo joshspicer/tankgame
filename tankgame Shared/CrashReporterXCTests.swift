@@ -8,7 +8,6 @@
 import XCTest
 import Foundation
 
-#if DEBUG
 /// XCTest unit tests for the CrashReporter - quick tests that can be run via Xcode Test Navigator
 class CrashReporterXCTests: XCTestCase {
     
@@ -58,4 +57,3 @@ class CrashReporterXCTests: XCTestCase {
         // Test passes if we reach this point without crashing
     }
 }
-#endif
