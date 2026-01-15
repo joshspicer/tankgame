@@ -129,6 +129,6 @@ When testing multiplayer functionality, verify:
 ## Notes
 
 - The game uses MultipeerConnectivity for peer-to-peer communication
-- Simulators must be running iOS 14.0 or later (check project requirements)
+- Simulators must be running iOS 18.0 or later
 - For best results, use the same iOS version on both simulators
 - The bundle identifier is `com.joshspicer.tankgame`
