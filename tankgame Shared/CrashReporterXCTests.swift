@@ -53,10 +53,9 @@ class CrashReporterXCTests: XCTestCase {
     
     /// Quick test: Verify install method doesn't crash
     func testInstallDoesNotCrash() {
-        // This test verifies the install method can be called
+        // This test verifies the install method can be called without throwing
         CrashReporter.shared.install()
-        // If we get here without crashing, the test passes
-        XCTAssertTrue(true)
+        // Test passes if we reach this point without crashing
     }
 }
 #endif

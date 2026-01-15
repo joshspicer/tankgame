@@ -87,7 +87,10 @@ class CrashReporterTests {
         print("✓ CrashReporter singleton exists")
         
         // Test 2: Check crash reports directory
-        let appSupport = FileManager.default.urls(for: .applicationSupportDirectory, in: .userDomainMask).first!
+        guard let appSupport = FileManager.default.urls(for: .applicationSupportDirectory, in: .userDomainMask).first else {
+            print("✗ Could not access application support directory")
+            return
+        }
         let crashDir = appSupport.appendingPathComponent("CrashReports")
         let dirExists = FileManager.default.fileExists(atPath: crashDir.path)
         print("✓ Crash reports directory exists: \(dirExists)")
