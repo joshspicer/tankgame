@@ -6,7 +6,6 @@
 //
 
 import XCTest
-import Foundation
 
 /// XCTest unit tests for the CrashReporter - quick tests that can be run via Xcode Test Navigator
 class CrashReporterXCTests: XCTestCase {
