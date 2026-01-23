@@ -3,5 +3,7 @@
         "tankgame/.vscode/mcp.json: apple-developer-docs": {
             "allowedDuringChat": true
         }
-    }
+    },
+    "python-envs.defaultEnvManager": "ms-python.python:system",
+    "python-envs.pythonProjects": []
 }

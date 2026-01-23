@@ -1,40 +1,38 @@
 //
 //  Projectile.swift
-//  tankgame Shared
+//  Tank Game
 //
-//  Created by jospicer on 10/28/25.
+//  Projectile fired by tanks with simple collision detection.
 //
 
 import Foundation
 
-struct Projectile: Codable {
+/// Projectile entity with movement and collision
+struct Projectile: Codable, Equatable {
     var row: Int
     var col: Int
     var direction: Direction
+    var ownerIndex: Int
     
+    /// Move the projectile one step forward
     mutating func advance() {
-        let offset = direction.offset
-        row += offset.row
-        col += offset.col
+        row += direction.offset.row
+        col += direction.offset.col
     }
     
+    /// Check if projectile is out of grid bounds
     func isOutOfBounds(gridSize: Int) -> Bool {
-        return row < 0 || row >= gridSize || col < 0 || col >= gridSize
+        row < 0 || row >= gridSize || col < 0 || col >= gridSize
     }
     
-    func hits(grid: [[GridCell]]) -> Bool {
-        guard row >= 0, row < grid.count,
-              col >= 0, col < grid[0].count else {
-            return false
-        }
-        return grid[row][col] == .wall
+    /// Check if projectile hits a wall
+    func hitsWall(grid: [[Bool]]) -> Bool {
+        guard !isOutOfBounds(gridSize: grid.count) else { return false }
+        return grid[row][col]
     }
     
-    func hits(tank: Tank) -> Bool {
-        return tank.isAlive && row == tank.row && col == tank.col
-    }
-    
-    func hitsLizard(_ lizard: Lizard) -> Bool {
-        return lizard.isAlive && row == lizard.row && col == lizard.col
+    /// Check if projectile hits a tank
+    func hitsTank(_ tank: Tank) -> Bool {
+        tank.isAlive && tank.row == row && tank.col == col
     }
 }

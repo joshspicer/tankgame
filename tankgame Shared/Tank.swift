@@ -1,49 +1,75 @@
 //
 //  Tank.swift
-//  tankgame Shared
+//  Tank Game
 //
-//  Created by jospicer on 10/28/25.
+//  Simple tank entity with position, direction, and movement.
 //
 
 import Foundation
 
-struct Tank: Codable {
+/// Cardinal directions for tank movement
+enum Direction: Int, Codable, CaseIterable {
+    case up = 0, right, down, left
+    
+    var offset: (row: Int, col: Int) {
+        switch self {
+        case .up:    return (-1, 0)
+        case .right: return (0, 1)
+        case .down:  return (1, 0)
+        case .left:  return (0, -1)
+        }
+    }
+    
+    var rotation: Double {
+        // SpriteKit: positive rotation is counter-clockwise
+        // Turret is drawn pointing up (+Y), so:
+        switch self {
+        case .up:    return 0
+        case .right: return -.pi / 2   // 90° clockwise
+        case .down:  return .pi        // 180°
+        case .left:  return .pi / 2    // 90° counter-clockwise
+        }
+    }
+}
+
+/// Tank entity representing a player in the game
+struct Tank: Codable, Equatable {
     var row: Int
     var col: Int
     var direction: Direction
-    var isAlive: Bool
+    var isAlive: Bool = true
     
-    init(row: Int, col: Int, direction: Direction = .down) {
-        self.row = row
-        self.col = col
-        self.direction = direction
-        self.isAlive = true
-    }
-    
-    mutating func move(in direction: Direction, grid: [[GridCell]]) -> Bool {
-        let offset = direction.offset
-        let newRow = row + offset.row
-        let newCol = col + offset.col
+    /// Attempt to move in a direction, returns true if successful
+    mutating func move(_ dir: Direction, on grid: [[Bool]]) -> Bool {
+        let newRow = row + dir.offset.row
+        let newCol = col + dir.offset.col
         
         // Check bounds
         guard newRow >= 0, newRow < grid.count,
               newCol >= 0, newCol < grid[0].count else {
+            direction = dir // Update facing even if can't move
             return false
         }
         
-        // Check if cell is empty
-        guard grid[newRow][newCol] == .empty else {
+        // Check for wall (true = wall)
+        guard !grid[newRow][newCol] else {
+            direction = dir
             return false
         }
         
         row = newRow
         col = newCol
-        self.direction = direction
+        direction = dir
         return true
     }
     
+    /// Create a projectile fired from this tank
     func shoot() -> Projectile {
-        let offset = direction.offset
-        return Projectile(row: row + offset.row, col: col + offset.col, direction: direction)
+        Projectile(
+            row: row + direction.offset.row,
+            col: col + direction.offset.col,
+            direction: direction,
+            ownerIndex: -1 // Set by caller
+        )
     }
 }
