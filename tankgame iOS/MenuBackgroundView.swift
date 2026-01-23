@@ -100,13 +100,14 @@ class MenuBackgroundView: UIView {
         // Use actual frame duration for accurate timing
         animationTime += displayLink.duration
         
+        // Calculate center once per frame
+        let centerRow = Double(gridSize / 2)
+        let centerCol = Double(gridSize / 2)
+        
         // Update grid colors directly without animation for performance
-        // (animating 256 cells individually at 60fps is too expensive)
         for row in 0..<gridSize {
             for col in 0..<gridSize {
-                // Calculate distance from center once
-                let centerRow = Double(gridSize / 2)
-                let centerCol = Double(gridSize / 2)
+                // Calculate distance from center
                 let distance = sqrt(pow(Double(row) - centerRow, 2) + pow(Double(col) - centerCol, 2))
                 
                 // Wave effect from center
@@ -125,11 +126,8 @@ class MenuBackgroundView: UIView {
                 // Map to palette index (using cached count)
                 let paletteIndex = min(Int(combined * Double(paletteCount)), paletteCount - 1)
                 
-                if row < gridCells.count && col < gridCells[row].count {
-                    let cell = gridCells[row][col]
-                    // Direct color update for better performance
-                    cell.backgroundColor = palette[paletteIndex]
-                }
+                // Update cell color (bounds already guaranteed by setupGrid)
+                gridCells[row][col].backgroundColor = palette[paletteIndex]
             }
         }
     }
