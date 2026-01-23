@@ -8,8 +8,6 @@
 
 /* Begin PBXFileReference section */
 		0AEBC8162EB14C4300890CC1 /* Tank Game.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = "Tank Game.app"; sourceTree = BUILT_PRODUCTS_DIR; };
-		0AEBC8272EB14C4300890CC1 /* Tank Game.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = "Tank Game.app"; sourceTree = BUILT_PRODUCTS_DIR; };
-		0AEBC8372EB14C4300890CC1 /* Tank Game.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = "Tank Game.app"; sourceTree = BUILT_PRODUCTS_DIR; };
 /* End PBXFileReference section */
 
 /* Begin PBXFileSystemSynchronizedBuildFileExceptionSet section */
@@ -25,41 +23,9 @@
 				Messages.swift,
 				Network.swift,
 				Projectile.swift,
-				Tank.swift,
+				Tank.swift
 			);
 			target = 0AEBC8152EB14C4300890CC1 /* tankgame iOS */;
-		};
-		0AEBC8502EB14C4300890CC1 /* Exceptions for "tankgame Shared" folder in "tankgame tvOS" target */ = {
-			isa = PBXFileSystemSynchronizedBuildFileExceptionSet;
-			membershipExceptions = (
-				Actions.sks,
-				Assets.xcassets,
-				Game.swift,
-				GameScene.sks,
-				GameScene.swift,
-				Map.swift,
-				Messages.swift,
-				Network.swift,
-				Projectile.swift,
-				Tank.swift,
-			);
-			target = 0AEBC8262EB14C4300890CC1 /* tankgame tvOS */;
-		};
-		0AEBC8542EB14C4300890CC1 /* Exceptions for "tankgame Shared" folder in "tankgame macOS" target */ = {
-			isa = PBXFileSystemSynchronizedBuildFileExceptionSet;
-			membershipExceptions = (
-				Actions.sks,
-				Assets.xcassets,
-				Game.swift,
-				GameScene.sks,
-				GameScene.swift,
-				Map.swift,
-				Messages.swift,
-				Network.swift,
-				Projectile.swift,
-				Tank.swift,
-			);
-			target = 0AEBC8362EB14C4300890CC1 /* tankgame macOS */;
 		};
 /* End PBXFileSystemSynchronizedBuildFileExceptionSet section */
 
@@ -67,9 +33,7 @@
 		0AEBC80D2EB14C4100890CC1 /* tankgame Shared */ = {
 			isa = PBXFileSystemSynchronizedRootGroup;
 			exceptions = (
-				0AEBC84C2EB14C4300890CC1 /* Exceptions for "tankgame Shared" folder in "tankgame iOS" target */,
-				0AEBC8502EB14C4300890CC1 /* Exceptions for "tankgame Shared" folder in "tankgame tvOS" target */,
-				0AEBC8542EB14C4300890CC1 /* Exceptions for "tankgame Shared" folder in "tankgame macOS" target */,
+				0AEBC84C2EB14C4300890CC1 /* Exceptions for "tankgame Shared" folder in "tankgame iOS" target */
 			);
 			path = "tankgame Shared";
 			sourceTree = "<group>";
@@ -79,34 +43,10 @@
 			path = "tankgame iOS";
 			sourceTree = "<group>";
 		};
-		0AEBC8282EB14C4300890CC1 /* tankgame tvOS */ = {
-			isa = PBXFileSystemSynchronizedRootGroup;
-			path = "tankgame tvOS";
-			sourceTree = "<group>";
-		};
-		0AEBC8382EB14C4300890CC1 /* tankgame macOS */ = {
-			isa = PBXFileSystemSynchronizedRootGroup;
-			path = "tankgame macOS";
-			sourceTree = "<group>";
-		};
 /* End PBXFileSystemSynchronizedRootGroup section */
 
 /* Begin PBXFrameworksBuildPhase section */
 		0AEBC8132EB14C4300890CC1 /* Frameworks */ = {
-			isa = PBXFrameworksBuildPhase;
-			buildActionMask = 2147483647;
-			files = (
-			);
-			runOnlyForDeploymentPostprocessing = 0;
-		};
-		0AEBC8242EB14C4300890CC1 /* Frameworks */ = {
-			isa = PBXFrameworksBuildPhase;
-			buildActionMask = 2147483647;
-			files = (
-			);
-			runOnlyForDeploymentPostprocessing = 0;
-		};
-		0AEBC8342EB14C4300890CC1 /* Frameworks */ = {
 			isa = PBXFrameworksBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
@@ -121,18 +61,14 @@
 			children = (
 				0AEBC80D2EB14C4100890CC1 /* tankgame Shared */,
 				0AEBC8182EB14C4300890CC1 /* tankgame iOS */,
-				0AEBC8282EB14C4300890CC1 /* tankgame tvOS */,
-				0AEBC8382EB14C4300890CC1 /* tankgame macOS */,
-				0AEBC8172EB14C4300890CC1 /* Products */,
+				0AEBC8172EB14C4300890CC1 /* Products */
 			);
 			sourceTree = "<group>";
 		};
 		0AEBC8172EB14C4300890CC1 /* Products */ = {
 			isa = PBXGroup;
 			children = (
-				0AEBC8162EB14C4300890CC1 /* Tank Game.app */,
-				0AEBC8272EB14C4300890CC1 /* Tank Game.app */,
-				0AEBC8372EB14C4300890CC1 /* Tank Game.app */,
+				0AEBC8162EB14C4300890CC1 /* Tank Game.app */
 			);
 			name = Products;
 			sourceTree = "<group>";
@@ -146,64 +82,20 @@
 			buildPhases = (
 				0AEBC8122EB14C4300890CC1 /* Sources */,
 				0AEBC8132EB14C4300890CC1 /* Frameworks */,
-				0AEBC8142EB14C4300890CC1 /* Resources */,
+				0AEBC8142EB14C4300890CC1 /* Resources */
 			);
 			buildRules = (
 			);
 			dependencies = (
 			);
 			fileSystemSynchronizedGroups = (
-				0AEBC8182EB14C4300890CC1 /* tankgame iOS */,
+				0AEBC8182EB14C4300890CC1 /* tankgame iOS */
 			);
 			name = "tankgame iOS";
 			packageProductDependencies = (
 			);
 			productName = "tankgame iOS";
 			productReference = 0AEBC8162EB14C4300890CC1 /* Tank Game.app */;
-			productType = "com.apple.product-type.application";
-		};
-		0AEBC8262EB14C4300890CC1 /* tankgame tvOS */ = {
-			isa = PBXNativeTarget;
-			buildConfigurationList = 0AEBC8512EB14C4300890CC1 /* Build configuration list for PBXNativeTarget "tankgame tvOS" */;
-			buildPhases = (
-				0AEBC8232EB14C4300890CC1 /* Sources */,
-				0AEBC8242EB14C4300890CC1 /* Frameworks */,
-				0AEBC8252EB14C4300890CC1 /* Resources */,
-			);
-			buildRules = (
-			);
-			dependencies = (
-			);
-			fileSystemSynchronizedGroups = (
-				0AEBC8282EB14C4300890CC1 /* tankgame tvOS */,
-			);
-			name = "tankgame tvOS";
-			packageProductDependencies = (
-			);
-			productName = "tankgame tvOS";
-			productReference = 0AEBC8272EB14C4300890CC1 /* Tank Game.app */;
-			productType = "com.apple.product-type.application";
-		};
-		0AEBC8362EB14C4300890CC1 /* tankgame macOS */ = {
-			isa = PBXNativeTarget;
-			buildConfigurationList = 0AEBC8552EB14C4300890CC1 /* Build configuration list for PBXNativeTarget "tankgame macOS" */;
-			buildPhases = (
-				0AEBC8332EB14C4300890CC1 /* Sources */,
-				0AEBC8342EB14C4300890CC1 /* Frameworks */,
-				0AEBC8352EB14C4300890CC1 /* Resources */,
-			);
-			buildRules = (
-			);
-			dependencies = (
-			);
-			fileSystemSynchronizedGroups = (
-				0AEBC8382EB14C4300890CC1 /* tankgame macOS */,
-			);
-			name = "tankgame macOS";
-			packageProductDependencies = (
-			);
-			productName = "tankgame macOS";
-			productReference = 0AEBC8372EB14C4300890CC1 /* Tank Game.app */;
 			productType = "com.apple.product-type.application";
 		};
 /* End PBXNativeTarget section */
@@ -219,20 +111,13 @@
 					0AEBC8152EB14C4300890CC1 = {
 						CreatedOnToolsVersion = 26.0.1;
 					};
-					0AEBC8262EB14C4300890CC1 = {
-						CreatedOnToolsVersion = 26.0.1;
-					};
-					0AEBC8362EB14C4300890CC1 = {
-						CreatedOnToolsVersion = 26.0.1;
-					};
-				};
 			};
 			buildConfigurationList = 0AEBC80C2EB14C4000890CC1 /* Build configuration list for PBXProject "tankgame" */;
 			developmentRegion = en;
 			hasScannedForEncodings = 0;
 			knownRegions = (
 				en,
-				Base,
+				Base
 			);
 			mainGroup = 0AEBC8082EB14C4000890CC1;
 			minimizedProjectReferenceProxies = 1;
@@ -241,9 +126,7 @@
 			projectDirPath = "";
 			projectRoot = "";
 			targets = (
-				0AEBC8152EB14C4300890CC1 /* tankgame iOS */,
-				0AEBC8262EB14C4300890CC1 /* tankgame tvOS */,
-				0AEBC8362EB14C4300890CC1 /* tankgame macOS */,
+				0AEBC8152EB14C4300890CC1 /* tankgame iOS */
 			);
 		};
 /* End PBXProject section */
@@ -256,38 +139,10 @@
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
-		0AEBC8252EB14C4300890CC1 /* Resources */ = {
-			isa = PBXResourcesBuildPhase;
-			buildActionMask = 2147483647;
-			files = (
-			);
-			runOnlyForDeploymentPostprocessing = 0;
-		};
-		0AEBC8352EB14C4300890CC1 /* Resources */ = {
-			isa = PBXResourcesBuildPhase;
-			buildActionMask = 2147483647;
-			files = (
-			);
-			runOnlyForDeploymentPostprocessing = 0;
-		};
 /* End PBXResourcesBuildPhase section */
 
 /* Begin PBXSourcesBuildPhase section */
 		0AEBC8122EB14C4300890CC1 /* Sources */ = {
-			isa = PBXSourcesBuildPhase;
-			buildActionMask = 2147483647;
-			files = (
-			);
-			runOnlyForDeploymentPostprocessing = 0;
-		};
-		0AEBC8232EB14C4300890CC1 /* Sources */ = {
-			isa = PBXSourcesBuildPhase;
-			buildActionMask = 2147483647;
-			files = (
-			);
-			runOnlyForDeploymentPostprocessing = 0;
-		};
-		0AEBC8332EB14C4300890CC1 /* Sources */ = {
 			isa = PBXSourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
@@ -310,7 +165,7 @@
 				IPHONEOS_DEPLOYMENT_TARGET = 18.0;
 				LD_RUNPATH_SEARCH_PATHS = (
 					"$(inherited)",
-					"@executable_path/Frameworks",
+					"@executable_path/Frameworks"
 				);
 				MARKETING_VERSION = 1.0;
 				PRODUCT_BUNDLE_IDENTIFIER = com.joshspicer.tankgame;
@@ -339,7 +194,7 @@
 				IPHONEOS_DEPLOYMENT_TARGET = 18.0;
 				LD_RUNPATH_SEARCH_PATHS = (
 					"$(inherited)",
-					"@executable_path/Frameworks",
+					"@executable_path/Frameworks"
 				);
 				MARKETING_VERSION = 1.0;
 				PRODUCT_BUNDLE_IDENTIFIER = com.joshspicer.tankgame;
@@ -353,129 +208,6 @@
 				SWIFT_VERSION = 5.0;
 				TARGETED_DEVICE_FAMILY = "1,2";
 				VALIDATE_PRODUCT = YES;
-			};
-			name = Release;
-		};
-		0AEBC8522EB14C4300890CC1 /* Debug */ = {
-			isa = XCBuildConfiguration;
-			buildSettings = {
-				ASSETCATALOG_COMPILER_APPICON_NAME = "tvOS App Icon & Top Shelf Image";
-				ASSETCATALOG_COMPILER_GLOBAL_ACCENT_COLOR_NAME = AccentColor;
-				CODE_SIGN_STYLE = Automatic;
-				CURRENT_PROJECT_VERSION = 1;
-				DEVELOPMENT_TEAM = N7C8DEK852;
-				GENERATE_INFOPLIST_FILE = NO;
-				INFOPLIST_FILE = "TankGame-tvOS-Info.plist";
-				LD_RUNPATH_SEARCH_PATHS = (
-					"$(inherited)",
-					"@executable_path/Frameworks",
-				);
-				MARKETING_VERSION = 1.0;
-				PRODUCT_BUNDLE_IDENTIFIER = com.joshspicer.tankgame;
-				PRODUCT_NAME = "Tank Game";
-				SDKROOT = appletvos;
-				STRING_CATALOG_GENERATE_SYMBOLS = YES;
-				SWIFT_APPROACHABLE_CONCURRENCY = YES;
-				SWIFT_DEFAULT_ACTOR_ISOLATION = MainActor;
-				SWIFT_EMIT_LOC_STRINGS = YES;
-				SWIFT_UPCOMING_FEATURE_MEMBER_IMPORT_VISIBILITY = YES;
-				SWIFT_VERSION = 5.0;
-				TARGETED_DEVICE_FAMILY = 3;
-				TVOS_DEPLOYMENT_TARGET = 26.0;
-			};
-			name = Debug;
-		};
-		0AEBC8532EB14C4300890CC1 /* Release */ = {
-			isa = XCBuildConfiguration;
-			buildSettings = {
-				ASSETCATALOG_COMPILER_APPICON_NAME = "tvOS App Icon & Top Shelf Image";
-				ASSETCATALOG_COMPILER_GLOBAL_ACCENT_COLOR_NAME = AccentColor;
-				CODE_SIGN_STYLE = Automatic;
-				CURRENT_PROJECT_VERSION = 1;
-				DEVELOPMENT_TEAM = N7C8DEK852;
-				GENERATE_INFOPLIST_FILE = NO;
-				INFOPLIST_FILE = "TankGame-tvOS-Info.plist";
-				LD_RUNPATH_SEARCH_PATHS = (
-					"$(inherited)",
-					"@executable_path/Frameworks",
-				);
-				MARKETING_VERSION = 1.0;
-				PRODUCT_BUNDLE_IDENTIFIER = com.joshspicer.tankgame;
-				PRODUCT_NAME = "Tank Game";
-				SDKROOT = appletvos;
-				STRING_CATALOG_GENERATE_SYMBOLS = YES;
-				SWIFT_APPROACHABLE_CONCURRENCY = YES;
-				SWIFT_DEFAULT_ACTOR_ISOLATION = MainActor;
-				SWIFT_EMIT_LOC_STRINGS = YES;
-				SWIFT_UPCOMING_FEATURE_MEMBER_IMPORT_VISIBILITY = YES;
-				SWIFT_VERSION = 5.0;
-				TARGETED_DEVICE_FAMILY = 3;
-				TVOS_DEPLOYMENT_TARGET = 26.0;
-				VALIDATE_PRODUCT = YES;
-			};
-			name = Release;
-		};
-		0AEBC8562EB14C4300890CC1 /* Debug */ = {
-			isa = XCBuildConfiguration;
-			buildSettings = {
-				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
-				ASSETCATALOG_COMPILER_GLOBAL_ACCENT_COLOR_NAME = AccentColor;
-				CODE_SIGN_STYLE = Automatic;
-				COMBINE_HIDPI_IMAGES = YES;
-				CURRENT_PROJECT_VERSION = 1;
-				DEVELOPMENT_TEAM = N7C8DEK852;
-				ENABLE_APP_SANDBOX = YES;
-				ENABLE_USER_SELECTED_FILES = readonly;
-				GENERATE_INFOPLIST_FILE = NO;
-				INFOPLIST_FILE = "TankGame-macOS-Info.plist";
-				LD_RUNPATH_SEARCH_PATHS = (
-					"$(inherited)",
-					"@executable_path/../Frameworks",
-				);
-				MACOSX_DEPLOYMENT_TARGET = 26.0;
-				MARKETING_VERSION = 1.0;
-				PRODUCT_BUNDLE_IDENTIFIER = com.joshspicer.tankgame;
-				PRODUCT_NAME = "Tank Game";
-				REGISTER_APP_GROUPS = YES;
-				SDKROOT = macosx;
-				STRING_CATALOG_GENERATE_SYMBOLS = YES;
-				SWIFT_APPROACHABLE_CONCURRENCY = YES;
-				SWIFT_DEFAULT_ACTOR_ISOLATION = MainActor;
-				SWIFT_EMIT_LOC_STRINGS = YES;
-				SWIFT_UPCOMING_FEATURE_MEMBER_IMPORT_VISIBILITY = YES;
-				SWIFT_VERSION = 5.0;
-			};
-			name = Debug;
-		};
-		0AEBC8572EB14C4300890CC1 /* Release */ = {
-			isa = XCBuildConfiguration;
-			buildSettings = {
-				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
-				ASSETCATALOG_COMPILER_GLOBAL_ACCENT_COLOR_NAME = AccentColor;
-				CODE_SIGN_STYLE = Automatic;
-				COMBINE_HIDPI_IMAGES = YES;
-				CURRENT_PROJECT_VERSION = 1;
-				DEVELOPMENT_TEAM = N7C8DEK852;
-				ENABLE_APP_SANDBOX = YES;
-				ENABLE_USER_SELECTED_FILES = readonly;
-				GENERATE_INFOPLIST_FILE = NO;
-				INFOPLIST_FILE = "TankGame-macOS-Info.plist";
-				LD_RUNPATH_SEARCH_PATHS = (
-					"$(inherited)",
-					"@executable_path/../Frameworks",
-				);
-				MACOSX_DEPLOYMENT_TARGET = 26.0;
-				MARKETING_VERSION = 1.0;
-				PRODUCT_BUNDLE_IDENTIFIER = com.joshspicer.tankgame;
-				PRODUCT_NAME = "Tank Game";
-				REGISTER_APP_GROUPS = YES;
-				SDKROOT = macosx;
-				STRING_CATALOG_GENERATE_SYMBOLS = YES;
-				SWIFT_APPROACHABLE_CONCURRENCY = YES;
-				SWIFT_DEFAULT_ACTOR_ISOLATION = MainActor;
-				SWIFT_EMIT_LOC_STRINGS = YES;
-				SWIFT_UPCOMING_FEATURE_MEMBER_IMPORT_VISIBILITY = YES;
-				SWIFT_VERSION = 5.0;
 			};
 			name = Release;
 		};
@@ -523,7 +255,7 @@
 				GCC_OPTIMIZATION_LEVEL = 0;
 				GCC_PREPROCESSOR_DEFINITIONS = (
 					"DEBUG=1",
-					"$(inherited)",
+					"$(inherited)"
 				);
 				GCC_WARN_64_TO_32_BIT_CONVERSION = YES;
 				GCC_WARN_ABOUT_RETURN_TYPE = YES_ERROR;
@@ -602,7 +334,7 @@
 			isa = XCConfigurationList;
 			buildConfigurations = (
 				0AEBC8582EB14C4300890CC1 /* Debug */,
-				0AEBC8592EB14C4300890CC1 /* Release */,
+				0AEBC8592EB14C4300890CC1 /* Release */
 			);
 			defaultConfigurationIsVisible = 0;
 			defaultConfigurationName = Release;
@@ -611,25 +343,7 @@
 			isa = XCConfigurationList;
 			buildConfigurations = (
 				0AEBC84E2EB14C4300890CC1 /* Debug */,
-				0AEBC84F2EB14C4300890CC1 /* Release */,
-			);
-			defaultConfigurationIsVisible = 0;
-			defaultConfigurationName = Release;
-		};
-		0AEBC8512EB14C4300890CC1 /* Build configuration list for PBXNativeTarget "tankgame tvOS" */ = {
-			isa = XCConfigurationList;
-			buildConfigurations = (
-				0AEBC8522EB14C4300890CC1 /* Debug */,
-				0AEBC8532EB14C4300890CC1 /* Release */,
-			);
-			defaultConfigurationIsVisible = 0;
-			defaultConfigurationName = Release;
-		};
-		0AEBC8552EB14C4300890CC1 /* Build configuration list for PBXNativeTarget "tankgame macOS" */ = {
-			isa = XCConfigurationList;
-			buildConfigurations = (
-				0AEBC8562EB14C4300890CC1 /* Debug */,
-				0AEBC8572EB14C4300890CC1 /* Release */,
+				0AEBC84F2EB14C4300890CC1 /* Release */
 			);
 			defaultConfigurationIsVisible = 0;
 			defaultConfigurationName = Release;
