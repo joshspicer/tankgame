@@ -25,6 +25,7 @@ class GameViewController: UIViewController {
     private var readyPlayers: Set<Int> = []
     
     // UI Elements
+    private var menuBackgroundView: MenuBackgroundView!
     private var titleLabel: UILabel!
     private var statusLabel: UILabel!
     private var hostButton: UIButton!
@@ -58,6 +59,18 @@ class GameViewController: UIViewController {
             lobbyContainer.leadingAnchor.constraint(equalTo: view.leadingAnchor),
             lobbyContainer.trailingAnchor.constraint(equalTo: view.trailingAnchor),
             lobbyContainer.bottomAnchor.constraint(equalTo: view.bottomAnchor)
+        ])
+        
+        // Animated background
+        menuBackgroundView = MenuBackgroundView()
+        menuBackgroundView.translatesAutoresizingMaskIntoConstraints = false
+        lobbyContainer.addSubview(menuBackgroundView)
+        
+        NSLayoutConstraint.activate([
+            menuBackgroundView.topAnchor.constraint(equalTo: lobbyContainer.topAnchor),
+            menuBackgroundView.leadingAnchor.constraint(equalTo: lobbyContainer.leadingAnchor),
+            menuBackgroundView.trailingAnchor.constraint(equalTo: lobbyContainer.trailingAnchor),
+            menuBackgroundView.bottomAnchor.constraint(equalTo: lobbyContainer.bottomAnchor)
         ])
         
         // Title
