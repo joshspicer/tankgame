@@ -80,6 +80,13 @@ class GameViewController: UIViewController {
         titleLabel.textColor = .white
         titleLabel.textAlignment = .center
         titleLabel.translatesAutoresizingMaskIntoConstraints = false
+        
+        // Add 8-bit style shadow effect
+        titleLabel.layer.shadowColor = UIColor.cyan.cgColor
+        titleLabel.layer.shadowOffset = CGSize(width: 3, height: 3)
+        titleLabel.layer.shadowOpacity = 0.6
+        titleLabel.layer.shadowRadius = 0
+        
         lobbyContainer.addSubview(titleLabel)
         
         // Status
@@ -108,11 +115,13 @@ class GameViewController: UIViewController {
         
         // Peer table
         peerTableView = UITableView()
-        peerTableView.backgroundColor = UIColor(white: 0.15, alpha: 1)
+        peerTableView.backgroundColor = UIColor(white: 0.15, alpha: 0.8)
         peerTableView.delegate = self
         peerTableView.dataSource = self
         peerTableView.register(UITableViewCell.self, forCellReuseIdentifier: "PeerCell")
-        peerTableView.layer.cornerRadius = 12
+        peerTableView.layer.cornerRadius = 8
+        peerTableView.layer.borderWidth = 2
+        peerTableView.layer.borderColor = UIColor.white.withAlphaComponent(0.2).cgColor
         peerTableView.isHidden = true
         peerTableView.translatesAutoresizingMaskIntoConstraints = false
         lobbyContainer.addSubview(peerTableView)
@@ -158,7 +167,18 @@ class GameViewController: UIViewController {
         button.titleLabel?.font = .systemFont(ofSize: 18, weight: .semibold)
         button.setTitleColor(.white, for: .normal)
         button.backgroundColor = color
-        button.layer.cornerRadius = 12
+        button.layer.cornerRadius = 8
+        
+        // Add 8-bit style border
+        button.layer.borderWidth = 3
+        button.layer.borderColor = UIColor.white.withAlphaComponent(0.3).cgColor
+        
+        // Add subtle shadow
+        button.layer.shadowColor = UIColor.black.cgColor
+        button.layer.shadowOffset = CGSize(width: 2, height: 2)
+        button.layer.shadowOpacity = 0.5
+        button.layer.shadowRadius = 0
+        
         button.translatesAutoresizingMaskIntoConstraints = false
         lobbyContainer.addSubview(button)
         return button

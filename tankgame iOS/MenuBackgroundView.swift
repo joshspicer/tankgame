@@ -21,9 +21,10 @@ class MenuBackgroundView: UIView {
     // 8-bit color palette - classic retro colors
     private let palette: [UIColor] = [
         UIColor(red: 0.08, green: 0.12, blue: 0.18, alpha: 1.0),  // Dark blue-gray (base)
-        UIColor(red: 0.12, green: 0.16, blue: 0.24, alpha: 1.0),  // Slightly lighter
-        UIColor(red: 0.16, green: 0.20, blue: 0.28, alpha: 1.0),  // Medium
-        UIColor(red: 0.20, green: 0.24, blue: 0.32, alpha: 1.0),  // Lighter
+        UIColor(red: 0.12, green: 0.18, blue: 0.26, alpha: 1.0),  // Slightly lighter
+        UIColor(red: 0.16, green: 0.24, blue: 0.34, alpha: 1.0),  // Medium
+        UIColor(red: 0.20, green: 0.30, blue: 0.42, alpha: 1.0),  // Lighter
+        UIColor(red: 0.10, green: 0.28, blue: 0.38, alpha: 1.0),  // Cyan tint
     ]
     
     override init(frame: CGRect) {
@@ -98,14 +99,18 @@ class MenuBackgroundView: UIView {
             for col in 0..<gridSize {
                 // Calculate wave based on position and time
                 let distance = sqrt(pow(Double(row - gridSize/2), 2) + pow(Double(col - gridSize/2), 2))
-                let wave = sin(distance * 0.3 - animationTime * 2) * 0.5 + 0.5
+                let wave = sin(distance * 0.4 - animationTime * 1.5) * 0.5 + 0.5
                 
-                // Also add a diagonal scanning effect
+                // Add a diagonal scanning effect
                 let diagonal = Double(row + col) / Double(gridSize * 2)
-                let scan = sin((diagonal + animationTime * 0.3) * Double.pi * 2) * 0.3 + 0.5
+                let scan = sin((diagonal + animationTime * 0.25) * Double.pi * 2) * 0.4 + 0.5
                 
-                // Combine both effects
-                let combined = (wave * 0.7 + scan * 0.3)
+                // Add a pulsing center effect
+                let centerDistance = sqrt(pow(Double(row - gridSize/2), 2) + pow(Double(col - gridSize/2), 2))
+                let pulse = sin(centerDistance * 0.2 - animationTime * 1.8) * 0.3 + 0.5
+                
+                // Combine all effects
+                let combined = (wave * 0.5 + scan * 0.3 + pulse * 0.2)
                 
                 // Map to palette index
                 let paletteIndex = min(Int(combined * Double(palette.count)), palette.count - 1)
