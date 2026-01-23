@@ -17,6 +17,7 @@ class MenuBackgroundView: UIView {
     // Animation properties
     private var displayLink: CADisplayLink?
     private var animationTime: TimeInterval = 0
+    private let paletteCount: Int
     
     // 8-bit color palette - classic retro colors
     private let palette: [UIColor] = [
@@ -28,11 +29,13 @@ class MenuBackgroundView: UIView {
     ]
     
     override init(frame: CGRect) {
+        paletteCount = palette.count
         super.init(frame: frame)
         setupBackground()
     }
     
     required init?(coder: NSCoder) {
+        paletteCount = palette.count
         super.init(coder: coder)
         setupBackground()
     }
@@ -101,23 +104,26 @@ class MenuBackgroundView: UIView {
         // (animating 256 cells individually at 60fps is too expensive)
         for row in 0..<gridSize {
             for col in 0..<gridSize {
-                // Calculate wave based on position and time
-                let distance = sqrt(pow(Double(row - gridSize/2), 2) + pow(Double(col - gridSize/2), 2))
+                // Calculate distance from center once
+                let centerRow = Double(gridSize / 2)
+                let centerCol = Double(gridSize / 2)
+                let distance = sqrt(pow(Double(row) - centerRow, 2) + pow(Double(col) - centerCol, 2))
+                
+                // Wave effect from center
                 let wave = sin(distance * 0.4 - animationTime * 1.5) * 0.5 + 0.5
                 
-                // Add a diagonal scanning effect
+                // Diagonal scanning effect
                 let diagonal = Double(row + col) / Double(gridSize * 2)
                 let scan = sin((diagonal + animationTime * 0.25) * Double.pi * 2) * 0.4 + 0.5
                 
-                // Add a pulsing center effect
-                let centerDistance = sqrt(pow(Double(row - gridSize/2), 2) + pow(Double(col - gridSize/2), 2))
-                let pulse = sin(centerDistance * 0.2 - animationTime * 1.8) * 0.3 + 0.5
+                // Pulsing center effect (reuse distance)
+                let pulse = sin(distance * 0.2 - animationTime * 1.8) * 0.3 + 0.5
                 
                 // Combine all effects
                 let combined = (wave * 0.5 + scan * 0.3 + pulse * 0.2)
                 
-                // Map to palette index
-                let paletteIndex = min(Int(combined * Double(palette.count)), palette.count - 1)
+                // Map to palette index (using cached count)
+                let paletteIndex = min(Int(combined * Double(paletteCount)), paletteCount - 1)
                 
                 if row < gridCells.count && col < gridCells[row].count {
                     let cell = gridCells[row][col]
