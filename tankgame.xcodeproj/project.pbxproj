@@ -14,10 +14,8 @@
 		0AEBC84C2EB14C4300890CC1 /* Exceptions for "tankgame Shared" folder in "tankgame iOS" target */ = {
 			isa = PBXFileSystemSynchronizedBuildFileExceptionSet;
 			membershipExceptions = (
-				Actions.sks,
 				Assets.xcassets,
 				Game.swift,
-				GameScene.sks,
 				GameScene.swift,
 				Map.swift,
 				Messages.swift,
