@@ -25,6 +25,7 @@ class GameViewController: UIViewController {
     private var readyPlayers: Set<Int> = []
     
     // UI Elements
+    private var menuBackgroundView: MenuBackgroundView!
     private var titleLabel: UILabel!
     private var statusLabel: UILabel!
     private var hostButton: UIButton!
@@ -60,13 +61,32 @@ class GameViewController: UIViewController {
             lobbyContainer.bottomAnchor.constraint(equalTo: view.bottomAnchor)
         ])
         
+        // Animated background
+        menuBackgroundView = MenuBackgroundView()
+        menuBackgroundView.translatesAutoresizingMaskIntoConstraints = false
+        lobbyContainer.addSubview(menuBackgroundView)
+        
+        NSLayoutConstraint.activate([
+            menuBackgroundView.topAnchor.constraint(equalTo: lobbyContainer.topAnchor),
+            menuBackgroundView.leadingAnchor.constraint(equalTo: lobbyContainer.leadingAnchor),
+            menuBackgroundView.trailingAnchor.constraint(equalTo: lobbyContainer.trailingAnchor),
+            menuBackgroundView.bottomAnchor.constraint(equalTo: lobbyContainer.bottomAnchor)
+        ])
+        
         // Title
         titleLabel = UILabel()
-        titleLabel.text = "🎮 Tank Battle"
+        titleLabel.text = "TANK BATTLE"
         titleLabel.font = .systemFont(ofSize: 36, weight: .bold)
         titleLabel.textColor = .white
         titleLabel.textAlignment = .center
         titleLabel.translatesAutoresizingMaskIntoConstraints = false
+        
+        // Add subtle 8-bit style shadow effect
+        titleLabel.layer.shadowColor = UIColor.white.cgColor
+        titleLabel.layer.shadowOffset = CGSize(width: 2, height: 2)
+        titleLabel.layer.shadowOpacity = 0.3
+        titleLabel.layer.shadowRadius = 0
+        
         lobbyContainer.addSubview(titleLabel)
         
         // Status
@@ -79,27 +99,29 @@ class GameViewController: UIViewController {
         lobbyContainer.addSubview(statusLabel)
         
         // Buttons
-        hostButton = makeButton(title: "Host Game", color: .systemBlue)
+        hostButton = makeButton(title: "Host Game", color: UIColor(white: 0.35, alpha: 1))
         hostButton.addTarget(self, action: #selector(hostTapped), for: .touchUpInside)
         
-        joinButton = makeButton(title: "Join Game", color: .systemGreen)
+        joinButton = makeButton(title: "Join Game", color: UIColor(white: 0.35, alpha: 1))
         joinButton.addTarget(self, action: #selector(joinTapped), for: .touchUpInside)
         
-        startButton = makeButton(title: "Start Game", color: .systemOrange)
+        startButton = makeButton(title: "Start Game", color: UIColor(white: 0.35, alpha: 1))
         startButton.addTarget(self, action: #selector(startTapped), for: .touchUpInside)
         startButton.isHidden = true
         
-        cancelButton = makeButton(title: "Cancel", color: .systemRed)
+        cancelButton = makeButton(title: "Cancel", color: UIColor(white: 0.28, alpha: 1))
         cancelButton.addTarget(self, action: #selector(cancelTapped), for: .touchUpInside)
         cancelButton.isHidden = true
         
         // Peer table
         peerTableView = UITableView()
-        peerTableView.backgroundColor = UIColor(white: 0.15, alpha: 1)
+        peerTableView.backgroundColor = UIColor(white: 0.15, alpha: 0.9)
         peerTableView.delegate = self
         peerTableView.dataSource = self
         peerTableView.register(UITableViewCell.self, forCellReuseIdentifier: "PeerCell")
-        peerTableView.layer.cornerRadius = 12
+        peerTableView.layer.cornerRadius = 4
+        peerTableView.layer.borderWidth = 1
+        peerTableView.layer.borderColor = UIColor.white.withAlphaComponent(0.2).cgColor
         peerTableView.isHidden = true
         peerTableView.translatesAutoresizingMaskIntoConstraints = false
         lobbyContainer.addSubview(peerTableView)
@@ -142,10 +164,15 @@ class GameViewController: UIViewController {
     private func makeButton(title: String, color: UIColor) -> UIButton {
         let button = UIButton(type: .system)
         button.setTitle(title, for: .normal)
-        button.titleLabel?.font = .systemFont(ofSize: 18, weight: .semibold)
+        button.titleLabel?.font = .systemFont(ofSize: 16, weight: .medium)
         button.setTitleColor(.white, for: .normal)
         button.backgroundColor = color
-        button.layer.cornerRadius = 12
+        button.layer.cornerRadius = 4
+        
+        // Minimal border for retro aesthetic
+        button.layer.borderWidth = 1
+        button.layer.borderColor = UIColor.white.withAlphaComponent(0.4).cgColor
+        
         button.translatesAutoresizingMaskIntoConstraints = false
         lobbyContainer.addSubview(button)
         return button
