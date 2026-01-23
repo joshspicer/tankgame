@@ -2,30 +2,24 @@
 //  GameViewController.swift
 //  tankgame macOS
 //
-//  Created by jospicer on 10/28/25.
-//  Updated: 2026
+//  macOS view controller for the game.
 //
 
 import Cocoa
 import SpriteKit
-import GameplayKit
 
 class GameViewController: NSViewController {
 
     override func viewDidLoad() {
         super.viewDidLoad()
         
-        let scene = GameScene.newGameScene()
+        let scene = GameScene.newScene()
         
         // Present the scene
         let skView = self.view as! SKView
         skView.presentScene(scene)
         
         skView.ignoresSiblingOrder = true
-        
-        skView.showsFPS = true
-        skView.showsNodeCount = true
     }
 
 }
-
