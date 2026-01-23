@@ -92,9 +92,13 @@ class MenuBackgroundView: UIView {
     }
     
     @objc private func updateAnimation() {
-        animationTime += 0.016 // ~60fps
+        guard let displayLink = displayLink else { return }
         
-        // Create wave-like animation pattern across the grid
+        // Use actual frame duration for accurate timing
+        animationTime += displayLink.duration
+        
+        // Update grid colors directly without animation for performance
+        // (animating 256 cells individually at 60fps is too expensive)
         for row in 0..<gridSize {
             for col in 0..<gridSize {
                 // Calculate wave based on position and time
@@ -117,11 +121,8 @@ class MenuBackgroundView: UIView {
                 
                 if row < gridCells.count && col < gridCells[row].count {
                     let cell = gridCells[row][col]
-                    
-                    // Animate color change smoothly
-                    UIView.animate(withDuration: 0.1, delay: 0, options: [.allowUserInteraction, .beginFromCurrentState]) {
-                        cell.backgroundColor = self.palette[paletteIndex]
-                    }
+                    // Direct color update for better performance
+                    cell.backgroundColor = palette[paletteIndex]
                 }
             }
         }
