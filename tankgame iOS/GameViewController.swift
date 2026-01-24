@@ -99,17 +99,17 @@ class GameViewController: UIViewController {
         lobbyContainer.addSubview(statusLabel)
         
         // Buttons
-        hostButton = makeButton(title: "Host Game", color: UIColor(white: 0.35, alpha: 1))
+        hostButton = makeButton(systemName: "antenna.radiowaves.left.and.right", color: UIColor(white: 0.35, alpha: 1))
         hostButton.addTarget(self, action: #selector(hostTapped), for: .touchUpInside)
-        
-        joinButton = makeButton(title: "Join Game", color: UIColor(white: 0.35, alpha: 1))
+
+        joinButton = makeButton(systemName: "person.badge.plus", color: UIColor(white: 0.35, alpha: 1))
         joinButton.addTarget(self, action: #selector(joinTapped), for: .touchUpInside)
-        
-        startButton = makeButton(title: "Start Game", color: UIColor(white: 0.35, alpha: 1))
+
+        startButton = makeButton(systemName: "play.fill", color: UIColor(white: 0.35, alpha: 1))
         startButton.addTarget(self, action: #selector(startTapped), for: .touchUpInside)
         startButton.isHidden = true
-        
-        cancelButton = makeButton(title: "Cancel", color: UIColor(white: 0.28, alpha: 1))
+
+        cancelButton = makeButton(systemName: "xmark", color: UIColor(white: 0.28, alpha: 1))
         cancelButton.addTarget(self, action: #selector(cancelTapped), for: .touchUpInside)
         cancelButton.isHidden = true
         
@@ -161,18 +161,22 @@ class GameViewController: UIViewController {
         ])
     }
     
-    private func makeButton(title: String, color: UIColor) -> UIButton {
+    private func makeButton(systemName: String, color: UIColor) -> UIButton {
         let button = UIButton(type: .system)
-        button.setTitle(title, for: .normal)
-        button.titleLabel?.font = .systemFont(ofSize: 16, weight: .medium)
-        button.setTitleColor(.white, for: .normal)
+
+        // Create a larger icon without text
+        let config = UIImage.SymbolConfiguration(pointSize: 28, weight: .medium)
+        let image = UIImage(systemName: systemName, withConfiguration: config)
+        button.setImage(image, for: .normal)
+        button.tintColor = .white
+
         button.backgroundColor = color
         button.layer.cornerRadius = 4
-        
+
         // Minimal border for retro aesthetic
         button.layer.borderWidth = 1
         button.layer.borderColor = UIColor.white.withAlphaComponent(0.4).cgColor
-        
+
         button.translatesAutoresizingMaskIntoConstraints = false
         lobbyContainer.addSubview(button)
         return button
