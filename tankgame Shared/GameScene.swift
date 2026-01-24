@@ -57,9 +57,9 @@ class GameScene: SKScene {
     
     // MARK: - Scene Setup
     
-    static func newScene() -> GameScene {
-        let scene = GameScene(size: CGSize(width: 600, height: 800))
-        scene.scaleMode = .aspectFit
+    static func newScene(size: CGSize) -> GameScene {
+        let scene = GameScene(size: size)
+        scene.scaleMode = .aspectFill
         return scene
     }
     

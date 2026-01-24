@@ -251,8 +251,8 @@ class GameViewController: UIViewController {
         let skView = SKView(frame: view.bounds)
         skView.ignoresSiblingOrder = true
         self.skView = skView
-        
-        let scene = GameScene.newScene()
+
+        let scene = GameScene.newScene(size: view.bounds.size)
         scene.gameDelegate = self
         scene.game = game
         self.gameScene = scene
