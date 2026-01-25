@@ -1,17 +1,33 @@
 # Tank Battle
 
-A simple, fun multiplayer tank game using Bluetooth/WiFi peer-to-peer connectivity.
+A multiplayer tank game using Bluetooth/WiFi peer-to-peer connectivity.
+
+![Gameplay](imgs/10fps.gif)
 
 ## Features
 
-- **Multiplayer**: 2-4 players over Bluetooth/Local Network using MultipeerConnectivity
+- **Multiplayer**: Unlimited* players over Bluetooth/Local Network using MultipeerConnectivity
 - **Procedural Maps**: Seeded random map generation for consistent gameplay
 - **Simple Controls**: Joystick to move, button to fire
-- **Beautiful Minimal Design**: Clean SpriteKit graphics
+- **Variable Map Sizes**: From 4x4 to 12x12 grids
+
+*Theoretically
+
+## Gameplay
+
+Battle against friends in fast-paced tank combat! Navigate procedurally generated maps, dodge incoming fire, and be the last tank standing.
+
+<p align="center">
+  <img src="imgs/6x6.png" width="45%" alt="6x6 Map"/>
+  <img src="imgs/12x12.png" width="45%" alt="12x12 Map"/>
+</p>
+
+*Maps come in different sizes — from compact 6x6 arenas to sprawling 12x12 battlefields.*
+
 
 ## Architecture
 
-The game uses a clean, modular architecture with just 8 core files:
+The game uses a clean, modular architecture:
 
 | File | Purpose |
 |------|---------|
@@ -23,14 +39,6 @@ The game uses a clean, modular architecture with just 8 core files:
 | `Messages.swift` | Network message types |
 | `GameScene.swift` | SpriteKit rendering and game loop |
 | `GameViewController.swift` | Lobby UI and game presentation |
-
-## How to Play
-
-1. One player taps **Host Game** to create a session
-2. Other players tap **Join Game** and select the host
-3. When all players are connected, host taps **Start Game**
-4. Use the joystick to move, fire button to shoot
-5. Last tank standing wins the round!
 
 ## Requirements
 
