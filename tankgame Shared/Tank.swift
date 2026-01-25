@@ -69,7 +69,7 @@ struct Tank: Codable, Equatable {
             row: row + direction.offset.row,
             col: col + direction.offset.col,
             direction: direction,
-            ownerIndex: -1 // Set by caller
+            ownerId: "" // Set by caller
         )
     }
 }

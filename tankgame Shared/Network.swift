@@ -2,7 +2,7 @@
 //  Network.swift
 //  Tank Game
 //
-//  Simple MultipeerConnectivity wrapper for Bluetooth multiplayer.
+//  Simple MultipeerConnectivity wrapper for peer-to-peer multiplayer.
 //
 
 import Foundation
@@ -10,81 +10,70 @@ import MultipeerConnectivity
 
 /// Delegate protocol for network events
 protocol NetworkDelegate: AnyObject {
-    func network(_ network: Network, foundPeer peer: MCPeerID)
-    func network(_ network: Network, lostPeer peer: MCPeerID)
-    func network(_ network: Network, connectedTo peer: MCPeerID)
-    func network(_ network: Network, disconnectedFrom peer: MCPeerID)
-    func network(_ network: Network, received message: GameMessage, from peer: MCPeerID)
+    func network(_ network: Network, peerConnected peerId: String)
+    func network(_ network: Network, peerDisconnected peerId: String)
+    func network(_ network: Network, received message: GameMessage, from peerId: String)
 }
 
-/// Simple MultipeerConnectivity wrapper
+/// Simple MultipeerConnectivity wrapper with peer-to-peer support
 final class Network: NSObject {
     static let serviceType = "tankgame"
-    
+
     weak var delegate: NetworkDelegate?
-    
+
     private let myPeerID: MCPeerID
     private(set) var session: MCSession!
     private var advertiser: MCNearbyServiceAdvertiser?
     private var browser: MCNearbyServiceBrowser?
-    
-    var isHost = false
-    
+
+    /// Unique persistent peer ID (UUID string)
+    let localPeerId: String
+
     override init() {
-        // Create or retrieve persistent peer ID
-        if let data = UserDefaults.standard.data(forKey: "tankgame.peerID"),
-           let decoded = try? NSKeyedUnarchiver.unarchivedObject(ofClass: MCPeerID.self, from: data) {
-            myPeerID = decoded
+        // Create or retrieve persistent UUID-based peer ID
+        if let existingId = UserDefaults.standard.string(forKey: "tankgame.peerId") {
+            localPeerId = existingId
         } else {
-            myPeerID = MCPeerID(displayName: UIDevice.current.name)
-            if let data = try? NSKeyedArchiver.archivedData(withRootObject: myPeerID, requiringSecureCoding: true) {
-                UserDefaults.standard.set(data, forKey: "tankgame.peerID")
-            }
+            localPeerId = UUID().uuidString
+            UserDefaults.standard.set(localPeerId, forKey: "tankgame.peerId")
         }
-        
+
+        // Use UUID as display name for MCPeerID
+        myPeerID = MCPeerID(displayName: localPeerId)
+
         super.init()
-        
+
         session = MCSession(peer: myPeerID, securityIdentity: nil, encryptionPreference: .required)
         session.delegate = self
     }
-    
-    // MARK: - Hosting
-    
-    func startHosting() {
-        isHost = true
+
+    // MARK: - Peer-to-Peer Mode
+
+    /// Start both advertising and browsing simultaneously
+    func startPeerToPeer() {
+        // Start advertising
         advertiser = MCNearbyServiceAdvertiser(peer: myPeerID, discoveryInfo: nil, serviceType: Self.serviceType)
         advertiser?.delegate = self
         advertiser?.startAdvertisingPeer()
-    }
-    
-    func stopHosting() {
-        advertiser?.stopAdvertisingPeer()
-        advertiser = nil
-    }
-    
-    // MARK: - Joining
-    
-    func startBrowsing() {
-        isHost = false
+
+        // Start browsing
         browser = MCNearbyServiceBrowser(peer: myPeerID, serviceType: Self.serviceType)
         browser?.delegate = self
         browser?.startBrowsingForPeers()
     }
-    
-    func stopBrowsing() {
+
+    func stopPeerToPeer() {
+        advertiser?.stopAdvertisingPeer()
+        advertiser = nil
         browser?.stopBrowsingForPeers()
         browser = nil
     }
-    
-    func invite(_ peer: MCPeerID) {
-        browser?.invitePeer(peer, to: session, withContext: nil, timeout: 30)
-    }
-    
+
     // MARK: - Messaging
-    
+
     func send(_ message: GameMessage) {
         guard !session.connectedPeers.isEmpty else { return }
-        
+
         do {
             let data = try JSONEncoder().encode(message)
             try session.send(data, toPeers: session.connectedPeers, with: .reliable)
@@ -92,29 +81,43 @@ final class Network: NSObject {
             print("Send error: \(error)")
         }
     }
-    
+
+    func send(_ message: GameMessage, to peerId: String) {
+        guard let peer = session.connectedPeers.first(where: { $0.displayName == peerId }) else { return }
+
+        do {
+            let data = try JSONEncoder().encode(message)
+            try session.send(data, toPeers: [peer], with: .reliable)
+        } catch {
+            print("Send to peer error: \(error)")
+        }
+    }
+
     // MARK: - Connection
-    
+
     func disconnect() {
         session.disconnect()
-        stopHosting()
-        stopBrowsing()
+        stopPeerToPeer()
     }
-    
+
     var isConnected: Bool {
         !session.connectedPeers.isEmpty
     }
-    
+
     var connectedCount: Int {
         session.connectedPeers.count + 1 // +1 for local
     }
-    
-    var myName: String {
-        myPeerID.displayName
+
+    /// All peer IDs sorted alphabetically (for deterministic ordering)
+    var sortedPeerIds: [String] {
+        var allIds = [localPeerId] + session.connectedPeers.map(\.displayName)
+        allIds.sort()
+        return allIds
     }
-    
-    var allPlayerNames: [String] {
-        [myPeerID.displayName] + session.connectedPeers.map(\.displayName)
+
+    /// Check if local peer is the elder (lowest UUID)
+    var isElder: Bool {
+        sortedPeerIds.first == localPeerId
     }
 }
 
@@ -126,9 +129,9 @@ extension Network: MCSessionDelegate {
             guard let self else { return }
             switch state {
             case .connected:
-                delegate?.network(self, connectedTo: peerID)
+                delegate?.network(self, peerConnected: peerID.displayName)
             case .notConnected:
-                delegate?.network(self, disconnectedFrom: peerID)
+                delegate?.network(self, peerDisconnected: peerID.displayName)
             case .connecting:
                 break
             @unknown default:
@@ -136,19 +139,19 @@ extension Network: MCSessionDelegate {
             }
         }
     }
-    
+
     func session(_ session: MCSession, didReceive data: Data, fromPeer peerID: MCPeerID) {
         do {
             let message = try JSONDecoder().decode(GameMessage.self, from: data)
             DispatchQueue.main.async { [weak self] in
                 guard let self else { return }
-                delegate?.network(self, received: message, from: peerID)
+                delegate?.network(self, received: message, from: peerID.displayName)
             }
         } catch {
             print("Decode error: \(error)")
         }
     }
-    
+
     func session(_ session: MCSession, didReceive stream: InputStream, withName streamName: String, fromPeer peerID: MCPeerID) {}
     func session(_ session: MCSession, didStartReceivingResourceWithName resourceName: String, fromPeer peerID: MCPeerID, with progress: Progress) {}
     func session(_ session: MCSession, didFinishReceivingResourceWithName resourceName: String, fromPeer peerID: MCPeerID, at localURL: URL?, withError error: Error?) {}
@@ -158,14 +161,10 @@ extension Network: MCSessionDelegate {
 
 extension Network: MCNearbyServiceAdvertiserDelegate {
     func advertiser(_ advertiser: MCNearbyServiceAdvertiser, didReceiveInvitationFromPeer peerID: MCPeerID, withContext context: Data?, invitationHandler: @escaping (Bool, MCSession?) -> Void) {
-        // Accept if we have room (max 4 players)
-        if session.connectedPeers.count < 3 {
-            invitationHandler(true, session)
-        } else {
-            invitationHandler(false, nil)
-        }
+        // Auto-accept all invitations (no player limit)
+        invitationHandler(true, session)
     }
-    
+
     func advertiser(_ advertiser: MCNearbyServiceAdvertiser, didNotStartAdvertisingPeer error: Error) {
         print("Advertise error: \(error)")
     }
@@ -175,19 +174,19 @@ extension Network: MCNearbyServiceAdvertiserDelegate {
 
 extension Network: MCNearbyServiceBrowserDelegate {
     func browser(_ browser: MCNearbyServiceBrowser, foundPeer peerID: MCPeerID, withDiscoveryInfo info: [String: String]?) {
-        DispatchQueue.main.async { [weak self] in
-            guard let self else { return }
-            delegate?.network(self, foundPeer: peerID)
+        // Deterministic invite: lower UUID invites higher UUID (prevents duplicate connections)
+        let theirId = peerID.displayName
+        if localPeerId < theirId {
+            // We have lower UUID, so we invite them
+            browser.invitePeer(peerID, to: session, withContext: nil, timeout: 30)
         }
+        // If they have lower UUID, they will invite us
     }
-    
+
     func browser(_ browser: MCNearbyServiceBrowser, lostPeer peerID: MCPeerID) {
-        DispatchQueue.main.async { [weak self] in
-            guard let self else { return }
-            delegate?.network(self, lostPeer: peerID)
-        }
+        // Handled by session delegate
     }
-    
+
     func browser(_ browser: MCNearbyServiceBrowser, didNotStartBrowsingForPeers error: Error) {
         print("Browse error: \(error)")
     }
