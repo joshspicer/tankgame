@@ -11,7 +11,7 @@ import SpriteKit
 protocol GameSceneDelegate: AnyObject {
     func gameScene(_ scene: GameScene, playerMoved direction: Direction)
     func gameScene(_ scene: GameScene, playerShot projectile: Projectile)
-    func gameScene(_ scene: GameScene, playerHit peerId: String)
+    func gameScene(_ scene: GameScene, playerHit victimId: String, byShooter shooterId: String)
     func gameScene(_ scene: GameScene, didChangeGridSize delta: Int)
 }
 
@@ -202,14 +202,19 @@ class GameScene: SKScene {
             return
         }
 
+        // Position aligned with scoreboard (right side)
+        let gridWidth = CGFloat(currentGridSize) * tileSize
+        let gridBottomY = size.height - gridWidth - 60
+        let scoreY = gridBottomY - 25
+
         // Small subtle gear button container
         let button = SKNode()
-        button.position = CGPoint(x: size.width - 30, y: size.height - 45)
+        button.position = CGPoint(x: size.width - 30, y: scoreY)
         button.zPosition = 100
         button.name = "settings_button"
 
         // Small subtle background
-        let bg = SKShapeNode(circleOfRadius: 16)
+        let bg = SKShapeNode(circleOfRadius: 14)
         bg.fillColor = SKColor(white: 0.2, alpha: 0.4)
         bg.strokeColor = SKColor(white: 0.4, alpha: 0.3)
         bg.lineWidth = 1
@@ -219,8 +224,8 @@ class GameScene: SKScene {
         // Subtle gear icon
         let gearLabel = SKLabelNode(text: "⚙")
         gearLabel.fontName = "AvenirNext-Medium"
-        gearLabel.fontSize = 16
-        gearLabel.fontColor = SKColor(white: 0.7, alpha: 0.7)
+        gearLabel.fontSize = 14
+        gearLabel.fontColor = SKColor(white: 0.6, alpha: 0.6)
         gearLabel.horizontalAlignmentMode = .center
         gearLabel.verticalAlignmentMode = .center
         gearLabel.position = CGPoint(x: 0, y: -1)
@@ -833,7 +838,7 @@ class GameScene: SKScene {
             // Check settings button (elder only) - use distance check for proper hit detection
             if isLocalPlayerElder, let button = settingsButton {
                 let buttonDist = hypot(location.x - button.position.x, location.y - button.position.y)
-                if buttonDist < 25 {  // Slightly larger than button radius (16) for easier tap
+                if buttonDist < 22 {  // Slightly larger than button radius (14) for easier tap
                     showSettingsModal()
                     return
                 }
@@ -958,11 +963,11 @@ class GameScene: SKScene {
 
         // Update projectiles
         if currentTime - lastProjectileUpdate > projectileInterval {
-            let hitPeers = game.projectiles.isEmpty ? [] : game.updateProjectiles()
+            let hits = game.projectiles.isEmpty ? [] : game.updateProjectiles()
             renderProjectiles()
 
-            for hitPeerId in hitPeers {
-                gameDelegate?.gameScene(self, playerHit: hitPeerId)
+            for hit in hits {
+                gameDelegate?.gameScene(self, playerHit: hit.victimId, byShooter: hit.shooterId)
                 renderTanksSmooth()
             }
 

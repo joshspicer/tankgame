@@ -284,9 +284,15 @@ final class Game {
 
     // MARK: - Game Logic
 
-    /// Update all projectiles, returns peerIds of hit tanks
-    func updateProjectiles() -> [String] {
-        var hitPeers: [String] = []
+    /// Hit info containing victim and shooter
+    struct HitInfo {
+        let victimId: String
+        let shooterId: String
+    }
+
+    /// Update all projectiles, returns hit info for each destroyed tank
+    func updateProjectiles() -> [HitInfo] {
+        var hits: [HitInfo] = []
         var activeProjectiles: [Projectile] = []
 
         for var projectile in projectiles {
@@ -304,7 +310,7 @@ final class Game {
 
                 if projectile.hitsTank(data.tank) {
                     players[peerId]?.tank.isAlive = false
-                    hitPeers.append(peerId)
+                    hits.append(HitInfo(victimId: peerId, shooterId: projectile.ownerId))
                     hitSomething = true
 
                     // Award point to shooter
@@ -331,7 +337,7 @@ final class Game {
             for (peerId, data) in players {
                 if projectile.hitsTank(data.tank) {
                     players[peerId]?.tank.isAlive = false
-                    hitPeers.append(peerId)
+                    hits.append(HitInfo(victimId: peerId, shooterId: projectile.ownerId))
                     hitSomething = true
 
                     // Award point to shooter
@@ -348,7 +354,7 @@ final class Game {
         }
 
         projectiles = activeProjectiles
-        return hitPeers
+        return hits
     }
 
     /// Number of alive players

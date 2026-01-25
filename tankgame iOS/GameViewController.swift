@@ -92,6 +92,9 @@ class GameViewController: UIViewController {
         let scene = GameScene.newScene()
         scene.gameDelegate = self
         scene.game = game
+        // Set elder status BEFORE presenting (player is alone at start, so is elder when alone,
+        // but we only show settings button when connected with others)
+        scene.isLocalPlayerElder = network.isElder && network.isConnected
         self.gameScene = scene
 
         skView.presentScene(scene)
@@ -198,10 +201,10 @@ extension GameViewController: NetworkDelegate {
     func network(_ network: Network, peerConnected peerId: String) {
         guard let game = game else { return }
 
-        NSLog("[Game] Peer connected: %@... (isElder: %d)", String(peerId.prefix(8)), network.isElder ? 1 : 0)
+        NSLog("[Game] Peer connected: %@... (isElder: %d, connected: %d)", String(peerId.prefix(8)), network.isElder ? 1 : 0, network.isConnected ? 1 : 0)
 
-        // Update elder status on scene
-        gameScene?.isLocalPlayerElder = network.isElder
+        // Update elder status on scene - only show settings when connected AND elder
+        gameScene?.isLocalPlayerElder = network.isElder && network.isConnected
         gameScene?.updateSettingsUI()
 
         // Add the new player
@@ -219,8 +222,8 @@ extension GameViewController: NetworkDelegate {
         let wasElder = network.isElder
         removePlayerForPeer(peerId)
 
-        // Update elder status on scene
-        gameScene?.isLocalPlayerElder = network.isElder
+        // Update elder status on scene - only show settings when connected AND elder
+        gameScene?.isLocalPlayerElder = network.isElder && network.isConnected
         gameScene?.updateSettingsUI()
 
         // If we just became the elder (the old elder disconnected), broadcast world state
@@ -330,18 +333,18 @@ extension GameViewController: GameSceneDelegate {
         network.send(.shoot(peerId: game.localPeerId, projectile: projectile.toState()))
     }
 
-    func gameScene(_ scene: GameScene, playerHit peerId: String) {
+    func gameScene(_ scene: GameScene, playerHit victimId: String, byShooter shooterId: String) {
         guard let game = game else { return }
 
-        // Broadcast hit with shooter info (local player is the shooter since we computed the hit)
-        network.send(.hit(victimId: peerId, byShooterId: game.localPeerId))
+        // Broadcast hit with correct shooter info
+        network.send(.hit(victimId: victimId, byShooterId: shooterId))
 
         // Update score display
         scene.updateScores()
 
         // Schedule respawn if it's a local hit
-        if peerId == network.localPeerId {
-            scheduleRespawn(for: peerId)
+        if victimId == network.localPeerId {
+            scheduleRespawn(for: victimId)
         }
     }
 
