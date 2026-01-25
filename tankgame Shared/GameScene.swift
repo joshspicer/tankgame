@@ -12,6 +12,7 @@ protocol GameSceneDelegate: AnyObject {
     func gameScene(_ scene: GameScene, playerMoved direction: Direction)
     func gameScene(_ scene: GameScene, playerShot projectile: Projectile)
     func gameScene(_ scene: GameScene, playerHit peerId: String)
+    func gameScene(_ scene: GameScene, didChangeGridSize delta: Int)
 }
 
 /// Main game scene
@@ -24,8 +25,10 @@ class GameScene: SKScene {
     /// Whether the local player is the elder (for debug display)
     var isLocalPlayerElder: Bool = false
 
-    // Layout constants
-    let gridSize = 8
+    /// Current grid size from game (or default)
+    private var currentGridSize: Int {
+        game?.gridSize ?? 8
+    }
 
     /// Tile size calculated to fit the screen
     private var tileSize: CGFloat {
@@ -33,8 +36,14 @@ class GameScene: SKScene {
         let availableWidth = size.width - 40  // 20px padding each side
         let availableHeight = size.height - 280  // Leave room for controls at bottom
         let maxGridSize = min(availableWidth, availableHeight)
-        return floor(maxGridSize / CGFloat(gridSize))
+        return floor(maxGridSize / CGFloat(currentGridSize))
     }
+
+    // Settings UI (elder only)
+    private var settingsButton: SKNode?
+    private var settingsModal: SKNode?
+    private var gridSizeLabel: SKLabelNode?
+    private var isSettingsModalVisible: Bool = false
 
     // Node containers
     private var gridNode: SKNode!
@@ -88,7 +97,7 @@ class GameScene: SKScene {
 
     private func setupNodes() {
         // Calculate grid position (centered horizontally, toward top)
-        let gridWidth = CGFloat(gridSize) * tileSize
+        let gridWidth = CGFloat(currentGridSize) * tileSize
         let gridX = (size.width - gridWidth) / 2
         let gridY = size.height - gridWidth - 60
 
@@ -161,7 +170,7 @@ class GameScene: SKScene {
         fireButton.addChild(fireLabel)
 
         // Scoreboard container (positioned below grid)
-        let gridWidth = CGFloat(gridSize) * tileSize
+        let gridWidth = CGFloat(currentGridSize) * tileSize
         let gridBottomY = size.height - gridWidth - 60  // Same calculation as setupNodes
         scoreboardNode = SKNode()
         scoreboardNode.position = CGPoint(x: size.width / 2, y: gridBottomY - 25)
@@ -179,6 +188,195 @@ class GameScene: SKScene {
         statusLabel.zPosition = 200
         statusLabel.isHidden = true
         addChild(statusLabel)
+
+        // Settings UI (top right corner)
+        setupSettingsUI()
+    }
+
+    private func setupSettingsUI() {
+        settingsButton?.removeFromParent()
+
+        // Only show settings button for elder
+        guard isLocalPlayerElder else {
+            settingsButton = nil
+            return
+        }
+
+        // Small subtle gear button container
+        let button = SKNode()
+        button.position = CGPoint(x: size.width - 30, y: size.height - 45)
+        button.zPosition = 100
+        button.name = "settings_button"
+
+        // Small subtle background
+        let bg = SKShapeNode(circleOfRadius: 16)
+        bg.fillColor = SKColor(white: 0.2, alpha: 0.4)
+        bg.strokeColor = SKColor(white: 0.4, alpha: 0.3)
+        bg.lineWidth = 1
+        bg.name = "settings_button"
+        button.addChild(bg)
+
+        // Subtle gear icon
+        let gearLabel = SKLabelNode(text: "⚙")
+        gearLabel.fontName = "AvenirNext-Medium"
+        gearLabel.fontSize = 16
+        gearLabel.fontColor = SKColor(white: 0.7, alpha: 0.7)
+        gearLabel.horizontalAlignmentMode = .center
+        gearLabel.verticalAlignmentMode = .center
+        gearLabel.position = CGPoint(x: 0, y: -1)
+        gearLabel.name = "settings_button"
+        button.addChild(gearLabel)
+
+        addChild(button)
+        settingsButton = button
+    }
+
+    /// Show settings modal overlay
+    private func showSettingsModal() {
+        guard settingsModal == nil else { return }
+
+        isSettingsModalVisible = true
+
+        // Modal container
+        let modal = SKNode()
+        modal.zPosition = 200
+
+        // Dimmed background (tap to close)
+        let dimBg = SKShapeNode(rect: CGRect(origin: .zero, size: size))
+        dimBg.fillColor = SKColor(white: 0, alpha: 0.5)
+        dimBg.strokeColor = .clear
+        dimBg.name = "settings_modal_bg"
+        modal.addChild(dimBg)
+
+        // Modal panel
+        let panelWidth: CGFloat = 240
+        let panelHeight: CGFloat = 160
+        let panel = SKShapeNode(rectOf: CGSize(width: panelWidth, height: panelHeight), cornerRadius: 16)
+        panel.fillColor = SKColor(white: 0.15, alpha: 0.95)
+        panel.strokeColor = SKColor(white: 0.4, alpha: 1)
+        panel.lineWidth = 2
+        panel.position = CGPoint(x: size.width / 2, y: size.height / 2)
+        panel.name = "settings_modal_panel"
+        modal.addChild(panel)
+
+        // Title
+        let title = SKLabelNode(text: "SETTINGS")
+        title.fontName = "AvenirNext-Bold"
+        title.fontSize = 20
+        title.fontColor = .white
+        title.horizontalAlignmentMode = .center
+        title.verticalAlignmentMode = .center
+        title.position = CGPoint(x: 0, y: 50)
+        panel.addChild(title)
+
+        // Grid size label
+        let gridLabel = SKLabelNode(text: "Grid Size")
+        gridLabel.fontName = "AvenirNext-Medium"
+        gridLabel.fontSize = 14
+        gridLabel.fontColor = SKColor(white: 0.7, alpha: 1)
+        gridLabel.horizontalAlignmentMode = .center
+        gridLabel.verticalAlignmentMode = .center
+        gridLabel.position = CGPoint(x: 0, y: 10)
+        panel.addChild(gridLabel)
+
+        // Grid size controls row
+        let controlsY: CGFloat = -25
+
+        // Minus button
+        let minusBtn = SKShapeNode(circleOfRadius: 20)
+        minusBtn.fillColor = SKColor(white: 0.3, alpha: 1)
+        minusBtn.strokeColor = SKColor(white: 0.5, alpha: 1)
+        minusBtn.lineWidth = 2
+        minusBtn.position = CGPoint(x: -60, y: controlsY)
+        minusBtn.name = "settings_minus"
+        panel.addChild(minusBtn)
+
+        let minusLabel = SKLabelNode(text: "−")
+        minusLabel.fontName = "AvenirNext-Bold"
+        minusLabel.fontSize = 28
+        minusLabel.fontColor = .white
+        minusLabel.horizontalAlignmentMode = .center
+        minusLabel.verticalAlignmentMode = .center
+        minusLabel.position = CGPoint(x: 0, y: -2)
+        minusBtn.addChild(minusLabel)
+
+        // Grid size value
+        let sizeLabel = SKLabelNode(text: "\(currentGridSize)×\(currentGridSize)")
+        sizeLabel.fontName = "AvenirNext-Bold"
+        sizeLabel.fontSize = 22
+        sizeLabel.fontColor = .white
+        sizeLabel.horizontalAlignmentMode = .center
+        sizeLabel.verticalAlignmentMode = .center
+        sizeLabel.position = CGPoint(x: 0, y: controlsY)
+        panel.addChild(sizeLabel)
+        gridSizeLabel = sizeLabel
+
+        // Plus button
+        let plusBtn = SKShapeNode(circleOfRadius: 20)
+        plusBtn.fillColor = SKColor(white: 0.3, alpha: 1)
+        plusBtn.strokeColor = SKColor(white: 0.5, alpha: 1)
+        plusBtn.lineWidth = 2
+        plusBtn.position = CGPoint(x: 60, y: controlsY)
+        plusBtn.name = "settings_plus"
+        panel.addChild(plusBtn)
+
+        let plusLabel = SKLabelNode(text: "+")
+        plusLabel.fontName = "AvenirNext-Bold"
+        plusLabel.fontSize = 28
+        plusLabel.fontColor = .white
+        plusLabel.horizontalAlignmentMode = .center
+        plusLabel.verticalAlignmentMode = .center
+        plusLabel.position = CGPoint(x: 0, y: -2)
+        plusBtn.addChild(plusLabel)
+
+        // Close button
+        let closeBtn = SKShapeNode(circleOfRadius: 16)
+        closeBtn.fillColor = SKColor(white: 0.25, alpha: 1)
+        closeBtn.strokeColor = SKColor(white: 0.5, alpha: 1)
+        closeBtn.lineWidth = 1
+        closeBtn.position = CGPoint(x: panelWidth / 2 - 20, y: panelHeight / 2 - 20)
+        closeBtn.name = "settings_close"
+        panel.addChild(closeBtn)
+
+        let closeLabel = SKLabelNode(text: "✕")
+        closeLabel.fontName = "AvenirNext-Bold"
+        closeLabel.fontSize = 16
+        closeLabel.fontColor = .white
+        closeLabel.horizontalAlignmentMode = .center
+        closeLabel.verticalAlignmentMode = .center
+        closeLabel.position = CGPoint(x: 0, y: -1)
+        closeBtn.addChild(closeLabel)
+
+        // Fade in animation
+        modal.alpha = 0
+        addChild(modal)
+        modal.run(SKAction.fadeIn(withDuration: 0.15))
+
+        settingsModal = modal
+    }
+
+    /// Hide settings modal
+    private func hideSettingsModal() {
+        guard let modal = settingsModal else { return }
+
+        isSettingsModalVisible = false
+
+        modal.run(SKAction.sequence([
+            SKAction.fadeOut(withDuration: 0.15),
+            SKAction.removeFromParent()
+        ]))
+
+        settingsModal = nil
+        gridSizeLabel = nil
+    }
+
+    /// Update settings UI visibility and state
+    func updateSettingsUI() {
+        // Recreate settings button based on elder status
+        setupSettingsUI()
+
+        // Update grid size label in modal if visible
+        gridSizeLabel?.text = "\(currentGridSize)×\(currentGridSize)"
     }
 
     // MARK: - Color Assignment
@@ -218,8 +416,8 @@ class GameScene: SKScene {
         gridNode.removeAllChildren()
         guard let game = game else { return }
 
-        for row in 0..<gridSize {
-            for col in 0..<gridSize {
+        for row in 0..<currentGridSize {
+            for col in 0..<currentGridSize {
                 let isWall = game.map.grid[row][col]
                 let tile = SKShapeNode(rectOf: CGSize(width: tileSize - 2, height: tileSize - 2), cornerRadius: 4)
                 tile.fillColor = isWall ? SKColor(white: 0.4, alpha: 1) : SKColor(white: 0.2, alpha: 1)
@@ -318,7 +516,7 @@ class GameScene: SKScene {
     private func position(for row: Int, col: Int) -> CGPoint {
         CGPoint(
             x: CGFloat(col) * tileSize + tileSize / 2,
-            y: CGFloat(gridSize - 1 - row) * tileSize + tileSize / 2
+            y: CGFloat(currentGridSize - 1 - row) * tileSize + tileSize / 2
         )
     }
 
@@ -607,6 +805,39 @@ class GameScene: SKScene {
     override func touchesBegan(_ touches: Set<UITouch>, with event: UIEvent?) {
         for touch in touches {
             let location = touch.location(in: self)
+
+            // Handle settings modal if visible
+            if isSettingsModalVisible, let modal = settingsModal {
+                let modalLocation = touch.location(in: modal)
+                let node = modal.atPoint(modalLocation)
+                let name = node.name ?? node.parent?.name ?? node.parent?.parent?.name
+
+                if name == "settings_minus" && currentGridSize > 4 {
+                    gameDelegate?.gameScene(self, didChangeGridSize: -1)
+                    return
+                } else if name == "settings_plus" && currentGridSize < 12 {
+                    gameDelegate?.gameScene(self, didChangeGridSize: 1)
+                    return
+                } else if name == "settings_close" || name == "settings_modal_bg" {
+                    hideSettingsModal()
+                    return
+                } else if name == "settings_modal_panel" {
+                    // Tap inside panel but not on a button - do nothing
+                    return
+                }
+                // If touched elsewhere in modal, close it
+                hideSettingsModal()
+                return
+            }
+
+            // Check settings button (elder only) - use distance check for proper hit detection
+            if isLocalPlayerElder, let button = settingsButton {
+                let buttonDist = hypot(location.x - button.position.x, location.y - button.position.y)
+                if buttonDist < 25 {  // Slightly larger than button radius (16) for easier tap
+                    showSettingsModal()
+                    return
+                }
+            }
 
             // Fire button
             if fireButton.contains(location) {

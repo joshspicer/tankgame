@@ -27,6 +27,7 @@ struct ProjectileState: Codable, Equatable {
 /// Full world state for syncing new joiners
 struct WorldState: Codable {
     let mapSeed: UInt32
+    let gridSize: Int
     let players: [PlayerState]
     let projectiles: [ProjectileState]
     let scores: [String: Int]

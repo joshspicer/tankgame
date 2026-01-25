@@ -19,10 +19,12 @@ final class Game {
     var players: [String: PlayerData] = [:]  // Keyed by peerId
     var projectiles: [Projectile] = []
     let localPeerId: String
+    private(set) var gridSize: Int
 
     /// Create a new game state
-    init(seed: UInt32, localPeerId: String) {
-        self.map = Map.generate(seed: seed)
+    init(seed: UInt32, localPeerId: String, gridSize: Int = 8) {
+        self.gridSize = gridSize
+        self.map = Map.generate(seed: seed, size: gridSize)
         self.localPeerId = localPeerId
 
         // Add local player
@@ -234,6 +236,7 @@ final class Game {
 
         return WorldState(
             mapSeed: map.seed,
+            gridSize: gridSize,
             players: playerStates,
             projectiles: projectileStates,
             scores: scores
@@ -242,8 +245,9 @@ final class Game {
 
     /// Apply received world state
     func applyWorldState(_ state: WorldState) {
-        // Regenerate map with same seed
-        self.map = Map.generate(seed: state.mapSeed)
+        // Update grid size and regenerate map
+        self.gridSize = state.gridSize
+        self.map = Map.generate(seed: state.mapSeed, size: state.gridSize)
 
         // Clear and rebuild players
         self.players.removeAll()
@@ -260,6 +264,22 @@ final class Game {
 
         // Rebuild projectiles
         self.projectiles = state.projectiles.map { Projectile.from($0) }
+    }
+
+    /// Resize the grid (elder only) - returns new world state
+    func resizeGrid(to newSize: Int, newSeed: UInt32) {
+        self.gridSize = newSize
+        self.map = Map.generate(seed: newSeed, size: newSize)
+        self.projectiles.removeAll()
+
+        // Respawn all players at new positions
+        for peerId in players.keys {
+            let spawn = findSpawnPosition(for: peerId)
+            var tank = Tank(row: spawn.row, col: spawn.col, direction: spawn.direction)
+            tank.isAlive = true
+            let score = players[peerId]?.score ?? 0
+            players[peerId] = PlayerData(tank: tank, score: score)
+        }
     }
 
     // MARK: - Game Logic

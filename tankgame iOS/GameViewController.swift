@@ -200,6 +200,10 @@ extension GameViewController: NetworkDelegate {
 
         NSLog("[Game] Peer connected: %@... (isElder: %d)", String(peerId.prefix(8)), network.isElder ? 1 : 0)
 
+        // Update elder status on scene
+        gameScene?.isLocalPlayerElder = network.isElder
+        gameScene?.updateSettingsUI()
+
         // Add the new player
         addPlayerForPeer(peerId)
 
@@ -214,6 +218,10 @@ extension GameViewController: NetworkDelegate {
     func network(_ network: Network, peerDisconnected peerId: String) {
         let wasElder = network.isElder
         removePlayerForPeer(peerId)
+
+        // Update elder status on scene
+        gameScene?.isLocalPlayerElder = network.isElder
+        gameScene?.updateSettingsUI()
 
         // If we just became the elder (the old elder disconnected), broadcast world state
         if !wasElder && network.isElder && network.isConnected {
@@ -335,5 +343,28 @@ extension GameViewController: GameSceneDelegate {
         if peerId == network.localPeerId {
             scheduleRespawn(for: peerId)
         }
+    }
+
+    func gameScene(_ scene: GameScene, didChangeGridSize delta: Int) {
+        guard let game = game, network.isElder else { return }
+
+        let newSize = max(4, min(12, game.gridSize + delta))
+        guard newSize != game.gridSize else { return }
+
+        // Generate new seed for new map
+        let newSeed = UInt32.random(in: 0...UInt32.max)
+
+        // Resize locally
+        game.resizeGrid(to: newSize, newSeed: newSeed)
+
+        // Broadcast new world state to all peers
+        let worldState = game.createWorldState()
+        network.send(.worldState(worldState))
+
+        // Refresh local scene
+        scene.fullRefresh()
+        scene.updateSettingsUI()
+
+        NSLog("[Game] Elder changed grid size to %d", newSize)
     }
 }

@@ -79,23 +79,26 @@ struct Map {
     }
 
     /// Create a new map with a random seed
-    static func random() -> Map {
-        generate(seed: UInt32.random(in: 0...UInt32.max))
+    static func random(size: Int = 8) -> Map {
+        generate(seed: UInt32.random(in: 0...UInt32.max), size: size)
     }
 
     /// Generate a map from a seed (deterministic for multiplayer sync)
-    static func generate(seed: UInt32) -> Map {
+    static func generate(seed: UInt32, size: Int = 8) -> Map {
         var rng = SeededRNG(seed: seed)
-        let size = 8
         var grid = Array(repeating: Array(repeating: false, count: size), count: size)
 
         // Protected spawn corners (2x2 areas in each corner)
-        let protected: Set<String> = [
-            "0,0", "0,1", "1,0", "1,1",  // Top-left
-            "6,6", "6,7", "7,6", "7,7",  // Bottom-right
-            "0,6", "0,7", "1,6", "1,7",  // Top-right
-            "6,0", "6,1", "7,0", "7,1"   // Bottom-left
-        ]
+        var protected = Set<String>()
+        for corner in [(0, 0), (size - 1, size - 1), (0, size - 1), (size - 1, 0)] {
+            for dr in 0...1 {
+                for dc in 0...1 {
+                    let r = min(max(corner.0 + dr - (corner.0 == size - 1 ? 1 : 0), 0), size - 1)
+                    let c = min(max(corner.1 + dc - (corner.1 == size - 1 ? 1 : 0), 0), size - 1)
+                    protected.insert("\(r),\(c)")
+                }
+            }
+        }
 
         // Keep border paths clear
         let border: Set<String> = {
