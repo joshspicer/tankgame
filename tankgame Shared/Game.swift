@@ -56,6 +56,11 @@ final class Game {
         var activeProjectiles: [Projectile] = []
         
         for var projectile in projectiles {
+            // Check if projectile is currently in a wall (e.g., spawned inside one)
+            if projectile.hitsWall(grid: map.grid) {
+                continue
+            }
+            
             projectile.advance()
             
             // Remove if out of bounds or hit wall
