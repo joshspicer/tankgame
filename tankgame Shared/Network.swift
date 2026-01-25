@@ -129,11 +129,13 @@ extension Network: MCSessionDelegate {
             guard let self else { return }
             switch state {
             case .connected:
+                NSLog("[Network] Connected to: %@... (total peers: %d)", String(peerID.displayName.prefix(8)), session.connectedPeers.count)
                 delegate?.network(self, peerConnected: peerID.displayName)
             case .notConnected:
+                NSLog("[Network] Disconnected from: %@...", String(peerID.displayName.prefix(8)))
                 delegate?.network(self, peerDisconnected: peerID.displayName)
             case .connecting:
-                break
+                NSLog("[Network] Connecting to: %@...", String(peerID.displayName.prefix(8)))
             @unknown default:
                 break
             }
@@ -174,10 +176,16 @@ extension Network: MCNearbyServiceAdvertiserDelegate {
 
 extension Network: MCNearbyServiceBrowserDelegate {
     func browser(_ browser: MCNearbyServiceBrowser, foundPeer peerID: MCPeerID, withDiscoveryInfo info: [String: String]?) {
+        // Skip if already connected
+        if session.connectedPeers.contains(where: { $0.displayName == peerID.displayName }) {
+            return
+        }
+
         // Deterministic invite: lower UUID invites higher UUID (prevents duplicate connections)
         let theirId = peerID.displayName
         if localPeerId < theirId {
             // We have lower UUID, so we invite them
+            NSLog("[Network] Inviting peer: %@...", String(theirId.prefix(8)))
             browser.invitePeer(peerID, to: session, withContext: nil, timeout: 30)
         }
         // If they have lower UUID, they will invite us

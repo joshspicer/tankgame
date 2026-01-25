@@ -21,6 +21,9 @@ class GameScene: SKScene {
 
     var game: Game?
 
+    /// Whether the local player is the elder (for debug display)
+    var isLocalPlayerElder: Bool = false
+
     // Layout constants
     let tileSize: CGFloat = 64
     let gridSize = 8
@@ -29,13 +32,17 @@ class GameScene: SKScene {
     private var gridNode: SKNode!
     private var tanksNode: SKNode!
     private var projectilesNode: SKNode!
+    private var borderNode: SKShapeNode!
 
     // UI elements
     private var joystickBase: SKShapeNode!
     private var joystickStick: SKShapeNode!
     private var fireButton: SKShapeNode!
-    private var scoreLabels: [SKLabelNode] = []
+    private var scoreboardNode: SKNode!
     private var statusLabel: SKLabelNode!
+    private var respawnOverlay: SKNode?
+    private var respawnCountdownLabel: SKLabelNode?
+    private var respawnEndTime: TimeInterval = 0
 
     // Touch tracking
     private var joystickTouch: UITouch?
@@ -48,11 +55,8 @@ class GameScene: SKScene {
     private let moveInterval: TimeInterval = 0.15
     private let projectileInterval: TimeInterval = 0.05
 
-    // Colors for players (8 base colors, hash fallback for more)
-    private let baseColors: [UIColor] = [
-        .systemBlue, .systemRed, .systemGreen, .systemOrange,
-        .systemPurple, .systemPink, .systemTeal, .systemYellow
-    ]
+    // Color cache to avoid recalculating (keyed by peerId)
+    private var colorCache: [String: UIColor] = [:]
 
     // MARK: - Scene Setup
 
@@ -79,6 +83,21 @@ class GameScene: SKScene {
         let gridWidth = CGFloat(gridSize) * tileSize
         let gridX = (size.width - gridWidth) / 2
         let gridY = size.height - gridWidth - 60
+
+        // Border around grid (will be colored with player color)
+        let borderPadding: CGFloat = 6
+        let borderRect = CGRect(
+            x: gridX - borderPadding,
+            y: gridY - borderPadding,
+            width: gridWidth + borderPadding * 2,
+            height: gridWidth + borderPadding * 2
+        )
+        borderNode = SKShapeNode(rect: borderRect, cornerRadius: 8)
+        borderNode.fillColor = .clear
+        borderNode.strokeColor = .white
+        borderNode.lineWidth = 4
+        borderNode.zPosition = -1
+        addChild(borderNode)
 
         gridNode = SKNode()
         gridNode.position = CGPoint(x: gridX, y: gridY)
@@ -133,19 +152,11 @@ class GameScene: SKScene {
         fireLabel.verticalAlignmentMode = .center
         fireButton.addChild(fireLabel)
 
-        // Score labels (top) - create 8 slots, show dynamically
-        for i in 0..<8 {
-            let label = SKLabelNode()
-            label.fontName = "AvenirNext-Bold"
-            label.fontSize = 16
-            label.horizontalAlignmentMode = .center
-            label.verticalAlignmentMode = .center
-            label.position = CGPoint(x: 40 + CGFloat(i % 4) * 140, y: size.height - 20 - CGFloat(i / 4) * 25)
-            label.zPosition = 100
-            label.isHidden = true
-            addChild(label)
-            scoreLabels.append(label)
-        }
+        // Scoreboard container (dynamically populated)
+        scoreboardNode = SKNode()
+        scoreboardNode.position = CGPoint(x: size.width / 2, y: size.height - 25)
+        scoreboardNode.zPosition = 100
+        addChild(scoreboardNode)
 
         // Status label
         statusLabel = SKLabelNode()
@@ -162,25 +173,33 @@ class GameScene: SKScene {
 
     // MARK: - Color Assignment
 
+    /// Generate a deterministic color from peerId - always the same for a given device
     private func color(for peerId: String) -> UIColor {
-        guard let game = game else { return baseColors[0] }
-
-        // Get sorted peer IDs for consistent ordering
-        let sortedIds = game.sortedPeerIds
-        if let index = sortedIds.firstIndex(of: peerId) {
-            if index < baseColors.count {
-                return baseColors[index]
-            }
-            // Hash fallback for >8 players
-            let hash = abs(peerId.hashValue)
-            return UIColor(
-                hue: CGFloat(hash % 360) / 360.0,
-                saturation: 0.7,
-                brightness: 0.9,
-                alpha: 1.0
-            )
+        // Check cache first
+        if let cached = colorCache[peerId] {
+            return cached
         }
-        return baseColors[0]
+
+        // Generate deterministic color from peerId using a stable hash
+        // Use a simple string hash that's stable across runs
+        var hash: UInt64 = 5381
+        for char in peerId.utf8 {
+            hash = ((hash << 5) &+ hash) &+ UInt64(char)
+        }
+
+        // Use golden ratio to spread hues evenly
+        let goldenRatio: Double = 0.618033988749895
+        let hue = (Double(hash % 1000) / 1000.0 + goldenRatio).truncatingRemainder(dividingBy: 1.0)
+
+        let color = UIColor(
+            hue: CGFloat(hue),
+            saturation: 0.7,
+            brightness: 0.85,
+            alpha: 1.0
+        )
+
+        colorCache[peerId] = color
+        return color
     }
 
     // MARK: - Rendering
@@ -223,18 +242,20 @@ class GameScene: SKScene {
         for (peerId, data) in game.players {
             if let node = tanksNode.childNode(withName: "tank_\(peerId)") {
                 if data.tank.isAlive {
+                    // Ensure node is visible (might have been faded from death animation)
+                    node.alpha = 1.0
+                    node.setScale(1.0)
+                    node.removeAllActions()
+
                     let targetPos = position(for: data.tank.row, col: data.tank.col)
                     let move = SKAction.move(to: targetPos, duration: 0.1)
                     let rotate = SKAction.rotate(toAngle: CGFloat(data.tank.direction.rotation), duration: 0.1, shortestUnitArc: true)
                     node.run(SKAction.group([move, rotate]))
                 } else {
-                    // Death animation
-                    let explode = SKAction.sequence([
-                        SKAction.group([
-                            SKAction.scale(to: 1.5, duration: 0.15),
-                            SKAction.fadeOut(withDuration: 0.15)
-                        ]),
-                        SKAction.removeFromParent()
+                    // Death animation - just hide, don't remove (spawnTank handles removal)
+                    let explode = SKAction.group([
+                        SKAction.scale(to: 1.5, duration: 0.15),
+                        SKAction.fadeOut(withDuration: 0.15)
                     ])
                     node.run(explode)
                 }
@@ -295,8 +316,11 @@ class GameScene: SKScene {
 
     /// Spawn a tank with animation
     func spawnTank(for peerId: String, at row: Int, col: Int, direction: Direction) {
-        // Remove existing node if any
-        tanksNode.childNode(withName: "tank_\(peerId)")?.removeFromParent()
+        // Remove ALL existing nodes for this player (stop any running death animations)
+        while let existingNode = tanksNode.childNode(withName: "tank_\(peerId)") {
+            existingNode.removeAllActions()
+            existingNode.removeFromParent()
+        }
 
         let tankNode = createTankNode(color: color(for: peerId))
         tankNode.position = position(for: row, col: col)
@@ -385,28 +409,102 @@ class GameScene: SKScene {
     func updateScores() {
         guard let game = game else { return }
 
-        // Hide all labels first
-        for label in scoreLabels {
-            label.isHidden = true
+        // Update border to local player's color
+        let myColor = color(for: game.localPeerId)
+        borderNode.strokeColor = myColor
+
+        // Rebuild scoreboard
+        scoreboardNode.removeAllChildren()
+
+        // Sort players by score (descending), then by peerId
+        let sortedPlayers = game.players.sorted { a, b in
+            if a.value.score != b.value.score {
+                return a.value.score > b.value.score
+            }
+            return a.key < b.key
         }
 
-        // Show scores for current players
-        let sortedIds = game.sortedPeerIds
-        for (i, peerId) in sortedIds.enumerated() {
-            guard i < scoreLabels.count else { break }
+        // Create compact score display
+        let maxDisplay = min(sortedPlayers.count, 6)
+        let spacing: CGFloat = 90
+        let startX = -CGFloat(maxDisplay - 1) * spacing / 2
 
-            let label = scoreLabels[i]
-            label.isHidden = false
-            label.fontColor = color(for: peerId)
+        // Determine who is the elder (lowest peerId alphabetically)
+        let elderPeerId = sortedPlayers.map(\.key).sorted().first
 
+        for (i, (peerId, _)) in sortedPlayers.prefix(maxDisplay).enumerated() {
+            let playerColor = color(for: peerId)
             let score = game.score(for: peerId)
-            if peerId == game.localPeerId {
-                label.text = "You: \(score)"
+            let isLocal = peerId == game.localPeerId
+            let isElder = peerId == elderPeerId
+
+            // Color indicator - star for elder, dot for others
+            if isElder {
+                // Star shape for elder
+                let star = SKLabelNode(text: "★")
+                star.fontName = "AvenirNext-Bold"
+                star.fontSize = 16
+                star.fontColor = playerColor
+                star.horizontalAlignmentMode = .center
+                star.verticalAlignmentMode = .center
+                star.position = CGPoint(x: startX + CGFloat(i) * spacing - 25, y: 0)
+                if isLocal {
+                    // Add glow effect for local elder
+                    let glow = SKLabelNode(text: "★")
+                    glow.fontName = "AvenirNext-Bold"
+                    glow.fontSize = 20
+                    glow.fontColor = .white
+                    glow.alpha = 0.5
+                    glow.horizontalAlignmentMode = .center
+                    glow.verticalAlignmentMode = .center
+                    glow.position = star.position
+                    glow.zPosition = -1
+                    scoreboardNode.addChild(glow)
+                }
+                scoreboardNode.addChild(star)
             } else {
-                // Show abbreviated peer ID
-                let shortId = String(peerId.prefix(4))
-                label.text = "\(shortId): \(score)"
+                // Regular dot
+                let dot = SKShapeNode(circleOfRadius: 6)
+                dot.fillColor = playerColor
+                dot.strokeColor = isLocal ? .white : .clear
+                dot.lineWidth = isLocal ? 2 : 0
+                dot.position = CGPoint(x: startX + CGFloat(i) * spacing - 25, y: 0)
+                scoreboardNode.addChild(dot)
             }
+
+            // Score text
+            let label = SKLabelNode(text: "\(score)")
+            label.fontName = "AvenirNext-Bold"
+            label.fontSize = isLocal ? 18 : 14
+            label.fontColor = playerColor
+            label.horizontalAlignmentMode = .left
+            label.verticalAlignmentMode = .center
+            label.position = CGPoint(x: startX + CGFloat(i) * spacing - 12, y: 0)
+            scoreboardNode.addChild(label)
+
+            // "YOU" label for local player
+            if isLocal {
+                let youLabel = SKLabelNode(text: "YOU")
+                youLabel.fontName = "AvenirNext-Bold"
+                youLabel.fontSize = 10
+                youLabel.fontColor = playerColor.withAlphaComponent(0.7)
+                youLabel.horizontalAlignmentMode = .center
+                youLabel.verticalAlignmentMode = .center
+                youLabel.position = CGPoint(x: startX + CGFloat(i) * spacing - 5, y: -15)
+                scoreboardNode.addChild(youLabel)
+            }
+        }
+
+        // If more players than displayed, show count
+        if sortedPlayers.count > maxDisplay {
+            let moreLabel = SKLabelNode(text: "+\(sortedPlayers.count - maxDisplay)")
+            moreLabel.fontName = "AvenirNext-Bold"
+            moreLabel.fontSize = 12
+            moreLabel.fontColor = SKColor(white: 0.6, alpha: 1)
+            moreLabel.horizontalAlignmentMode = .left
+            moreLabel.verticalAlignmentMode = .center
+            moreLabel.position = CGPoint(x: startX + CGFloat(maxDisplay) * spacing - 25, y: 0)
+            scoreboardNode.addChild(moreLabel)
         }
     }
 
@@ -420,6 +518,78 @@ class GameScene: SKScene {
             SKAction.fadeOut(withDuration: 0.3),
             SKAction.run { self.statusLabel.isHidden = true }
         ]))
+    }
+
+    /// Show respawn countdown with spinner animation
+    func showRespawnCountdown(duration: TimeInterval) {
+        // Remove any existing overlay
+        hideRespawnCountdown()
+
+        // Create overlay container
+        let overlay = SKNode()
+        overlay.zPosition = 150
+
+        // Dimmed background
+        let dimBackground = SKShapeNode(rect: CGRect(origin: .zero, size: size))
+        dimBackground.fillColor = SKColor(white: 0, alpha: 0.4)
+        dimBackground.strokeColor = .clear
+        dimBackground.position = .zero
+        overlay.addChild(dimBackground)
+
+        // Center container for spinner and text
+        let centerY = size.height / 2
+
+        // Spinner ring
+        let spinnerRadius: CGFloat = 40
+        let spinner = SKShapeNode()
+        let path = CGMutablePath()
+        path.addArc(center: .zero, radius: spinnerRadius, startAngle: 0, endAngle: .pi * 1.5, clockwise: false)
+        spinner.path = path
+        spinner.strokeColor = .white
+        spinner.lineWidth = 4
+        spinner.lineCap = .round
+        spinner.position = CGPoint(x: size.width / 2, y: centerY + 20)
+        spinner.zPosition = 151
+
+        // Rotate spinner continuously
+        let rotate = SKAction.rotate(byAngle: -.pi * 2, duration: 1.0)
+        spinner.run(SKAction.repeatForever(rotate))
+        overlay.addChild(spinner)
+
+        // Countdown label inside spinner
+        let countdownLabel = SKLabelNode()
+        countdownLabel.fontName = "AvenirNext-Bold"
+        countdownLabel.fontSize = 24
+        countdownLabel.fontColor = .white
+        countdownLabel.horizontalAlignmentMode = .center
+        countdownLabel.verticalAlignmentMode = .center
+        countdownLabel.position = CGPoint(x: size.width / 2, y: centerY + 20)
+        countdownLabel.zPosition = 152
+        overlay.addChild(countdownLabel)
+
+        // "RESPAWNING" label below
+        let respawnLabel = SKLabelNode(text: "RESPAWNING")
+        respawnLabel.fontName = "AvenirNext-Bold"
+        respawnLabel.fontSize = 18
+        respawnLabel.fontColor = SKColor(white: 0.8, alpha: 1)
+        respawnLabel.horizontalAlignmentMode = .center
+        respawnLabel.verticalAlignmentMode = .center
+        respawnLabel.position = CGPoint(x: size.width / 2, y: centerY - 40)
+        respawnLabel.zPosition = 151
+        overlay.addChild(respawnLabel)
+
+        addChild(overlay)
+        respawnOverlay = overlay
+        respawnCountdownLabel = countdownLabel
+        respawnEndTime = CACurrentMediaTime() + duration
+    }
+
+    /// Hide respawn countdown
+    func hideRespawnCountdown() {
+        respawnOverlay?.removeFromParent()
+        respawnOverlay = nil
+        respawnCountdownLabel = nil
+        respawnEndTime = 0
     }
 
     // MARK: - Touch Handling
@@ -511,6 +681,15 @@ class GameScene: SKScene {
     // MARK: - Game Loop
 
     override func update(_ currentTime: TimeInterval) {
+        // Update respawn countdown label
+        if respawnEndTime > 0 {
+            let remaining = max(0, respawnEndTime - CACurrentMediaTime())
+            respawnCountdownLabel?.text = String(format: "%.1f", remaining)
+            if remaining <= 0 {
+                hideRespawnCountdown()
+            }
+        }
+
         guard let game = game else { return }
 
         // Get a local copy of the tank to avoid exclusive access violations

@@ -37,6 +37,9 @@ enum GameMessage: Codable {
     /// Full world state sent to new joiners
     case worldState(WorldState)
 
+    /// Periodic sync of all player states (sent by elder)
+    case sync(players: [PlayerState], scores: [String: Int])
+
     /// Player joined the game
     case playerJoined(peerId: String)
 

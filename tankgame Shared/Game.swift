@@ -52,9 +52,10 @@ final class Game {
     // MARK: - Player Management
 
     /// Add a player at the safest spawn position
+    /// Returns the new tank if created, or nil if player already exists
     @discardableResult
     func addPlayer(peerId: String) -> Tank? {
-        guard players[peerId] == nil else { return players[peerId]?.tank }
+        guard players[peerId] == nil else { return nil }
 
         let spawn = findSpawnPosition(for: peerId)
         let tank = Tank(row: spawn.row, col: spawn.col, direction: spawn.direction)
@@ -77,74 +78,72 @@ final class Game {
     }
 
     /// Find the safest spawn position (farthest from other tanks)
-    /// For a new player with given peerId
+    /// For a new player with given peerId, with jitter to avoid collisions
     func findSpawnPosition(for peerId: String? = nil) -> (row: Int, col: Int, direction: Direction) {
         let gridSize = map.size
 
-        // Corner positions
-        let corners: [(row: Int, col: Int, direction: Direction)] = [
-            (0, 0, .down),                      // Top-left
-            (gridSize - 1, gridSize - 1, .up),  // Bottom-right
-            (0, gridSize - 1, .left),           // Top-right
-            (gridSize - 1, 0, .right)           // Bottom-left
-        ]
-
-        // If no other players, use peerId hash to pick a corner deterministically
-        let alivePlayers = players.values.filter { $0.tank.isAlive }
-        if alivePlayers.isEmpty {
-            if let peerId = peerId {
-                let cornerIndex = abs(peerId.hashValue) % corners.count
-                return corners[cornerIndex]
+        // All perimeter positions (not just corners) for more options
+        var perimeterPositions: [(row: Int, col: Int, direction: Direction)] = []
+        for i in 0..<gridSize {
+            perimeterPositions.append((0, i, .down))           // Top edge
+            perimeterPositions.append((gridSize - 1, i, .up))  // Bottom edge
+            if i > 0 && i < gridSize - 1 {
+                perimeterPositions.append((i, 0, .right))              // Left edge
+                perimeterPositions.append((i, gridSize - 1, .left))    // Right edge
             }
-            return corners[0]
         }
 
-        // Find the corner farthest from all other tanks
-        var bestPosition = corners[0]
-        var bestMinDistance: Int = -1
+        // Filter out walls
+        perimeterPositions = perimeterPositions.filter { !map.grid[$0.row][$0.col] }
 
-        for corner in corners {
-            // Skip if wall
-            guard !map.grid[corner.row][corner.col] else { continue }
+        // If no other players, use peerId hash to pick a position deterministically
+        let alivePlayers = players.values.filter { $0.tank.isAlive }
+        if alivePlayers.isEmpty {
+            if let peerId = peerId, !perimeterPositions.isEmpty {
+                // Use stable hash for deterministic but spread-out positions
+                var hash: UInt64 = 5381
+                for char in peerId.utf8 {
+                    hash = ((hash << 5) &+ hash) &+ UInt64(char)
+                }
+                let index = Int(hash % UInt64(perimeterPositions.count))
+                return perimeterPositions[index]
+            }
+            return perimeterPositions.first ?? (0, 0, .down)
+        }
 
-            // Calculate minimum distance to any alive tank
+        // Score each position by minimum distance to other tanks
+        var scoredPositions: [(pos: (row: Int, col: Int, direction: Direction), score: Int)] = []
+
+        for pos in perimeterPositions {
             var minDistance = Int.max
             for (_, data) in players {
                 guard data.tank.isAlive else { continue }
-                let dist = abs(data.tank.row - corner.row) + abs(data.tank.col - corner.col)
+                let dist = abs(data.tank.row - pos.row) + abs(data.tank.col - pos.col)
                 minDistance = min(minDistance, dist)
             }
-
-            if minDistance > bestMinDistance {
-                bestMinDistance = minDistance
-                bestPosition = corner
-            }
+            scoredPositions.append((pos, minDistance))
         }
 
-        // If all corners occupied, search the full perimeter
-        if bestMinDistance <= 1 {
-            for row in 0..<gridSize {
-                for col in 0..<gridSize {
-                    guard row == 0 || row == gridSize - 1 || col == 0 || col == gridSize - 1 else { continue }
-                    guard !map.grid[row][col] else { continue }
+        // Sort by distance (farthest first)
+        scoredPositions.sort { $0.score > $1.score }
 
-                    var minDistance = Int.max
-                    for (_, data) in players {
-                        guard data.tank.isAlive else { continue }
-                        let dist = abs(data.tank.row - row) + abs(data.tank.col - col)
-                        minDistance = min(minDistance, dist)
-                    }
+        // Take the top candidates (within 2 of best score) and pick randomly based on peerId
+        let bestScore = scoredPositions.first?.score ?? 0
+        let candidates = scoredPositions.filter { $0.score >= bestScore - 2 }
 
-                    if minDistance > bestMinDistance {
-                        bestMinDistance = minDistance
-                        let direction = spawnDirection(for: row, col: col, gridSize: gridSize)
-                        bestPosition = (row, col, direction)
-                    }
-                }
+        if let peerId = peerId, !candidates.isEmpty {
+            // Use peerId hash + current time for jitter
+            var hash: UInt64 = 5381
+            for char in peerId.utf8 {
+                hash = ((hash << 5) &+ hash) &+ UInt64(char)
             }
+            // Add time-based jitter
+            hash = hash &+ UInt64(Date().timeIntervalSince1970 * 1000) % 997
+            let index = Int(hash % UInt64(candidates.count))
+            return candidates[index].pos
         }
 
-        return bestPosition
+        return candidates.first?.pos ?? perimeterPositions.first ?? (0, 0, .down)
     }
 
     /// Determine facing direction based on spawn position
@@ -156,16 +155,68 @@ final class Game {
     }
 
     /// Respawn a dead player at the safest position
-    func respawnPlayer(peerId: String) {
-        guard var data = players[peerId] else { return }
-
+    /// Returns the respawn position, or nil if respawn failed
+    @discardableResult
+    func respawnPlayer(peerId: String) -> (row: Int, col: Int, direction: Direction)? {
         let spawn = findSpawnPosition(for: peerId)
-        data.tank = Tank(row: spawn.row, col: spawn.col, direction: spawn.direction)
-        data.tank.isAlive = true
-        players[peerId] = data
+
+        if var data = players[peerId] {
+            // Player exists - update their position
+            data.tank = Tank(row: spawn.row, col: spawn.col, direction: spawn.direction)
+            data.tank.isAlive = true
+            players[peerId] = data
+        } else {
+            // Player doesn't exist - create them
+            var tank = Tank(row: spawn.row, col: spawn.col, direction: spawn.direction)
+            tank.isAlive = true
+            players[peerId] = PlayerData(tank: tank, score: 0)
+        }
+
+        return spawn
     }
 
     // MARK: - World State Sync
+
+    /// Create player states array for periodic sync
+    func createPlayerStates() -> [PlayerState] {
+        players.map { (peerId, data) in
+            PlayerState(
+                peerId: peerId,
+                row: data.tank.row,
+                col: data.tank.col,
+                direction: data.tank.direction,
+                isAlive: data.tank.isAlive
+            )
+        }
+    }
+
+    /// Apply sync data from elder
+    func applySync(players syncPlayers: [PlayerState], scores syncScores: [String: Int]) {
+        for playerState in syncPlayers {
+            if var data = players[playerState.peerId] {
+                // Update existing player
+                data.tank.row = playerState.row
+                data.tank.col = playerState.col
+                data.tank.direction = playerState.direction
+                data.tank.isAlive = playerState.isAlive
+                data.score = syncScores[playerState.peerId] ?? data.score
+                players[playerState.peerId] = data
+            } else {
+                // Add missing player
+                var tank = Tank(row: playerState.row, col: playerState.col, direction: playerState.direction)
+                tank.isAlive = playerState.isAlive
+                players[playerState.peerId] = PlayerData(tank: tank, score: syncScores[playerState.peerId] ?? 0)
+            }
+        }
+
+        // Remove players that aren't in the sync (they left)
+        let syncPeerIds = Set(syncPlayers.map(\.peerId))
+        for peerId in players.keys {
+            if peerId != localPeerId && !syncPeerIds.contains(peerId) {
+                players.removeValue(forKey: peerId)
+            }
+        }
+    }
 
     /// Create world state for syncing new joiners
     func createWorldState() -> WorldState {
@@ -219,11 +270,36 @@ final class Game {
         var activeProjectiles: [Projectile] = []
 
         for var projectile in projectiles {
-            // Check if projectile is currently in a wall
+            // Check if projectile is currently in a wall (shouldn't happen normally)
             if projectile.hitsWall(grid: map.grid) {
                 continue
             }
 
+            // Check tank collisions at CURRENT position (before advancing)
+            // This catches adjacent-cell hits where projectile spawns on top of enemy
+            var hitSomething = false
+            for (peerId, data) in players {
+                // Don't let a projectile hit its owner on spawn
+                if peerId == projectile.ownerId { continue }
+
+                if projectile.hitsTank(data.tank) {
+                    players[peerId]?.tank.isAlive = false
+                    hitPeers.append(peerId)
+                    hitSomething = true
+
+                    // Award point to shooter
+                    if let shooterData = players[projectile.ownerId] {
+                        players[projectile.ownerId]?.score = shooterData.score + 1
+                    }
+                    break
+                }
+            }
+
+            if hitSomething {
+                continue
+            }
+
+            // Advance projectile
             projectile.advance()
 
             // Remove if out of bounds or hit wall
@@ -231,8 +307,7 @@ final class Game {
                 continue
             }
 
-            // Check tank collisions
-            var hitSomething = false
+            // Check tank collisions at NEW position (after advancing)
             for (peerId, data) in players {
                 if projectile.hitsTank(data.tank) {
                     players[peerId]?.tank.isAlive = false
