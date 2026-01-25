@@ -18,7 +18,7 @@ This is an Xcode project using MultiPlayKit for multiplayer networking.
 
 - **MultiPlayKit** - Peer-to-peer multiplayer library (elder pattern, not host/client)
   - See: https://github.com/joshspicer/MultiPlayKit
-  - Patterns documented in: `~/git/skills/ios-project-setup/references/custom-libraries.md`
+  - Patterns: `ios-project-setup` skill → `custom-libraries.md` (or https://github.com/joshspicer/skills)
 
 ## Architecture
 
