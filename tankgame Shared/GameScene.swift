@@ -25,8 +25,16 @@ class GameScene: SKScene {
     var isLocalPlayerElder: Bool = false
 
     // Layout constants
-    let tileSize: CGFloat = 64
     let gridSize = 8
+
+    /// Tile size calculated to fit the screen
+    private var tileSize: CGFloat {
+        // Use the smaller dimension to ensure grid fits, with padding for UI
+        let availableWidth = size.width - 40  // 20px padding each side
+        let availableHeight = size.height - 280  // Leave room for controls at bottom
+        let maxGridSize = min(availableWidth, availableHeight)
+        return floor(maxGridSize / CGFloat(gridSize))
+    }
 
     // Node containers
     private var gridNode: SKNode!
@@ -61,8 +69,8 @@ class GameScene: SKScene {
     // MARK: - Scene Setup
 
     static func newScene() -> GameScene {
-        let scene = GameScene(size: CGSize(width: 600, height: 800))
-        scene.scaleMode = .aspectFit
+        let scene = GameScene()
+        scene.scaleMode = .resizeFill
         return scene
     }
 
@@ -152,9 +160,11 @@ class GameScene: SKScene {
         fireLabel.verticalAlignmentMode = .center
         fireButton.addChild(fireLabel)
 
-        // Scoreboard container (dynamically populated)
+        // Scoreboard container (positioned below grid)
+        let gridWidth = CGFloat(gridSize) * tileSize
+        let gridBottomY = size.height - gridWidth - 60  // Same calculation as setupNodes
         scoreboardNode = SKNode()
-        scoreboardNode.position = CGPoint(x: size.width / 2, y: size.height - 25)
+        scoreboardNode.position = CGPoint(x: size.width / 2, y: gridBottomY - 25)
         scoreboardNode.zPosition = 100
         addChild(scoreboardNode)
 
