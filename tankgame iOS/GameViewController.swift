@@ -265,19 +265,25 @@ extension GameViewController: NetworkDelegate {
             game.projectiles.append(projectile)
             gameScene?.renderProjectiles()
 
-        case .hit(let hitPeerId):
+        case .hit(let victimId, let shooterId):
             guard let game = game, let scene = gameScene else { return }
 
             // Only process if player exists and is alive
-            guard let playerData = game.players[hitPeerId], playerData.tank.isAlive else { return }
+            guard let playerData = game.players[victimId], playerData.tank.isAlive else { return }
 
-            game.players[hitPeerId]?.tank.isAlive = false
+            game.players[victimId]?.tank.isAlive = false
+
+            // Award point to shooter (so all peers have consistent scores)
+            if let shooterData = game.players[shooterId] {
+                game.players[shooterId]?.score = shooterData.score + 1
+            }
+
             scene.renderTanksSmooth()
             scene.updateScores()
 
             // Schedule respawn for local player
-            if hitPeerId == network.localPeerId {
-                scheduleRespawn(for: hitPeerId)
+            if victimId == network.localPeerId {
+                scheduleRespawn(for: victimId)
             }
 
         case .respawn(let respawnPeerId, let row, let col, let direction):
@@ -317,10 +323,10 @@ extension GameViewController: GameSceneDelegate {
     }
 
     func gameScene(_ scene: GameScene, playerHit peerId: String) {
-        guard game != nil else { return }
+        guard let game = game else { return }
 
-        // Broadcast hit
-        network.send(.hit(peerId: peerId))
+        // Broadcast hit with shooter info (local player is the shooter since we computed the hit)
+        network.send(.hit(victimId: peerId, byShooterId: game.localPeerId))
 
         // Update score display
         scene.updateScores()

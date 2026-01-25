@@ -52,8 +52,8 @@ enum GameMessage: Codable {
     /// Player fired a projectile
     case shoot(peerId: String, projectile: ProjectileState)
 
-    /// Player was hit and eliminated
-    case hit(peerId: String)
+    /// Player was hit and eliminated (includes shooter for score tracking)
+    case hit(victimId: String, byShooterId: String)
 
     /// Player respawned
     case respawn(peerId: String, row: Int, col: Int, direction: Direction)
