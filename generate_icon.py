@@ -42,8 +42,8 @@ def draw_tank_icon():
     barrel_width = 60
     barrel_length = 220
 
-    # Position tank slightly lower so barrel+flash are centered
-    tank_cy = CENTER + 60
+    # Position tank centered
+    tank_cy = CENTER
 
     # === TANK BODY (treads) ===
     # Left tread
@@ -104,43 +104,6 @@ def draw_tank_icon():
         CENTER - barrel_width // 2 - 5, barrel_y_end,
         CENTER + barrel_width // 2 + 5, barrel_y_end + tip_height
     ], radius=10, fill=TANK_DARK)
-
-    # === MUZZLE FLASH (action!) ===
-    flash_cy = barrel_y_end - 50
-
-    # Outer glow (larger, softer)
-    for i in range(5, 0, -1):
-        glow_size = 60 + i * 25
-        alpha = 0.15 + (5 - i) * 0.1
-        glow_color = (
-            int(FLASH_OUTER[0] * alpha + BG_MEDIUM[0] * (1 - alpha)),
-            int(FLASH_OUTER[1] * alpha + BG_MEDIUM[1] * (1 - alpha)),
-            int(FLASH_OUTER[2] * alpha + BG_MEDIUM[2] * (1 - alpha))
-        )
-        draw.ellipse([
-            CENTER - glow_size, flash_cy - glow_size // 2,
-            CENTER + glow_size, flash_cy + glow_size // 2
-        ], fill=glow_color)
-
-    # Inner flash (bright core)
-    draw.ellipse([
-        CENTER - 50, flash_cy - 35,
-        CENTER + 50, flash_cy + 35
-    ], fill=MUZZLE_FLASH)
-
-    # Bright center
-    draw.ellipse([
-        CENTER - 25, flash_cy - 20,
-        CENTER + 25, flash_cy + 20
-    ], fill=(255, 255, 220))
-
-    # === PROJECTILE ===
-    proj_y = flash_cy - 80
-    proj_size = 28
-    draw.ellipse([
-        CENTER - proj_size // 2, proj_y - proj_size // 2,
-        CENTER + proj_size // 2, proj_y + proj_size // 2
-    ], fill=PROJECTILE)
 
     return img
 
