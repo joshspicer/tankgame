@@ -251,6 +251,9 @@
 			);
 			mainGroup = 0AEBC8082EB14C4000890CC1;
 			minimizedProjectReferenceProxies = 1;
+			packageReferences = (
+				03FCEF512F2681830019ACE9 /* XCRemoteSwiftPackageReference "MultiPlayKit" */,
+			);
 			preferredProjectObjectVersion = 77;
 			productRefGroup = 0AEBC8172EB14C4300890CC1 /* Products */;
 			projectDirPath = "";
@@ -650,6 +653,17 @@
 			defaultConfigurationName = Release;
 		};
 /* End XCConfigurationList section */
+
+/* Begin XCRemoteSwiftPackageReference section */
+		03FCEF512F2681830019ACE9 /* XCRemoteSwiftPackageReference "MultiPlayKit" */ = {
+			isa = XCRemoteSwiftPackageReference;
+			repositoryURL = "https://github.com/joshspicer/MultiPlayKit.git";
+			requirement = {
+				kind = upToNextMajorVersion;
+				minimumVersion = 1.0.0;
+			};
+		};
+/* End XCRemoteSwiftPackageReference section */
 	};
 	rootObject = 0AEBC8092EB14C4000890CC1 /* Project object */;
 }
