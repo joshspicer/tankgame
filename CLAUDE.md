@@ -4,11 +4,21 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 ## Build & Development
 
-This is a pure Xcode project (no external package managers). Use XcodeBuildMCP tools for building and testing.
+This is an Xcode project using MultiPlayKit for multiplayer networking.
+
+**Local Development:** Open `tankgame.xcworkspace` (not `.xcodeproj`) to use the local MultiPlayKit package.
+
+**CI/Distribution:** The `.xcodeproj` references the remote GitHub URL and works without local packages.
 
 **Targets:** `tankgame iOS`, `tankgame macOS`, `tankgame tvOS`
 
 **Testing Multiplayer:** Launch two iOS simulators simultaneously via XcodeBuildMCP to test peer-to-peer networking.
+
+## Dependencies
+
+- **MultiPlayKit** - Peer-to-peer multiplayer library (elder pattern, not host/client)
+  - See: https://github.com/joshspicer/MultiPlayKit
+  - Patterns documented in: `~/git/skills/ios-project-setup/references/custom-libraries.md`
 
 ## Architecture
 
@@ -23,8 +33,8 @@ Tank Battle is a multiplayer tank game using SpriteKit for rendering and Multipe
 - `Map.swift` - Procedural 8x8 grid generation with seeded RNG for multiplayer sync
 
 **Networking** (`tankgame Shared/`):
-- `Network.swift` - MultipeerConnectivity wrapper handling peer discovery, sessions, message encoding
-- `Messages.swift` - Network protocol with 6 message types (roundStart, move, shoot, hit, ready, etc.)
+- `Network.swift` - Wrapper around MultiPlayKit's PeerSession for peer discovery, elder election, and message passing
+- `Messages.swift` - Game messages conforming to PeerMessage protocol
 
 **Rendering** (`tankgame Shared/`):
 - `GameScene.swift` - Core SpriteKit scene definition and setup
