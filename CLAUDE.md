@@ -27,7 +27,12 @@ Tank Battle is a multiplayer tank game using SpriteKit for rendering and Multipe
 - `Messages.swift` - Network protocol with 6 message types (roundStart, move, shoot, hit, ready, etc.)
 
 **Rendering** (`tankgame Shared/`):
-- `GameScene.swift` - SpriteKit scene with joystick input, game loop (movement at 150ms, projectiles at 50ms)
+- `GameScene.swift` - Core SpriteKit scene definition and setup
+- `GameScene+Rendering.swift` - Grid, tank, and projectile rendering
+- `GameScene+UI.swift` - Scoreboard, status labels, respawn overlay
+- `GameScene+Settings.swift` - Settings modal and elder-only controls
+- `GameScene+Input.swift` - Touch handling: joystick, fire button
+- `GameScene+GameLoop.swift` - Main update loop (movement at 150ms, projectiles at 50ms)
 
 **Platform UI** (`tankgame iOS/`, `tankgame macOS/`, `tankgame tvOS/`):
 - `GameViewController.swift` - Lobby UI, network delegation, scene presentation
@@ -48,5 +53,7 @@ Maps use seeded random generation (Linear Congruential Generator) so all clients
 ## Development Guidelines
 
 **Modularity is critical:** When adding features, create NEW Swift files for specific functionality rather than expanding existing files. This prevents merge conflicts during parallel development.
+
+**Split large files:** When a file exceeds ~200 lines, split it into multiple extension files (e.g., `GameScene+Rendering.swift`, `GameScene+UI.swift`). Keep each extension focused on a single responsibility. This improves readability and maintainability.
 
 **Avoid refactoring existing code** unless explicitly requested. Keep changes focused and additive.
