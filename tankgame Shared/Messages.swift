@@ -6,6 +6,7 @@
 //
 
 import Foundation
+import MultiPlayKit
 
 /// Player state for network sync
 struct PlayerState: Codable, Equatable {
@@ -34,7 +35,8 @@ struct WorldState: Codable {
 }
 
 /// All network message types for the game
-enum GameMessage: Codable {
+enum GameMessage: Codable, PeerMessage, @unchecked Sendable {
+    static var messageType: String { "GameMessage" }
     /// Full world state sent to new joiners
     case worldState(WorldState)
 
