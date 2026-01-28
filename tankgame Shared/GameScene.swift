@@ -14,6 +14,8 @@ protocol GameSceneDelegate: AnyObject {
     func gameScene(_ scene: GameScene, playerShot projectile: Projectile)
     func gameScene(_ scene: GameScene, playerHit victimId: String, byShooter shooterId: String)
     func gameScene(_ scene: GameScene, didChangeGridSize delta: Int)
+    func gameScene(_ scene: GameScene, powerUpSpawned powerUp: PowerUp)
+    func gameScene(_ scene: GameScene, powerUpCollected powerUp: PowerUp, by peerId: String)
 }
 
 /// Main game scene
@@ -46,6 +48,7 @@ class GameScene: SKScene {
     var gridNode: SKNode!
     var tanksNode: SKNode!
     var projectilesNode: SKNode!
+    var powerUpsNode: SKNode!
     var borderNode: SKShapeNode!
 
     // MARK: - UI Elements
@@ -136,6 +139,11 @@ class GameScene: SKScene {
         projectilesNode.position = gridNode.position
         projectilesNode.zPosition = 5
         addChild(projectilesNode)
+
+        powerUpsNode = SKNode()
+        powerUpsNode.position = gridNode.position
+        powerUpsNode.zPosition = 3
+        addChild(powerUpsNode)
     }
 
     /// Full refresh for world state sync
@@ -143,6 +151,7 @@ class GameScene: SKScene {
         renderGrid()
         renderTanks()
         renderProjectiles()
+        renderPowerUps()
         updateScores()
     }
 

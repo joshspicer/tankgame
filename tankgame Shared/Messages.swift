@@ -31,6 +31,7 @@ struct WorldState: Codable {
     let gridSize: Int
     let players: [PlayerState]
     let projectiles: [ProjectileState]
+    let powerUps: [PowerUpState]
     let scores: [String: Int]
 }
 
@@ -60,4 +61,10 @@ enum GameMessage: Codable, PeerMessage, @unchecked Sendable {
 
     /// Player respawned
     case respawn(peerId: String, row: Int, col: Int, direction: Direction)
+
+    /// Powerup spawned
+    case powerUpSpawned(PowerUpState)
+
+    /// Powerup collected
+    case powerUpCollected(powerUpId: String, peerId: String)
 }

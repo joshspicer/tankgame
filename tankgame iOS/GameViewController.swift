@@ -313,6 +313,30 @@ extension GameViewController: NetworkDelegate {
             }
 
             scene.spawnTank(for: respawnPeerId, at: row, col: col, direction: direction)
+
+        case .powerUpSpawned(let powerUpState):
+            guard let game = game, let scene = gameScene else { return }
+            let powerUp = PowerUp.from(powerUpState)
+            game.powerUps.append(powerUp)
+            scene.renderPowerUps()
+
+        case .powerUpCollected(let powerUpId, let collectingPeerId):
+            guard let game = game, let scene = gameScene else { return }
+
+            // Remove the powerup
+            if let index = game.powerUps.firstIndex(where: { $0.id == powerUpId }) {
+                let powerUp = game.powerUps.remove(at: index)
+
+                // Apply effect to the collecting player
+                let effect = powerUp.type.createEffect()
+                let currentTime = CACurrentMediaTime()
+                game.players[collectingPeerId]?.tank.applyPowerUp(effect, currentTime: currentTime)
+
+                // Show effect if it's visible
+                scene.showPowerUpCollectionEffect(at: powerUp.row, col: powerUp.col, type: powerUp.type)
+                scene.renderPowerUps()
+                scene.renderTanksSmooth()
+            }
         }
     }
 }
@@ -369,5 +393,15 @@ extension GameViewController: GameSceneDelegate {
         scene.updateSettingsUI()
 
         NSLog("[Game] Elder changed grid size to %d", newSize)
+    }
+
+    func gameScene(_ scene: GameScene, powerUpSpawned powerUp: PowerUp) {
+        // Elder spawned a powerup, broadcast to all peers
+        network.send(.powerUpSpawned(powerUp.toState()))
+    }
+
+    func gameScene(_ scene: GameScene, powerUpCollected powerUp: PowerUp, by peerId: String) {
+        // Player collected a powerup, broadcast to all peers
+        network.send(.powerUpCollected(powerUpId: powerUp.id, peerId: peerId))
     }
 }

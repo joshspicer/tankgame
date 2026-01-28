@@ -18,8 +18,11 @@ final class Game {
     var map: Map
     var players: [String: PlayerData] = [:]  // Keyed by peerId
     var projectiles: [Projectile] = []
+    var powerUps: [PowerUp] = []
     let localPeerId: String
     private(set) var gridSize: Int
+    private var lastPowerUpSpawn: TimeInterval = 0
+    private let powerUpSpawnInterval: TimeInterval = 10.0
 
     /// Create a new game state
     init(seed: UInt32, localPeerId: String, gridSize: Int = 8) {
@@ -233,12 +236,14 @@ final class Game {
         }
 
         let projectileStates = projectiles.map { $0.toState() }
+        let powerUpStates = powerUps.map { $0.toState() }
 
         return WorldState(
             mapSeed: map.seed,
             gridSize: gridSize,
             players: playerStates,
             projectiles: projectileStates,
+            powerUps: powerUpStates,
             scores: scores
         )
     }
@@ -264,6 +269,9 @@ final class Game {
 
         // Rebuild projectiles
         self.projectiles = state.projectiles.map { Projectile.from($0) }
+
+        // Rebuild powerups
+        self.powerUps = state.powerUps.map { PowerUp.from($0) }
     }
 
     /// Resize the grid (elder only) - returns new world state
@@ -365,5 +373,69 @@ final class Game {
     /// Get all peer IDs sorted alphabetically
     var sortedPeerIds: [String] {
         players.keys.sorted()
+    }
+
+    // MARK: - PowerUp Management
+
+    /// Spawn a new powerup at a random empty location
+    func spawnPowerUp(currentTime: TimeInterval) -> PowerUp? {
+        guard currentTime - lastPowerUpSpawn >= powerUpSpawnInterval else { return nil }
+
+        // Find empty cells (not walls, not occupied by tanks/powerups)
+        var emptyCells: [(row: Int, col: Int)] = []
+        for row in 0..<gridSize {
+            for col in 0..<gridSize {
+                // Skip walls
+                if map.grid[row][col] { continue }
+
+                // Skip occupied cells
+                let isOccupied = players.values.contains { $0.tank.row == row && $0.tank.col == col && $0.tank.isAlive }
+                if isOccupied { continue }
+
+                // Skip cells with existing powerups
+                let hasPowerUp = powerUps.contains { $0.row == row && $0.col == col }
+                if hasPowerUp { continue }
+
+                emptyCells.append((row, col))
+            }
+        }
+
+        guard !emptyCells.isEmpty else { return nil }
+
+        // Random position
+        let randomIndex = Int.random(in: 0..<emptyCells.count)
+        let position = emptyCells[randomIndex]
+
+        // Random powerup type
+        let type = PowerUpType.allCases.randomElement() ?? .speed
+
+        let powerUp = PowerUp(row: position.row, col: position.col, type: type, spawnedAt: currentTime)
+        powerUps.append(powerUp)
+        lastPowerUpSpawn = currentTime
+
+        return powerUp
+    }
+
+    /// Check if a tank is on a powerup, return the powerup if collected
+    func checkPowerUpCollection(for peerId: String) -> PowerUp? {
+        guard let tank = players[peerId]?.tank, tank.isAlive else { return nil }
+
+        if let index = powerUps.firstIndex(where: { $0.row == tank.row && $0.col == tank.col }) {
+            return powerUps.remove(at: index)
+        }
+
+        return nil
+    }
+
+    /// Remove expired powerups
+    func cleanupExpiredPowerUps(currentTime: TimeInterval) {
+        powerUps.removeAll { $0.shouldDespawn(currentTime: currentTime) }
+    }
+
+    /// Update all tank powerup effects
+    func updateTankPowerUps(currentTime: TimeInterval) {
+        for peerId in players.keys {
+            players[peerId]?.tank.updatePowerUps(currentTime: currentTime)
+        }
     }
 }

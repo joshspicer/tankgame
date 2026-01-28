@@ -23,6 +23,7 @@ extension GameScene {
 
         updateLocalTankMovement(currentTime: currentTime, tank: &tank, game: game)
         updateProjectiles(currentTime: currentTime, game: game)
+        updatePowerUps(currentTime: currentTime, game: game)
 
         lastUpdateTime = currentTime
     }
@@ -70,6 +71,45 @@ extension GameScene {
             }
 
             lastProjectileUpdate = currentTime
+        }
+    }
+
+    // MARK: - PowerUp Updates
+
+    private func updatePowerUps(currentTime: TimeInterval, game: Game) {
+        // Update tank powerup effects (expire old ones)
+        game.updateTankPowerUps(currentTime: currentTime)
+
+        // Spawn new powerups (only if elder)
+        if isLocalPlayerElder {
+            if let newPowerUp = game.spawnPowerUp(currentTime: currentTime) {
+                renderPowerUps()
+                gameDelegate?.gameScene(self, powerUpSpawned: newPowerUp)
+            }
+
+            // Cleanup expired powerups
+            let beforeCount = game.powerUps.count
+            game.cleanupExpiredPowerUps(currentTime: currentTime)
+            if game.powerUps.count < beforeCount {
+                renderPowerUps()
+            }
+        }
+
+        // Check for powerup collection
+        if let collectedPowerUp = game.checkPowerUpCollection(for: game.localPeerId) {
+            // Apply effect
+            let effect = collectedPowerUp.type.createEffect()
+            game.players[game.localPeerId]?.tank.applyPowerUp(effect, currentTime: currentTime)
+
+            // Show visual effect
+            showPowerUpCollectionEffect(at: collectedPowerUp.row, col: collectedPowerUp.col, type: collectedPowerUp.type)
+
+            // Notify network
+            gameDelegate?.gameScene(self, powerUpCollected: collectedPowerUp, by: game.localPeerId)
+
+            // Re-render
+            renderPowerUps()
+            renderTanksSmooth()
         }
     }
 }

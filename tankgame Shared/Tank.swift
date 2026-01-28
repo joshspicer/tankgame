@@ -38,6 +38,12 @@ struct Tank: Codable, Equatable {
     var col: Int
     var direction: Direction
     var isAlive: Bool = true
+
+    // Powerup modifiers
+    var speedMultiplier: Double = 1.0
+    var fireRateMultiplier: Double = 1.0
+    var hasShield: Bool = false
+    var activePowerUps: [ActivePowerUpEffect] = []
     
     /// Attempt to move in a direction, returns true if successful
     mutating func move(_ dir: Direction, on grid: [[Bool]]) -> Bool {
@@ -71,5 +77,36 @@ struct Tank: Codable, Equatable {
             direction: direction,
             ownerId: "" // Set by caller
         )
+    }
+
+    /// Update active powerups and remove expired ones
+    mutating func updatePowerUps(currentTime: TimeInterval) {
+        activePowerUps.removeAll { $0.hasExpired(currentTime: currentTime) }
+    }
+
+    /// Apply a powerup effect
+    mutating func applyPowerUp(_ effect: PowerUpEffectWrapper, currentTime: TimeInterval) {
+        effect.apply(to: &self)
+
+        // Track timed effects
+        if effect.duration > 0 {
+            let multiplier: Double?
+            switch effect {
+            case .speed(let e): multiplier = e.multiplier
+            case .fireRate(let e): multiplier = e.multiplier
+            default: multiplier = nil
+            }
+
+            activePowerUps.append(ActivePowerUpEffect(
+                effectType: effect.effectType,
+                expiresAt: currentTime + effect.duration,
+                multiplier: multiplier
+            ))
+        }
+    }
+
+    /// Remove a specific powerup effect type
+    mutating func removePowerUp(_ effect: PowerUpEffectWrapper) {
+        effect.remove(from: &self)
     }
 }
