@@ -38,6 +38,7 @@ struct Tank: Codable, Equatable {
     var col: Int
     var direction: Direction
     var isAlive: Bool = true
+    var isAI: Bool = false
     
     /// Attempt to move in a direction, returns true if successful
     mutating func move(_ dir: Direction, on grid: [[Bool]]) -> Bool {

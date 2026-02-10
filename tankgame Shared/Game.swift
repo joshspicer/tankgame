@@ -11,6 +11,7 @@ import Foundation
 struct PlayerData {
     var tank: Tank
     var score: Int
+    var aiPlayer: AIPlayer?
 }
 
 /// Manages the state of the game
@@ -61,15 +62,31 @@ final class Game {
 
         let spawn = findSpawnPosition(for: peerId)
         let tank = Tank(row: spawn.row, col: spawn.col, direction: spawn.direction)
-        players[peerId] = PlayerData(tank: tank, score: 0)
+        players[peerId] = PlayerData(tank: tank, score: 0, aiPlayer: nil)
+        return tank
+    }
+
+    /// Add an AI player with specified difficulty
+    /// Returns the new tank if created, or nil if player already exists
+    @discardableResult
+    func addAIPlayer(id: String, difficulty: AIDifficulty = .easy) -> Tank? {
+        guard players[id] == nil else { return nil }
+
+        let spawn = findSpawnPosition(for: id)
+        var tank = Tank(row: spawn.row, col: spawn.col, direction: spawn.direction)
+        tank.isAI = true
+        let aiPlayer = AIPlayer(id: id, difficulty: difficulty)
+        players[id] = PlayerData(tank: tank, score: 0, aiPlayer: aiPlayer)
         return tank
     }
 
     /// Add a player at a specific position (for world state sync)
-    func addPlayer(peerId: String, row: Int, col: Int, direction: Direction, isAlive: Bool, score: Int) {
+    func addPlayer(peerId: String, row: Int, col: Int, direction: Direction, isAlive: Bool, score: Int, isAI: Bool = false, aiDifficulty: AIDifficulty? = nil) {
         var tank = Tank(row: row, col: col, direction: direction)
         tank.isAlive = isAlive
-        players[peerId] = PlayerData(tank: tank, score: score)
+        tank.isAI = isAI
+        let aiPlayer = isAI && aiDifficulty != nil ? AIPlayer(id: peerId, difficulty: aiDifficulty!) : nil
+        players[peerId] = PlayerData(tank: tank, score: score, aiPlayer: aiPlayer)
     }
 
     /// Remove a player and return their tank for explosion animation
@@ -166,12 +183,13 @@ final class Game {
             // Player exists - update their position
             data.tank = Tank(row: spawn.row, col: spawn.col, direction: spawn.direction)
             data.tank.isAlive = true
+            data.tank.isAI = data.aiPlayer != nil  // Preserve AI status
             players[peerId] = data
         } else {
             // Player doesn't exist - create them
             var tank = Tank(row: spawn.row, col: spawn.col, direction: spawn.direction)
             tank.isAlive = true
-            players[peerId] = PlayerData(tank: tank, score: 0)
+            players[peerId] = PlayerData(tank: tank, score: 0, aiPlayer: nil)
         }
 
         return spawn
@@ -187,7 +205,9 @@ final class Game {
                 row: data.tank.row,
                 col: data.tank.col,
                 direction: data.tank.direction,
-                isAlive: data.tank.isAlive
+                isAlive: data.tank.isAlive,
+                isAI: data.tank.isAI,
+                aiDifficulty: data.aiPlayer?.difficulty
             )
         }
     }
@@ -201,13 +221,25 @@ final class Game {
                 data.tank.col = playerState.col
                 data.tank.direction = playerState.direction
                 data.tank.isAlive = playerState.isAlive
+                data.tank.isAI = playerState.isAI
                 data.score = syncScores[playerState.peerId] ?? data.score
+                // Update AI difficulty if changed
+                if playerState.isAI, let difficulty = playerState.aiDifficulty {
+                    if data.aiPlayer == nil {
+                        data.aiPlayer = AIPlayer(id: playerState.peerId, difficulty: difficulty)
+                    } else {
+                        data.aiPlayer?.difficulty = difficulty
+                    }
+                }
                 players[playerState.peerId] = data
             } else {
                 // Add missing player
                 var tank = Tank(row: playerState.row, col: playerState.col, direction: playerState.direction)
                 tank.isAlive = playerState.isAlive
-                players[playerState.peerId] = PlayerData(tank: tank, score: syncScores[playerState.peerId] ?? 0)
+                tank.isAI = playerState.isAI
+                let aiPlayer = playerState.isAI && playerState.aiDifficulty != nil ?
+                    AIPlayer(id: playerState.peerId, difficulty: playerState.aiDifficulty!) : nil
+                players[playerState.peerId] = PlayerData(tank: tank, score: syncScores[playerState.peerId] ?? 0, aiPlayer: aiPlayer)
             }
         }
 
@@ -228,7 +260,9 @@ final class Game {
                 row: data.tank.row,
                 col: data.tank.col,
                 direction: data.tank.direction,
-                isAlive: data.tank.isAlive
+                isAlive: data.tank.isAlive,
+                isAI: data.tank.isAI,
+                aiDifficulty: data.aiPlayer?.difficulty
             )
         }
 
@@ -258,7 +292,9 @@ final class Game {
                 col: playerState.col,
                 direction: playerState.direction,
                 isAlive: playerState.isAlive,
-                score: state.scores[playerState.peerId] ?? 0
+                score: state.scores[playerState.peerId] ?? 0,
+                isAI: playerState.isAI,
+                aiDifficulty: playerState.aiDifficulty
             )
         }
 
@@ -277,8 +313,10 @@ final class Game {
             let spawn = findSpawnPosition(for: peerId)
             var tank = Tank(row: spawn.row, col: spawn.col, direction: spawn.direction)
             tank.isAlive = true
+            tank.isAI = players[peerId]?.tank.isAI ?? false
             let score = players[peerId]?.score ?? 0
-            players[peerId] = PlayerData(tank: tank, score: score)
+            let aiPlayer = players[peerId]?.aiPlayer
+            players[peerId] = PlayerData(tank: tank, score: score, aiPlayer: aiPlayer)
         }
     }
 
@@ -317,6 +355,11 @@ final class Game {
                     if let shooterData = players[projectile.ownerId] {
                         players[projectile.ownerId]?.score = shooterData.score + 1
                     }
+
+                    // If AI was killed, level it up
+                    if let aiPlayer = players[peerId]?.aiPlayer {
+                        aiPlayer.levelUp()
+                    }
                     break
                 }
             }
@@ -343,6 +386,11 @@ final class Game {
                     // Award point to shooter
                     if let shooterData = players[projectile.ownerId] {
                         players[projectile.ownerId]?.score = shooterData.score + 1
+                    }
+
+                    // If AI was killed, level it up
+                    if let aiPlayer = players[peerId]?.aiPlayer {
+                        aiPlayer.levelUp()
                     }
                     break
                 }

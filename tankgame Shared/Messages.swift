@@ -15,6 +15,8 @@ struct PlayerState: Codable, Equatable {
     var col: Int
     var direction: Direction
     var isAlive: Bool
+    var isAI: Bool = false
+    var aiDifficulty: AIDifficulty? = nil
 }
 
 /// Projectile state for network sync
