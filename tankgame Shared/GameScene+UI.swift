@@ -12,6 +12,9 @@ extension GameScene {
     // MARK: - UI Setup
 
     func setupUI() {
+#if os(tvOS)
+        setupTVOSPlaceholderControls()
+#else
         // Joystick (bottom left)
         let joystickRadius: CGFloat = 60
         let baseRadius: CGFloat = 80
@@ -48,6 +51,7 @@ extension GameScene {
         fireLabel.fontColor = .white
         fireLabel.verticalAlignmentMode = .center
         fireButton.addChild(fireLabel)
+#endif
 
         // Scoreboard container
         let gridWidth = CGFloat(currentGridSize) * tileSize
@@ -242,4 +246,21 @@ extension GameScene {
         respawnCountdownLabel = nil
         respawnEndTime = 0
     }
+
+#if os(tvOS)
+    // MARK: - tvOS Controller Hint
+
+    func setupTVOSPlaceholderControls() {
+        // Show a controller hint at the bottom of the screen for tvOS
+        let hint = SKLabelNode(text: "D-Pad: Move  ●: Fire")
+        hint.fontName = "AvenirNext-Medium"
+        hint.fontSize = 24
+        hint.fontColor = SKColor(white: 0.6, alpha: 0.8)
+        hint.horizontalAlignmentMode = .center
+        hint.verticalAlignmentMode = .center
+        hint.position = CGPoint(x: size.width / 2, y: 50)
+        hint.zPosition = 100
+        addChild(hint)
+    }
+#endif
 }

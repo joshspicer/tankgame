@@ -9,6 +9,7 @@ import SpriteKit
 
 extension GameScene {
 
+#if !os(tvOS)
     // MARK: - Touch Handling
 
     override func touchesBegan(_ touches: Set<UITouch>, with event: UIEvent?) {
@@ -123,6 +124,7 @@ extension GameScene {
             currentDirection = nil
         }
     }
+#endif
 
     // MARK: - Fire
 

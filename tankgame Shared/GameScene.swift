@@ -96,6 +96,10 @@ class GameScene: SKScene {
         setupNodes()
         setupUI()
 
+#if os(tvOS)
+        setupControllerInput()
+#endif
+
         if game != nil {
             renderGrid()
             renderTanks()
