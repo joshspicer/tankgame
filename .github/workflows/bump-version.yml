@@ -1,0 +1,61 @@
+name: Bump Minor Version
+
+on:
+  workflow_dispatch:  # Manual trigger only
+
+jobs:
+  bump-version:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+      pull-requests: write
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+
+      - name: Get current version
+        id: get_version
+        run: |
+          CURRENT_VERSION=$(grep -m 1 "MARKETING_VERSION = " tankgame.xcodeproj/project.pbxproj | sed 's/.*MARKETING_VERSION = \([0-9.]*\);/\1/')
+          echo "current_version=$CURRENT_VERSION" >> $GITHUB_OUTPUT
+          echo "Current version: $CURRENT_VERSION"
+
+      - name: Bump version
+        id: bump
+        run: |
+          python3 .github/scripts/bump_version.py tankgame.xcodeproj/project.pbxproj
+          NEW_VERSION=$(grep -m 1 "MARKETING_VERSION = " tankgame.xcodeproj/project.pbxproj | sed 's/.*MARKETING_VERSION = \([0-9.]*\);/\1/')
+          echo "new_version=$NEW_VERSION" >> $GITHUB_OUTPUT
+          echo "New version: $NEW_VERSION"
+
+      - name: Create Pull Request
+        uses: peter-evans/create-pull-request@v6
+        with:
+          token: ${{ secrets.GITHUB_TOKEN }}
+          commit-message: "Bump version to ${{ steps.bump.outputs.new_version }}"
+          branch: version-bump/${{ steps.bump.outputs.new_version }}
+          delete-branch: true
+          title: "Bump version to ${{ steps.bump.outputs.new_version }}"
+          body: |
+            ## Version Bump
+
+            This PR bumps the minor version of Tank Game.
+
+            - **Previous version**: ${{ steps.get_version.outputs.current_version }}
+            - **New version**: ${{ steps.bump.outputs.new_version }}
+
+            This PR was automatically created by the [Bump Minor Version](${{ github.server_url }}/${{ github.repository }}/actions/workflows/bump-version.yml) GitHub Action.
+
+            ### Changes
+            - Updated `MARKETING_VERSION` in `tankgame.xcodeproj/project.pbxproj`
+
+            Please review and merge when ready.
+          labels: |
+            version-bump
+            automated
