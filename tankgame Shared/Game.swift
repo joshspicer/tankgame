@@ -353,7 +353,24 @@ final class Game {
             }
         }
 
-        projectiles = activeProjectiles
+        // Check for projectile-on-projectile collisions
+        var collidedIndices = Set<Int>()
+        for i in 0..<activeProjectiles.count {
+            if collidedIndices.contains(i) { continue }
+            for j in (i+1)..<activeProjectiles.count {
+                if collidedIndices.contains(j) { continue }
+                // Two projectiles collide if they're at the same position
+                if activeProjectiles[i].row == activeProjectiles[j].row &&
+                   activeProjectiles[i].col == activeProjectiles[j].col {
+                    collidedIndices.insert(i)
+                    collidedIndices.insert(j)
+                    break
+                }
+            }
+        }
+
+        // Remove collided projectiles
+        projectiles = activeProjectiles.enumerated().filter { !collidedIndices.contains($0.offset) }.map { $0.element }
         return hits
     }
 
