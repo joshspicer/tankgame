@@ -22,6 +22,32 @@ protocol PowerUpEffect: Codable {
     func remove(from tank: inout Tank)
 }
 
+/// Registry for powerup effect types to enable dynamic creation
+struct PowerUpEffectRegistry {
+    private static var effectCreators: [String: (Decoder) throws -> any PowerUpEffect] = [
+        "speed": { try SpeedBoostEffect(from: $0) },
+        "fireRate": { try FireRateBoostEffect(from: $0) },
+        "shield": { try ShieldEffect(from: $0) },
+        "health": { try HealthRestoreEffect(from: $0) }
+    ]
+
+    static func register(type: String, creator: @escaping (Decoder) throws -> any PowerUpEffect) {
+        effectCreators[type] = creator
+    }
+
+    static func createEffect(type: String, from decoder: Decoder) throws -> any PowerUpEffect {
+        guard let creator = effectCreators[type] else {
+            throw DecodingError.dataCorrupted(
+                DecodingError.Context(
+                    codingPath: decoder.codingPath,
+                    debugDescription: "Unknown effect type: \(type)"
+                )
+            )
+        }
+        return try creator(decoder)
+    }
+}
+
 /// Speed boost powerup effect
 struct SpeedBoostEffect: PowerUpEffect, Codable {
     let effectType = "speed"

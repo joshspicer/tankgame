@@ -18,13 +18,13 @@ enum PowerUpType: String, Codable, CaseIterable {
     func createEffect() -> PowerUpEffectWrapper {
         switch self {
         case .speed:
-            return .speed(SpeedBoostEffect(duration: 5.0, multiplier: 1.5))
+            return PowerUpEffectWrapper(SpeedBoostEffect(duration: 5.0, multiplier: 1.5))
         case .fireRate:
-            return .fireRate(FireRateBoostEffect(duration: 5.0, multiplier: 1.5))
+            return PowerUpEffectWrapper(FireRateBoostEffect(duration: 5.0, multiplier: 1.5))
         case .shield:
-            return .shield(ShieldEffect(duration: 10.0))
+            return PowerUpEffectWrapper(ShieldEffect(duration: 10.0))
         case .health:
-            return .health(HealthRestoreEffect())
+            return PowerUpEffectWrapper(HealthRestoreEffect())
         }
     }
 
@@ -39,47 +39,52 @@ enum PowerUpType: String, Codable, CaseIterable {
     }
 }
 
-/// Wrapper for type-erased powerup effects
-enum PowerUpEffectWrapper: Codable {
-    case speed(SpeedBoostEffect)
-    case fireRate(FireRateBoostEffect)
-    case shield(ShieldEffect)
-    case health(HealthRestoreEffect)
+/// Wrapper for type-erased powerup effects with type-safe encoding/decoding
+struct PowerUpEffectWrapper: Codable {
+    private let effect: any PowerUpEffect
+
+    init(_ effect: any PowerUpEffect) {
+        self.effect = effect
+    }
 
     var effectType: String {
-        switch self {
-        case .speed(let effect): return effect.effectType
-        case .fireRate(let effect): return effect.effectType
-        case .shield(let effect): return effect.effectType
-        case .health(let effect): return effect.effectType
-        }
+        effect.effectType
     }
 
     var duration: TimeInterval {
-        switch self {
-        case .speed(let effect): return effect.duration
-        case .fireRate(let effect): return effect.duration
-        case .shield(let effect): return effect.duration
-        case .health(let effect): return effect.duration
-        }
+        effect.duration
     }
 
     func apply(to tank: inout Tank) {
-        switch self {
-        case .speed(let effect): effect.apply(to: &tank)
-        case .fireRate(let effect): effect.apply(to: &tank)
-        case .shield(let effect): effect.apply(to: &tank)
-        case .health(let effect): effect.apply(to: &tank)
-        }
+        effect.apply(to: &tank)
     }
 
     func remove(from tank: inout Tank) {
-        switch self {
-        case .speed(let effect): effect.remove(from: &tank)
-        case .fireRate(let effect): effect.remove(from: &tank)
-        case .shield(let effect): effect.remove(from: &tank)
-        case .health(let effect): effect.remove(from: &tank)
-        }
+        effect.remove(from: &tank)
+    }
+
+    // MARK: - Codable
+
+    private enum CodingKeys: String, CodingKey {
+        case effectType
+        case effectData
+    }
+
+    init(from decoder: Decoder) throws {
+        let container = try decoder.container(keyedBy: CodingKeys.self)
+        let type = try container.decode(String.self, forKey: .effectType)
+
+        // Use registry to create the appropriate effect type
+        let effectDecoder = try container.superDecoder(forKey: .effectData)
+        self.effect = try PowerUpEffectRegistry.createEffect(type: type, from: effectDecoder)
+    }
+
+    func encode(to encoder: Encoder) throws {
+        var container = encoder.container(keyedBy: CodingKeys.self)
+        try container.encode(effect.effectType, forKey: .effectType)
+
+        let effectEncoder = container.superEncoder(forKey: .effectData)
+        try effect.encode(to: effectEncoder)
     }
 }
 
