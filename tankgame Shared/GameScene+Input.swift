@@ -80,6 +80,10 @@ extension GameScene {
         } else if name == "settings_plus" && currentGridSize < 12 {
             gameDelegate?.gameScene(self, didChangeGridSize: 1)
             return
+        } else if name == "settings_add_ai" {
+            addAIPlayer()
+            hideSettingsModal()
+            return
         } else if name == "settings_close" || name == "settings_modal_bg" {
             hideSettingsModal()
             return
@@ -88,6 +92,26 @@ extension GameScene {
         }
 
         hideSettingsModal()
+    }
+
+    // MARK: - AI Player Management
+
+    func addAIPlayer() {
+        guard let game = game else { return }
+
+        // Generate unique AI ID
+        let aiCount = game.players.values.filter { $0.tank.isAI }.count
+        let aiId = "AI-\(UUID().uuidString.prefix(8))"
+
+        // Add AI player to game
+        game.addAIPlayer(id: aiId, difficulty: .easy)
+
+        // Broadcast to other players via delegate
+        gameDelegate?.gameScene(self, playerMoved: .up)  // Trigger sync
+
+        // Update rendering
+        renderTanksSmooth()
+        updateScores()
     }
 
     // MARK: - Joystick

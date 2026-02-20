@@ -71,7 +71,7 @@ extension GameScene {
         modal.addChild(dimBg)
 
         let panelWidth: CGFloat = 240
-        let panelHeight: CGFloat = 160
+        let panelHeight: CGFloat = 240
         let panel = SKShapeNode(rectOf: CGSize(width: panelWidth, height: panelHeight), cornerRadius: 16)
         panel.fillColor = SKColor(white: 0.15, alpha: 0.95)
         panel.strokeColor = SKColor(white: 0.4, alpha: 1)
@@ -86,7 +86,7 @@ extension GameScene {
         title.fontColor = .white
         title.horizontalAlignmentMode = .center
         title.verticalAlignmentMode = .center
-        title.position = CGPoint(x: 0, y: 50)
+        title.position = CGPoint(x: 0, y: 90)
         panel.addChild(title)
 
         let gridLabel = SKLabelNode(text: "Grid Size")
@@ -95,10 +95,10 @@ extension GameScene {
         gridLabel.fontColor = SKColor(white: 0.7, alpha: 1)
         gridLabel.horizontalAlignmentMode = .center
         gridLabel.verticalAlignmentMode = .center
-        gridLabel.position = CGPoint(x: 0, y: 10)
+        gridLabel.position = CGPoint(x: 0, y: 50)
         panel.addChild(gridLabel)
 
-        let controlsY: CGFloat = -25
+        let controlsY: CGFloat = 15
 
         let minusBtn = SKShapeNode(circleOfRadius: 20)
         minusBtn.fillColor = SKColor(white: 0.3, alpha: 1)
@@ -143,6 +143,35 @@ extension GameScene {
         plusLabel.verticalAlignmentMode = .center
         plusLabel.position = CGPoint(x: 0, y: -2)
         plusBtn.addChild(plusLabel)
+
+        // AI Players section
+        let aiLabel = SKLabelNode(text: "AI Players")
+        aiLabel.fontName = "AvenirNext-Medium"
+        aiLabel.fontSize = 14
+        aiLabel.fontColor = SKColor(white: 0.7, alpha: 1)
+        aiLabel.horizontalAlignmentMode = .center
+        aiLabel.verticalAlignmentMode = .center
+        aiLabel.position = CGPoint(x: 0, y: -35)
+        panel.addChild(aiLabel)
+
+        let aiButtonY: CGFloat = -70
+
+        let addAIBtn = SKShapeNode(rectOf: CGSize(width: 100, height: 36), cornerRadius: 8)
+        addAIBtn.fillColor = SKColor(white: 0.3, alpha: 1)
+        addAIBtn.strokeColor = SKColor(white: 0.5, alpha: 1)
+        addAIBtn.lineWidth = 2
+        addAIBtn.position = CGPoint(x: 0, y: aiButtonY)
+        addAIBtn.name = "settings_add_ai"
+        panel.addChild(addAIBtn)
+
+        let addAILabel = SKLabelNode(text: "Add AI")
+        addAILabel.fontName = "AvenirNext-Bold"
+        addAILabel.fontSize = 16
+        addAILabel.fontColor = .white
+        addAILabel.horizontalAlignmentMode = .center
+        addAILabel.verticalAlignmentMode = .center
+        addAILabel.position = CGPoint(x: 0, y: -1)
+        addAIBtn.addChild(addAILabel)
 
         let closeBtn = SKShapeNode(circleOfRadius: 16)
         closeBtn.fillColor = SKColor(white: 0.25, alpha: 1)

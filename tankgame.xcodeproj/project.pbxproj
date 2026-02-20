@@ -17,10 +17,12 @@
 			isa = PBXFileSystemSynchronizedBuildFileExceptionSet;
 			membershipExceptions = (
 				Actions.sks,
+				AIPlayer.swift,
 				Assets.xcassets,
 				Game.swift,
 				GameScene.sks,
 				GameScene.swift,
+				"GameScene+AI.swift",
 				"GameScene+GameLoop.swift",
 				"GameScene+Input.swift",
 				"GameScene+Rendering.swift",
@@ -38,10 +40,12 @@
 			isa = PBXFileSystemSynchronizedBuildFileExceptionSet;
 			membershipExceptions = (
 				Actions.sks,
+				AIPlayer.swift,
 				Assets.xcassets,
 				Game.swift,
 				GameScene.sks,
 				GameScene.swift,
+				"GameScene+AI.swift",
 				"GameScene+GameLoop.swift",
 				"GameScene+Input.swift",
 				"GameScene+Rendering.swift",
@@ -59,10 +63,12 @@
 			isa = PBXFileSystemSynchronizedBuildFileExceptionSet;
 			membershipExceptions = (
 				Actions.sks,
+				AIPlayer.swift,
 				Assets.xcassets,
 				Game.swift,
 				GameScene.sks,
 				GameScene.swift,
+				"GameScene+AI.swift",
 				"GameScene+GameLoop.swift",
 				"GameScene+Input.swift",
 				"GameScene+Rendering.swift",

@@ -15,13 +15,20 @@ extension GameScene {
         updateRespawnCountdown()
 
         guard let game = game else { return }
-        guard var tank = game.players[game.localPeerId]?.tank, tank.isAlive else { return }
 
         if lastUpdateTime == 0 {
             lastUpdateTime = currentTime
         }
 
-        updateLocalTankMovement(currentTime: currentTime, tank: &tank, game: game)
+        // Update AI players
+        updateAIPlayers(currentTime: currentTime)
+
+        // Update local tank movement
+        if let tank = game.players[game.localPeerId]?.tank, tank.isAlive {
+            var mutableTank = tank
+            updateLocalTankMovement(currentTime: currentTime, tank: &mutableTank, game: game)
+        }
+
         updateProjectiles(currentTime: currentTime, game: game)
 
         lastUpdateTime = currentTime
