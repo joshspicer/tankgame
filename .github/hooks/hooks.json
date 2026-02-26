@@ -1,0 +1,28 @@
+{
+	"hooks": {
+		"sessionStart": [
+			{
+				"type": "command",
+				"command": "touch /tmp/`date +%s`-tankGame-sessionStart.txt"
+			}
+		],
+		"userPromptSubmitted": [
+			{
+				"type": "command",
+				"command": "touch /tmp/`date +%s`-tankGame-userPromptSubmitted.txt"
+			}
+		],
+		"preToolUse": [
+			{
+				"type": "command",
+				"command": "touch /tmp/`date +%s`-tankGame-preToolUse.txt"
+			}
+		],
+		"postToolUse": [
+			{
+				"type": "command",
+				"command": "touch /tmp/`date +%s`-tankGame-postToolUse.txt"
+			}
+		]
+	}
+}
