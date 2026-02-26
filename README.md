@@ -40,6 +40,15 @@ The game uses a clean, modular architecture:
 | `GameScene.swift` | SpriteKit rendering and game loop |
 | `GameViewController.swift` | Lobby UI and game presentation |
 
+## A Battle Cry
+
+> Roll out onto the grid, bold and unafraid,
+> Every shot a lesson, every hit a trade.
+> The map is procedural, the outcome unclear —
+> But the tank that keeps moving has nothing to fear.
+> So fire with conviction, maneuver with grace,
+> For glory awaits every warrior in this space.
+
 ## Requirements
 
 - iOS 18.0+
