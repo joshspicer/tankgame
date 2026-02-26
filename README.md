@@ -40,6 +40,13 @@ The game uses a clean, modular architecture:
 | `GameScene.swift` | SpriteKit rendering and game loop |
 | `GameViewController.swift` | Lobby UI and game presentation |
 
+## A Poem
+
+*Tanks roll across an 8-bit grid,*
+*Shells fly where other players hid.*
+*Bluetooth hums, peers connect and find,*
+*One last tank standing — leave the rest behind.*
+
 ## Requirements
 
 - iOS 18.0+
