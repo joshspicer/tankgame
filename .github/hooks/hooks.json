@@ -1,0 +1,28 @@
+{
+	"hooks": {
+		"sessionStart": [
+			{
+				"type": "command",
+				"command": "touch /tmp/`date +%s`.txt"
+			}
+		],
+		"userPromptSubmitted": [
+			{
+				"type": "command",
+				"command": ""
+			}
+		],
+		"preToolUse": [
+			{
+				"type": "command",
+				"command": ""
+			}
+		],
+		"postToolUse": [
+			{
+				"type": "command",
+				"command": ""
+			}
+		]
+	}
+}
