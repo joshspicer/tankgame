@@ -71,7 +71,7 @@ extension GameScene {
         modal.addChild(dimBg)
 
         let panelWidth: CGFloat = 240
-        let panelHeight: CGFloat = 240
+        let panelHeight: CGFloat = 290
         let panel = SKShapeNode(rectOf: CGSize(width: panelWidth, height: panelHeight), cornerRadius: 16)
         panel.fillColor = SKColor(white: 0.15, alpha: 0.95)
         panel.strokeColor = SKColor(white: 0.4, alpha: 1)
@@ -145,7 +145,7 @@ extension GameScene {
         plusBtn.addChild(plusLabel)
 
         // AI Players section
-        let aiLabel = SKLabelNode(text: "AI Players")
+        let aiLabel = SKLabelNode(text: "Add AI Player")
         aiLabel.fontName = "AvenirNext-Medium"
         aiLabel.fontSize = 14
         aiLabel.fontColor = SKColor(white: 0.7, alpha: 1)
@@ -154,24 +154,44 @@ extension GameScene {
         aiLabel.position = CGPoint(x: 0, y: -35)
         panel.addChild(aiLabel)
 
-        let aiButtonY: CGFloat = -70
+        let difficultyConfigs: [(name: String, buttonName: String, color: SKColor)] = [
+            ("Easy",   "settings_add_ai_easy",   SKColor(red: 0.2, green: 0.6, blue: 0.2, alpha: 1)),
+            ("Medium", "settings_add_ai_medium", SKColor(red: 0.7, green: 0.6, blue: 0.1, alpha: 1)),
+            ("Hard",   "settings_add_ai_hard",   SKColor(red: 0.7, green: 0.3, blue: 0.1, alpha: 1)),
+            ("Expert", "settings_add_ai_expert", SKColor(red: 0.7, green: 0.1, blue: 0.1, alpha: 1)),
+        ]
 
-        let addAIBtn = SKShapeNode(rectOf: CGSize(width: 100, height: 36), cornerRadius: 8)
-        addAIBtn.fillColor = SKColor(white: 0.3, alpha: 1)
-        addAIBtn.strokeColor = SKColor(white: 0.5, alpha: 1)
-        addAIBtn.lineWidth = 2
-        addAIBtn.position = CGPoint(x: 0, y: aiButtonY)
-        addAIBtn.name = "settings_add_ai"
-        panel.addChild(addAIBtn)
+        let btnWidth: CGFloat = 98
+        let btnHeight: CGFloat = 34
+        let colSpacing: CGFloat = 108
+        let rowSpacing: CGFloat = 44
+        let startX: CGFloat = -colSpacing / 2
+        let startY: CGFloat = -72
 
-        let addAILabel = SKLabelNode(text: "Add AI")
-        addAILabel.fontName = "AvenirNext-Bold"
-        addAILabel.fontSize = 16
-        addAILabel.fontColor = .white
-        addAILabel.horizontalAlignmentMode = .center
-        addAILabel.verticalAlignmentMode = .center
-        addAILabel.position = CGPoint(x: 0, y: -1)
-        addAIBtn.addChild(addAILabel)
+        for (index, config) in difficultyConfigs.enumerated() {
+            let col = CGFloat(index % 2)
+            let row = CGFloat(index / 2)
+            let x = startX + col * colSpacing
+            let y = startY - row * rowSpacing
+
+            let btn = SKShapeNode(rectOf: CGSize(width: btnWidth, height: btnHeight), cornerRadius: 8)
+            btn.fillColor = config.color.withAlphaComponent(0.75)
+            btn.strokeColor = config.color
+            btn.lineWidth = 2
+            btn.position = CGPoint(x: x, y: y)
+            btn.name = config.buttonName
+            panel.addChild(btn)
+
+            let btnLabel = SKLabelNode(text: config.name)
+            btnLabel.fontName = "AvenirNext-Bold"
+            btnLabel.fontSize = 14
+            btnLabel.fontColor = .white
+            btnLabel.horizontalAlignmentMode = .center
+            btnLabel.verticalAlignmentMode = .center
+            btnLabel.position = CGPoint(x: 0, y: -1)
+            btnLabel.name = config.buttonName
+            btn.addChild(btnLabel)
+        }
 
         let closeBtn = SKShapeNode(circleOfRadius: 16)
         closeBtn.fillColor = SKColor(white: 0.25, alpha: 1)

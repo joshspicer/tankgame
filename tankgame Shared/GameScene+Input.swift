@@ -80,8 +80,20 @@ extension GameScene {
         } else if name == "settings_plus" && currentGridSize < 12 {
             gameDelegate?.gameScene(self, didChangeGridSize: 1)
             return
-        } else if name == "settings_add_ai" {
-            addAIPlayer()
+        } else if name == "settings_add_ai_easy" {
+            addAIPlayer(difficulty: .easy)
+            hideSettingsModal()
+            return
+        } else if name == "settings_add_ai_medium" {
+            addAIPlayer(difficulty: .medium)
+            hideSettingsModal()
+            return
+        } else if name == "settings_add_ai_hard" {
+            addAIPlayer(difficulty: .hard)
+            hideSettingsModal()
+            return
+        } else if name == "settings_add_ai_expert" {
+            addAIPlayer(difficulty: .expert)
             hideSettingsModal()
             return
         } else if name == "settings_close" || name == "settings_modal_bg" {
@@ -96,15 +108,14 @@ extension GameScene {
 
     // MARK: - AI Player Management
 
-    func addAIPlayer() {
+    func addAIPlayer(difficulty: AIDifficulty = .easy) {
         guard let game = game else { return }
 
         // Generate unique AI ID
-        let aiCount = game.players.values.filter { $0.tank.isAI }.count
         let aiId = "AI-\(UUID().uuidString.prefix(8))"
 
         // Add AI player to game
-        game.addAIPlayer(id: aiId, difficulty: .easy)
+        game.addAIPlayer(id: aiId, difficulty: difficulty)
 
         // Broadcast to other players via delegate
         gameDelegate?.gameScene(self, playerMoved: .up)  // Trigger sync
