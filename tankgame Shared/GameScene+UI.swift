@@ -71,6 +71,9 @@ extension GameScene {
 
         // Settings UI
         setupSettingsUI()
+
+        // Ammo indicator (above fire button)
+        setupAmmoIndicator()
     }
 
     // MARK: - Scoreboard

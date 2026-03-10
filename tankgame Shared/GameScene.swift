@@ -76,8 +76,18 @@ class GameScene: SKScene {
     var lastUpdateTime: TimeInterval = 0
     var lastMoveTime: TimeInterval = 0
     var lastProjectileUpdate: TimeInterval = 0
+    var sceneTime: TimeInterval = 0
     let moveInterval: TimeInterval = 0.15
     let projectileInterval: TimeInterval = 0.05
+
+    // MARK: - Reload State
+
+    var ammo: Int = 5
+    let maxAmmo: Int = 5
+    var isReloading: Bool = false
+    var reloadEndTime: TimeInterval = 0
+    let reloadDuration: TimeInterval = 2.0
+    var ammoIndicator: SKNode?
 
     // MARK: - Color Cache
 

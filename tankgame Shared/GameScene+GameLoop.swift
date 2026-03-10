@@ -12,7 +12,9 @@ extension GameScene {
     // MARK: - Game Loop
 
     override func update(_ currentTime: TimeInterval) {
+        sceneTime = currentTime
         updateRespawnCountdown()
+        updateReload(currentTime: currentTime)
 
         guard let game = game else { return }
 

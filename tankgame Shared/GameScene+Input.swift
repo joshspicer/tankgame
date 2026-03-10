@@ -153,9 +153,17 @@ extension GameScene {
     func fire() {
         guard let game = game else { return }
         guard game.localTank.isAlive else { return }
+        guard !isReloading, ammo > 0 else { return }
 
         var projectile = game.localTank.shoot()
         projectile.ownerId = game.localPeerId
         gameDelegate?.gameScene(self, playerShot: projectile)
+
+        ammo -= 1
+        updateAmmoIndicator()
+
+        if ammo == 0 {
+            startReload(currentTime: sceneTime)
+        }
     }
 }
