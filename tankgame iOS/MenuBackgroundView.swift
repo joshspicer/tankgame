@@ -108,7 +108,7 @@ class MenuBackgroundView: UIView {
         for row in 0..<gridSize {
             for col in 0..<gridSize {
                 // Calculate distance from center
-                let distance = sqrt(pow(Double(row) - centerRow, 2) + pow(Double(col) - centerCol, 2))
+                let distance = hypot(Double(row) - centerRow, Double(col) - centerCol)
                 
                 // Wave effect from center
                 let wave = sin(distance * 0.4 - animationTime * 1.5) * 0.5 + 0.5

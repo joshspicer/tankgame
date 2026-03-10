@@ -23,7 +23,7 @@ extension GameScene {
 
             // Check settings button (elder only)
             if isLocalPlayerElder, let button = settingsButton {
-                let buttonDist = hypot(location.x - button.position.x, location.y - button.position.y)
+                let buttonDist = location.distance(to: button.position)
                 if buttonDist < 22 {
                     showSettingsModal()
                     return
@@ -37,7 +37,7 @@ extension GameScene {
             }
 
             // Joystick
-            let joystickDist = hypot(location.x - joystickBase.position.x, location.y - joystickBase.position.y)
+            let joystickDist = location.distance(to: joystickBase.position)
             if joystickDist < 100 {
                 joystickTouch = touch
                 updateJoystick(touch: touch)
@@ -122,7 +122,7 @@ extension GameScene {
 
         var dx = location.x - basePos.x
         var dy = location.y - basePos.y
-        let dist = hypot(dx, dy)
+        let dist = location.distance(to: basePos)
         let maxDist: CGFloat = 40
 
         if dist > maxDist {
