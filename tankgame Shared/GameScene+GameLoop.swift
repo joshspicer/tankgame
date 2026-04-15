@@ -2,7 +2,8 @@
 //  GameScene+GameLoop.swift
 //  Tank Game
 //
-//  Main game loop: movement, projectiles, respawn countdown.
+//  Main game loop: movement input, rendering, respawn countdown.
+//  Collision detection and projectile updates are handled by the server.
 //
 
 import SpriteKit
@@ -20,16 +21,10 @@ extension GameScene {
             lastUpdateTime = currentTime
         }
 
-        // Update AI players
-        updateAIPlayers(currentTime: currentTime)
-
-        // Update local tank movement
+        // Send movement input to server at the movement interval
         if let tank = game.players[game.localPeerId]?.tank, tank.isAlive {
-            var mutableTank = tank
-            updateLocalTankMovement(currentTime: currentTime, tank: &mutableTank, game: game)
+            updateLocalTankInput(currentTime: currentTime)
         }
-
-        updateProjectiles(currentTime: currentTime, game: game)
 
         lastUpdateTime = currentTime
     }
@@ -46,37 +41,15 @@ extension GameScene {
         }
     }
 
-    // MARK: - Tank Movement
+    // MARK: - Tank Movement Input
 
-    private func updateLocalTankMovement(currentTime: TimeInterval, tank: inout Tank, game: Game) {
+    private func updateLocalTankInput(currentTime: TimeInterval) {
         if currentTime - lastMoveTime > moveInterval {
             if let dir = currentDirection {
-                let oldDir = tank.direction
-                let moved = tank.move(dir, on: game.map.grid)
-
-                if moved || tank.direction != oldDir {
-                    self.game?.players[game.localPeerId]?.tank = tank
-                    gameDelegate?.gameScene(self, playerMoved: dir)
-                    renderTanksSmooth()
-                }
+                // Send input to server via delegate (server validates and moves)
+                gameDelegate?.gameScene(self, playerMoved: dir)
                 lastMoveTime = currentTime
             }
-        }
-    }
-
-    // MARK: - Projectile Updates
-
-    private func updateProjectiles(currentTime: TimeInterval, game: Game) {
-        if currentTime - lastProjectileUpdate > projectileInterval {
-            let hits = game.projectiles.isEmpty ? [] : game.updateProjectiles()
-            renderProjectiles()
-
-            for hit in hits {
-                gameDelegate?.gameScene(self, playerHit: hit.victimId, byShooter: hit.shooterId)
-                renderTanksSmooth()
-            }
-
-            lastProjectileUpdate = currentTime
         }
     }
 }

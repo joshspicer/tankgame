@@ -2,7 +2,7 @@
 //  GameViewController.swift
 //  Tank Game iOS
 //
-//  Main view controller - game starts immediately, peers connect dynamically.
+//  Main view controller - connects to Modal server on launch.
 //
 
 import UIKit
@@ -12,19 +12,13 @@ class GameViewController: UIViewController {
 
     // MARK: - Properties
 
-    private var network: Network!
+    private var serverConnection: ServerConnection!
     private var gameScene: GameScene?
     private var game: Game?
     private var skView: SKView!
 
-    /// Map seed - persisted and shared with peers
-    private var mapSeed: UInt32 = 0
-
-    /// Respawn timers keyed by peerId
-    private var respawnTimers: [String: Timer] = [:]
-
-    /// Periodic sync timer (elder only)
-    private var syncTimer: Timer?
+    /// The player ID assigned by the server
+    private var localPlayerId: String?
 
     // MARK: - Lifecycle
 
@@ -32,158 +26,86 @@ class GameViewController: UIViewController {
         super.viewDidLoad()
         view.backgroundColor = UIColor(white: 0.1, alpha: 1)
 
-        network = Network()
-        network.delegate = self
-
-        // Start game immediately
-        startSoloGame()
-
-        // Start peer-to-peer with jitter to avoid race conditions
-        let jitter = connectionJitter(for: network.localPeerId)
-        NSLog("[Game] Starting peer-to-peer in %.2f seconds", jitter)
-        DispatchQueue.main.asyncAfter(deadline: .now() + jitter) { [weak self] in
-            self?.network.startPeerToPeer()
-        }
-
-        // Start periodic sync timer
-        startSyncTimer()
-    }
-
-    /// Calculate deterministic jitter (0-1.5 seconds) based on peerId
-    private func connectionJitter(for peerId: String) -> Double {
-        var hash: UInt64 = 5381
-        for char in peerId.utf8 {
-            hash = ((hash << 5) &+ hash) &+ UInt64(char)
-        }
-        return Double(hash % 1500) / 1000.0  // 0.0 to 1.5 seconds
-    }
-
-    // MARK: - Periodic Sync
-
-    private func startSyncTimer() {
-        syncTimer?.invalidate()
-        syncTimer = Timer.scheduledTimer(withTimeInterval: 3.0, repeats: true) { [weak self] _ in
-            self?.performPeriodicSync()
-        }
-    }
-
-    private func performPeriodicSync() {
-        guard let game = game, network.isElder, network.isConnected else { return }
-
-        let worldState = game.createWorldState()
-        NSLog("[Game] Elder periodic sync: broadcasting worldState with %d players", worldState.players.count)
-        network.send(.worldState(worldState))
-    }
-
-    // MARK: - Game Start
-
-    private func startSoloGame() {
-        // Generate initial map seed
-        mapSeed = UInt32.random(in: 0...UInt32.max)
-
-        // Create game with local player
-        game = Game(seed: mapSeed, localPeerId: network.localPeerId)
-
-        // Create SpriteKit view
+        // Set up SpriteKit view immediately (show loading state)
         skView = SKView(frame: view.bounds)
         skView.ignoresSiblingOrder = true
         view.addSubview(skView)
 
+        // Connect to Modal server
+        let deviceName = UIDevice.current.name
+        serverConnection = ServerConnection(displayName: deviceName)
+        serverConnection.delegate = self
+        serverConnection.connect()
+
+        NSLog("[Game] Connecting to server...")
+    }
+
+    // MARK: - Game Setup
+
+    /// Initialize game from server world state
+    private func setupGame(playerId: String, worldState: ServerWorldState) {
+        self.localPlayerId = playerId
+
+        // Create game with server-provided seed and the assigned player ID
+        let game = Game(seed: worldState.mapSeed, localPeerId: playerId, gridSize: worldState.gridSize)
+
+        // Clear the default local player that Game.init adds - server state is authoritative
+        game.players.removeAll()
+
+        // Apply all players from server state
+        applyServerWorldState(worldState, to: game)
+
+        self.game = game
+
+        // Create and present the scene
         let scene = GameScene.newScene()
         scene.gameDelegate = self
         scene.game = game
-        // Set elder status BEFORE presenting (player is alone at start, so is elder when alone,
-        // but we only show settings button when connected with others)
-        scene.isLocalPlayerElder = network.isElder && network.isConnected
+        scene.isLocalPlayerElder = false  // No elder concept in server mode
         self.gameScene = scene
 
         skView.presentScene(scene)
+        NSLog("[Game] Game started with %d players on %dx%d map", game.players.count, worldState.gridSize, worldState.gridSize)
     }
 
-    // MARK: - Player Management
+    /// Apply a ServerWorldState to the Game instance
+    private func applyServerWorldState(_ state: ServerWorldState, to game: Game) {
+        // Update players
+        var serverPlayerIds = Set<String>()
 
-    private func addPlayerForPeer(_ peerId: String) {
-        guard let game = game, let scene = gameScene else { return }
+        for (playerId, ps) in state.players {
+            serverPlayerIds.insert(playerId)
 
-        // Add player to game
-        if let tank = game.addPlayer(peerId: peerId) {
-            NSLog("[Game] Added player %@... at (%d, %d)", String(peerId.prefix(8)), tank.row, tank.col)
-            // Broadcast to other peers
-            network.send(.playerJoined(peerId: peerId))
-
-            // Render spawn animation
-            scene.spawnTank(for: peerId, at: tank.row, col: tank.col, direction: tank.direction)
-        } else {
-            NSLog("[Game] Player %@... already exists", String(peerId.prefix(8)))
-        }
-    }
-
-    private func removePlayerForPeer(_ peerId: String) {
-        guard let game = game, let scene = gameScene else { return }
-
-        // Cancel any pending respawn
-        respawnTimers[peerId]?.invalidate()
-        respawnTimers.removeValue(forKey: peerId)
-
-        // Remove from game and get tank for explosion
-        if let tank = game.removePlayer(peerId: peerId) {
-            // Show explosion
-            scene.showExplosion(at: tank.row, col: tank.col)
-            scene.removeTank(for: peerId)
-
-            // Broadcast to other peers
-            network.send(.playerLeft(peerId: peerId))
+            let dir = Direction(rawValue: ps.direction) ?? .down
+            if game.players[playerId] != nil {
+                // Update existing
+                game.players[playerId]?.tank.row = ps.row
+                game.players[playerId]?.tank.col = ps.col
+                game.players[playerId]?.tank.direction = dir
+                game.players[playerId]?.tank.isAlive = ps.isAlive
+                game.players[playerId]?.score = ps.score
+            } else {
+                // Add new
+                game.addPlayer(peerId: playerId, row: ps.row, col: ps.col, direction: dir, isAlive: ps.isAlive, score: ps.score)
+            }
         }
 
-        // Update scores display
-        scene.updateScores()
-    }
-
-    private func scheduleRespawn(for peerId: String) {
-        // Cancel existing timer
-        respawnTimers[peerId]?.invalidate()
-
-        // Add jitter to respawn time (2.5 to 3.5 seconds) based on peerId hash
-        var hash: UInt64 = 5381
-        for char in peerId.utf8 {
-            hash = ((hash << 5) &+ hash) &+ UInt64(char)
-        }
-        let jitter = Double(hash % 1000) / 1000.0  // 0.0 to 1.0
-        let respawnDelay = 2.5 + jitter  // 2.5 to 3.5 seconds
-
-        // Show countdown overlay for local player
-        if peerId == network.localPeerId {
-            gameScene?.showRespawnCountdown(duration: respawnDelay)
+        // Remove players not in server state (they left)
+        for playerId in game.players.keys {
+            if !serverPlayerIds.contains(playerId) {
+                game.players.removeValue(forKey: playerId)
+            }
         }
 
-        respawnTimers[peerId] = Timer.scheduledTimer(withTimeInterval: respawnDelay, repeats: false) { [weak self] _ in
-            guard let self = self, let game = self.game, let scene = self.gameScene else { return }
-
-            // Respawn and get the position (creates player if missing)
-            guard let spawn = game.respawnPlayer(peerId: peerId) else { return }
-
-            // Render tank locally
-            scene.spawnTank(for: peerId, at: spawn.row, col: spawn.col, direction: spawn.direction)
-
-            // Broadcast respawn to all peers
-            self.network.send(.respawn(peerId: peerId, row: spawn.row, col: spawn.col, direction: spawn.direction))
-
-            self.respawnTimers.removeValue(forKey: peerId)
+        // Update projectiles
+        game.projectiles = state.projectiles.map { ps in
+            Projectile(
+                row: ps.row,
+                col: ps.col,
+                direction: Direction(rawValue: ps.direction) ?? .down,
+                ownerId: ps.ownerId
+            )
         }
-    }
-
-    // MARK: - World State Sync
-
-    private func syncToWorldState(_ state: WorldState) {
-        guard let scene = gameScene else { return }
-
-        // Apply state to game
-        game?.applyWorldState(state)
-
-        NSLog("[Game] After sync, game has %d players", game?.players.count ?? 0)
-
-        // Full scene refresh
-        scene.fullRefresh()
     }
 
     // MARK: - View Configuration
@@ -195,96 +117,49 @@ class GameViewController: UIViewController {
     override var prefersStatusBarHidden: Bool { true }
 }
 
-// MARK: - NetworkDelegate
+// MARK: - ServerConnectionDelegate
 
-extension GameViewController: NetworkDelegate {
-    func network(_ network: Network, peerConnected peerId: String) {
-        guard let game = game else { return }
-
-        NSLog("[Game] Peer connected: %@... (isElder: %d, connected: %d)", String(peerId.prefix(8)), network.isElder ? 1 : 0, network.isConnected ? 1 : 0)
-
-        // Update elder status on scene - only show settings when connected AND elder
-        gameScene?.isLocalPlayerElder = network.isElder && network.isConnected
-        gameScene?.updateSettingsUI()
-
-        // Add the new player
-        addPlayerForPeer(peerId)
-
-        // If we're the elder, send world state to the new peer
-        if network.isElder {
-            let worldState = game.createWorldState()
-            NSLog("[Game] Sending worldState with %d players to %@...", worldState.players.count, String(peerId.prefix(8)))
-            network.send(.worldState(worldState), to: peerId)
-        }
+extension GameViewController: ServerConnectionDelegate {
+    func serverDidConnect(_ connection: ServerConnection) {
+        NSLog("[Game] Connected to server")
     }
 
-    func network(_ network: Network, peerDisconnected peerId: String) {
-        let wasElder = network.isElder
-        removePlayerForPeer(peerId)
-
-        // Update elder status on scene - only show settings when connected AND elder
-        gameScene?.isLocalPlayerElder = network.isElder && network.isConnected
-        gameScene?.updateSettingsUI()
-
-        // If we just became the elder (the old elder disconnected), broadcast world state
-        if !wasElder && network.isElder && network.isConnected {
-            NSLog("[Game] Became new elder after disconnect, broadcasting worldState")
-            if let game = game {
-                let worldState = game.createWorldState()
-                network.send(.worldState(worldState))
-            }
-        }
+    func serverDidDisconnect(_ connection: ServerConnection) {
+        NSLog("[Game] Disconnected from server")
+        gameScene?.statusLabel?.text = "Reconnecting..."
     }
 
-    func network(_ network: Network, received message: GameMessage, from peerId: String) {
+    func server(_ connection: ServerConnection, didReceive message: ServerMessage) {
         switch message {
-        case .worldState(let state):
-            NSLog("[Game] Received worldState with %d players from %@...", state.players.count, String(peerId.prefix(8)))
-            syncToWorldState(state)
+        case .welcome(let playerId, let worldState):
+            NSLog("[Game] Welcome! Player ID: %@, %d players on map", String(playerId.prefix(8)), worldState.players.count)
+            setupGame(playerId: playerId, worldState: worldState)
 
-        case .sync:
-            // Handled via defensive recovery in individual message handlers
-            break
-
-        case .playerJoined(let joinedPeerId):
-            // Another peer announced a player joined - add if we don't have them
-            if game?.players[joinedPeerId] == nil {
-                addPlayerForPeer(joinedPeerId)
-            }
-
-        case .playerLeft(let leftPeerId):
-            // Another peer announced a player left
-            removePlayerForPeer(leftPeerId)
-
-        case .move(let movePeerId, let row, let col, let direction):
+        case .stateUpdate(let worldState):
             guard let game = game, let scene = gameScene else { return }
+            applyServerWorldState(worldState, to: game)
+            scene.renderTanksSmooth()
+            scene.renderProjectiles()
+            scene.updateScores()
 
-            // Ensure player exists - they might have connected but we missed the join
-            if game.players[movePeerId] == nil {
-                game.addPlayer(peerId: movePeerId, row: row, col: col, direction: direction, isAlive: true, score: 0)
-                scene.spawnTank(for: movePeerId, at: row, col: col, direction: direction)
-            } else {
-                game.players[movePeerId]?.tank.row = row
-                game.players[movePeerId]?.tank.col = col
-                game.players[movePeerId]?.tank.direction = direction
-                scene.renderTanksSmooth()
+        case .playerJoined(let playerId, let displayName):
+            NSLog("[Game] Player joined: %@ (%@)", displayName, String(playerId.prefix(8)))
+            // Player will appear in next state_update
+
+        case .playerLeft(let playerId):
+            guard let game = game, let scene = gameScene else { return }
+            NSLog("[Game] Player left: %@", String(playerId.prefix(8)))
+
+            if let tank = game.removePlayer(peerId: playerId) {
+                scene.showExplosion(at: tank.row, col: tank.col)
+                scene.removeTank(for: playerId)
             }
-
-        case .shoot(_, let projectileState):
-            guard let game = game else { return }
-            let projectile = Projectile.from(projectileState)
-            game.projectiles.append(projectile)
-            gameScene?.renderProjectiles()
+            scene.updateScores()
 
         case .hit(let victimId, let shooterId):
             guard let game = game, let scene = gameScene else { return }
 
-            // Only process if player exists and is alive
-            guard let playerData = game.players[victimId], playerData.tank.isAlive else { return }
-
             game.players[victimId]?.tank.isAlive = false
-
-            // Award point to shooter (so all peers have consistent scores)
             if let shooterData = game.players[shooterId] {
                 game.players[shooterId]?.score = shooterData.score + 1
             }
@@ -292,28 +167,54 @@ extension GameViewController: NetworkDelegate {
             scene.renderTanksSmooth()
             scene.updateScores()
 
-            // Schedule respawn for local player
-            if victimId == network.localPeerId {
-                scheduleRespawn(for: victimId)
+            // Show respawn countdown for local player (server controls actual respawn)
+            if victimId == localPlayerId {
+                scene.showRespawnCountdown(duration: 3.0)
             }
 
-        case .respawn(let respawnPeerId, let row, let col, let direction):
+        case .respawn(let playerId, let row, let col, let direction):
             guard let game = game, let scene = gameScene else { return }
+            let dir = Direction(rawValue: direction) ?? .down
 
-            // Ensure player exists in game state
-            if game.players[respawnPeerId] == nil {
-                // Player doesn't exist - add them at the respawn position
-                game.addPlayer(peerId: respawnPeerId, row: row, col: col, direction: direction, isAlive: true, score: 0)
+            if game.players[playerId] == nil {
+                game.addPlayer(peerId: playerId, row: row, col: col, direction: dir, isAlive: true, score: 0)
             } else {
-                // Update existing player
-                game.players[respawnPeerId]?.tank.row = row
-                game.players[respawnPeerId]?.tank.col = col
-                game.players[respawnPeerId]?.tank.direction = direction
-                game.players[respawnPeerId]?.tank.isAlive = true
+                game.players[playerId]?.tank.row = row
+                game.players[playerId]?.tank.col = col
+                game.players[playerId]?.tank.direction = dir
+                game.players[playerId]?.tank.isAlive = true
             }
+            scene.spawnTank(for: playerId, at: row, col: col, direction: dir)
 
-            scene.spawnTank(for: respawnPeerId, at: row, col: col, direction: direction)
+        case .mapUpdate(let worldState):
+            guard let game = game, let scene = gameScene else { return }
+            game.applyWorldState(WorldState(
+                mapSeed: worldState.mapSeed,
+                gridSize: worldState.gridSize,
+                players: worldState.players.map { (id, ps) in
+                    PlayerState(peerId: id, row: ps.row, col: ps.col,
+                                direction: Direction(rawValue: ps.direction) ?? .down,
+                                isAlive: ps.isAlive)
+                },
+                projectiles: worldState.projectiles.map { ps in
+                    ProjectileState(row: ps.row, col: ps.col,
+                                    direction: Direction(rawValue: ps.direction) ?? .down,
+                                    ownerId: ps.ownerId)
+                },
+                scores: worldState.scores
+            ))
+            scene.fullRefresh()
+
+        case .error(let message):
+            NSLog("[Game] Server error: %@", message)
+
+        case .unknown:
+            break
         }
+    }
+
+    func server(_ connection: ServerConnection, didEncounterError error: Error) {
+        NSLog("[Game] Connection error: %@", error.localizedDescription)
     }
 }
 
@@ -321,53 +222,20 @@ extension GameViewController: NetworkDelegate {
 
 extension GameViewController: GameSceneDelegate {
     func gameScene(_ scene: GameScene, playerMoved direction: Direction) {
-        guard let game = game else { return }
-        let tank = game.localTank
-        network.send(.move(peerId: game.localPeerId, row: tank.row, col: tank.col, direction: tank.direction))
+        // Send movement INPUT to server (server validates and broadcasts)
+        serverConnection.sendMove(direction: direction)
     }
 
     func gameScene(_ scene: GameScene, playerShot projectile: Projectile) {
-        guard let game = game else { return }
-        game.projectiles.append(projectile)
-        scene.renderProjectiles()
-        network.send(.shoot(peerId: game.localPeerId, projectile: projectile.toState()))
+        // Send shoot INPUT to server (server creates projectile)
+        serverConnection.sendShoot()
     }
 
     func gameScene(_ scene: GameScene, playerHit victimId: String, byShooter shooterId: String) {
-        guard let game = game else { return }
-
-        // Broadcast hit with correct shooter info
-        network.send(.hit(victimId: victimId, byShooterId: shooterId))
-
-        // Update score display
-        scene.updateScores()
-
-        // Schedule respawn if it's a local hit
-        if victimId == network.localPeerId {
-            scheduleRespawn(for: victimId)
-        }
+        // No-op: server handles collision detection
     }
 
     func gameScene(_ scene: GameScene, didChangeGridSize delta: Int) {
-        guard let game = game, network.isElder else { return }
-
-        let newSize = max(4, min(12, game.gridSize + delta))
-        guard newSize != game.gridSize else { return }
-
-        // Generate new seed for new map
-        let newSeed = UInt32.random(in: 0...UInt32.max)
-
-        // Resize locally
-        game.resizeGrid(to: newSize, newSeed: newSeed)
-
-        // Broadcast new world state to all peers
-        let worldState = game.createWorldState()
-        network.send(.worldState(worldState))
-
-        // Refresh local scene
-        scene.fullRefresh()
-        scene.updateSettingsUI()
-
-        NSLog("[Game] Elder changed grid size to %d", newSize)
+        // No-op: server controls grid size
     }
 }
