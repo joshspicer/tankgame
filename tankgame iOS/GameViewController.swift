@@ -31,13 +31,13 @@ class GameViewController: UIViewController {
         skView.ignoresSiblingOrder = true
         view.addSubview(skView)
 
-        // Connect to Modal server
-        let deviceName = UIDevice.current.name
-        serverConnection = ServerConnection(displayName: deviceName)
+        // Connect to Modal server — use saved name if available
+        let savedName = UserDefaults.standard.string(forKey: "tankgame.playerName") ?? ""
+        serverConnection = ServerConnection(displayName: savedName)
         serverConnection.delegate = self
         serverConnection.connect()
 
-        NSLog("[Game] Connecting to server...")
+        NSLog("[Game] Connecting to server... (savedName: %@)", savedName.isEmpty ? "<none>" : savedName)
     }
 
     // MARK: - Game Setup
@@ -151,6 +151,11 @@ extension GameViewController: ServerConnectionDelegate {
         switch message {
         case .welcome(let playerId, let worldState):
             NSLog("[Game] Welcome! Player ID: %@, %d players on map", String(playerId.prefix(8)), worldState.players.count)
+            // Save our assigned name for next launch
+            if let myState = worldState.players[playerId], let name = myState.displayName, !name.isEmpty {
+                UserDefaults.standard.set(name, forKey: "tankgame.playerName")
+                NSLog("[Game] Saved player name: %@", name)
+            }
             setupGame(playerId: playerId, worldState: worldState)
 
         case .stateUpdate(let worldState):

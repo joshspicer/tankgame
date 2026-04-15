@@ -76,7 +76,7 @@ class GameScene: SKScene {
     var lastUpdateTime: TimeInterval = 0
     var lastMoveTime: TimeInterval = 0
     var lastProjectileUpdate: TimeInterval = 0
-    let moveInterval: TimeInterval = 0.15
+    let moveInterval: TimeInterval = 0.12
     let projectileInterval: TimeInterval = 0.05
 
     // MARK: - Color Cache

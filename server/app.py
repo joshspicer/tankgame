@@ -61,7 +61,20 @@ MAP_ROTATION_INTERVAL = 3600  # rotate map every hour (seconds)
 DEFAULT_GRID_SIZE = 20
 
 seed = random.randint(0, 0xFFFFFFFF)
-state = GameState(seed=seed, grid_size=DEFAULT_GRID_SIZE)
+
+# Try to load persisted grid size from modal.Dict
+_startup_grid_size = DEFAULT_GRID_SIZE
+try:
+    _startup_dict = _get_modal_dict()
+    if _startup_dict is not None:
+        _config = _startup_dict.get("__server_config")
+        if _config and isinstance(_config.get("gridSize"), int):
+            _startup_grid_size = _config["gridSize"]
+            log.info(f"LOADED_CONFIG gridSize={_startup_grid_size} from modal.Dict")
+except Exception:
+    pass
+
+state = GameState(seed=seed, grid_size=_startup_grid_size)
 conns: dict[str, WebSocket] = {}
 player_names: dict[str, str] = {}  # pid -> display name for logging
 q: asyncio.Queue = asyncio.Queue()
@@ -339,6 +352,51 @@ async def get_player_stats(player_name: str):
     })
 
 
+@app.post("/config/map_size")
+async def set_map_size(data: dict):
+    """Set the map grid size. Regenerates the map and respawns all players."""
+    new_size = data.get("gridSize")
+    if not isinstance(new_size, int) or new_size < 8 or new_size > 32:
+        return JSONResponse({"error": "gridSize must be an integer between 8 and 32"}, status_code=400)
+
+    new_seed = random.randint(0, 0xFFFFFFFF)
+    old_size = state.grid_size
+    state.resize_grid(new_size, new_seed)
+    log.info(f"MAP_CONFIG_CHANGED {old_size}x{old_size} -> {new_size}x{new_size} seed={new_seed}")
+
+    # Persist to modal.Dict
+    d = _get_modal_dict()
+    if d is not None:
+        try:
+            d["__server_config"] = {"gridSize": new_size, "lastChanged": time.time()}
+            log.info(f"MAP_CONFIG_PERSISTED gridSize={new_size}")
+        except Exception as e:
+            log.warning(f"MAP_CONFIG_PERSIST_FAIL error={e}")
+
+    # Broadcast new state to all connected players
+    if conns:
+        await broadcast(state_update_msg(state.to_world_state()))
+
+    return JSONResponse({
+        "status": "ok",
+        "gridSize": new_size,
+        "mapSeed": new_seed,
+        "playersRespawned": len(state.players),
+    })
+
+
+@app.get("/config")
+async def get_config():
+    """Return current server configuration."""
+    return JSONResponse({
+        "gridSize": state.grid_size,
+        "mapSeed": state.map.seed,
+        "tickRate": TICK_RATE,
+        "mapRotationInterval": MAP_ROTATION_INTERVAL,
+        "players": len(conns),
+    })
+
+
 @app.websocket("/ws")
 async def ws_endpoint(ws: WebSocket):
     global loop_started
@@ -360,6 +418,15 @@ async def ws_endpoint(ws: WebSocket):
             return
 
         name = generate_fun_name()
+        # Honor client's previous name if provided and not taken by another active player
+        if msg.display_name and msg.display_name.strip():
+            requested = msg.display_name.strip()
+            # Check if another connected player already has this name
+            if requested not in player_names.values():
+                release_name(name)  # release the auto-generated one
+                name = requested
+                log.info(f"NAME_RESTORED name={name} pid={pid[:8]}")
+
         tank = state.add_player(pid, name)
 
         if tank is None:

@@ -53,18 +53,33 @@ extension GameScene {
                 if data.tank.isAlive {
                     node.alpha = 1.0
                     node.setScale(1.0)
-                    node.removeAllActions()
 
                     let targetPos = position(for: data.tank.row, col: data.tank.col)
-                    let move = SKAction.move(to: targetPos, duration: 0.1)
-                    let rotate = SKAction.rotate(toAngle: CGFloat(data.tank.direction.rotation), duration: 0.1, shortestUnitArc: true)
-                    node.run(SKAction.group([move, rotate]))
+                    let targetAngle = CGFloat(data.tank.direction.rotation)
+
+                    // Only animate if position or rotation actually changed
+                    let dx = abs(node.position.x - targetPos.x)
+                    let dy = abs(node.position.y - targetPos.y)
+                    let posChanged = dx > 1 || dy > 1
+                    let rotChanged = abs(node.zRotation - targetAngle) > 0.01
+
+                    if posChanged || rotChanged {
+                        node.removeAllActions()
+                        let animDuration: TimeInterval = 0.12
+                        let move = SKAction.move(to: targetPos, duration: animDuration)
+                        move.timingMode = .easeOut
+                        let rotate = SKAction.rotate(toAngle: targetAngle, duration: animDuration, shortestUnitArc: true)
+                        rotate.timingMode = .easeOut
+                        node.run(SKAction.group([move, rotate]))
+                    }
                 } else {
-                    let explode = SKAction.group([
-                        SKAction.scale(to: 1.5, duration: 0.15),
-                        SKAction.fadeOut(withDuration: 0.15)
-                    ])
-                    node.run(explode)
+                    if node.alpha > 0.1 {
+                        let explode = SKAction.group([
+                            SKAction.scale(to: 1.5, duration: 0.15),
+                            SKAction.fadeOut(withDuration: 0.15)
+                        ])
+                        node.run(explode)
+                    }
                 }
             } else if data.tank.isAlive {
                 let tankNode = createTankNode(color: color(for: peerId))
