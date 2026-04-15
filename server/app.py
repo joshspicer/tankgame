@@ -55,8 +55,7 @@ except ImportError:
 # ===== Shared State =====
 
 TICK_RATE = 0.05  # 50ms = 20 ticks/sec
-LEADERBOARD_FILE = "/root/leaderboard.json"
-MAP_ROTATION_FILE = "/root/map_rotation_signal.json"
+MAP_ROTATION_INTERVAL = 3600  # rotate map every hour (seconds)
 
 seed = random.randint(0, 0xFFFFFFFF)
 state = GameState(seed=seed, grid_size=8)
@@ -66,46 +65,64 @@ q: asyncio.Queue = asyncio.Queue()
 loop_started = False
 tick_count = 0
 server_start_time = time.time()
+last_map_rotation = time.time()
+last_leaderboard_sync = 0.0
 
 # Session leaderboard: tracks stats for the current container lifetime
 # Keyed by display name (not pid, since pids change on reconnect)
-session_stats: dict[str, dict] = {}  # name -> {kills, deaths, shots, hits_taken, sessions}
+session_stats: dict[str, dict] = {}  # name -> {kills, deaths, shots, sessions}
+
+# modal.Dict for persistent leaderboard (only used inside Modal containers)
+_modal_dict = None
+
+def _get_modal_dict():
+    """Lazily initialize modal.Dict — only works inside Modal containers."""
+    global _modal_dict
+    if _modal_dict is not None:
+        return _modal_dict
+    try:
+        import modal as _modal
+        _modal_dict = _modal.Dict.from_name("tankgame-leaderboard", create_if_missing=True)
+        log.info("MODAL_DICT_CONNECTED name=tankgame-leaderboard")
+        return _modal_dict
+    except Exception as e:
+        log.debug(f"MODAL_DICT_UNAVAILABLE error={e} (normal when running locally)")
+        return None
 
 log.info("=== TANK BATTLE SERVER STARTING ===")
 log.info(f"Map seed={seed} gridSize={state.grid_size}")
 log.info(f"Tick rate={TICK_RATE}s ({1/TICK_RATE:.0f} ticks/sec)")
+log.info(f"Map rotation interval={MAP_ROTATION_INTERVAL}s")
 
 
 # ===== Leaderboard Persistence =====
 
-def _load_leaderboard() -> dict:
-    """Load leaderboard from local JSON file."""
+def _sync_to_modal_dict():
+    """Push session stats to modal.Dict for persistence across container restarts."""
+    d = _get_modal_dict()
+    if d is None or not session_stats:
+        return
     try:
-        with open(LEADERBOARD_FILE) as f:
-            return json.load(f)
-    except (FileNotFoundError, json.JSONDecodeError):
-        return {}
-
-
-def _save_leaderboard():
-    """Save session stats to local JSON file for Modal sync."""
-    try:
-        # Merge with existing file data (other sessions may have written)
-        existing = _load_leaderboard()
+        synced = 0
         for name, stats in session_stats.items():
-            if name in existing:
-                existing[name]["kills"] = max(existing[name].get("kills", 0), stats["kills"])
-                existing[name]["deaths"] = max(existing[name].get("deaths", 0), stats["deaths"])
-                existing[name]["shots"] = max(existing[name].get("shots", 0), stats["shots"])
-                existing[name]["sessions"] = existing[name].get("sessions", 0) + 1
-                existing[name]["last_seen"] = time.time()
+            existing = d.get(name)
+            if existing is None:
+                d[name] = {**stats, "last_seen": time.time()}
+                synced += 1
             else:
-                existing[name] = {**stats, "last_seen": time.time()}
-        with open(LEADERBOARD_FILE, "w") as f:
-            json.dump(existing, f)
-        log.info(f"LEADERBOARD_SAVED entries={len(existing)}")
+                # Accumulate — don't overwrite, add to historical totals
+                d[name] = {
+                    "kills": existing.get("kills", 0) + stats.get("kills", 0),
+                    "deaths": existing.get("deaths", 0) + stats.get("deaths", 0),
+                    "shots": existing.get("shots", 0) + stats.get("shots", 0),
+                    "sessions": existing.get("sessions", 0) + stats.get("sessions", 0),
+                    "last_seen": time.time(),
+                }
+                synced += 1
+        if synced > 0:
+            log.info(f"LEADERBOARD_SYNCED entries={synced} to=modal.Dict")
     except Exception as e:
-        log.error(f"LEADERBOARD_SAVE_FAIL error={e}")
+        log.error(f"LEADERBOARD_SYNC_FAIL error={e}")
 
 
 def _record_kill(shooter_name: str, victim_name: str):
@@ -116,8 +133,6 @@ def _record_kill(shooter_name: str, victim_name: str):
         session_stats[victim_name] = {"kills": 0, "deaths": 0, "shots": 0, "sessions": 1}
     session_stats[shooter_name]["kills"] += 1
     session_stats[victim_name]["deaths"] += 1
-    # Persist every kill
-    _save_leaderboard()
 
 
 def _record_shot(shooter_name: str):
@@ -162,7 +177,7 @@ async def broadcast(msg: str, exclude: str | None = None):
 
 async def game_loop():
     """Server-authoritative game loop at 20 ticks/sec."""
-    global tick_count
+    global tick_count, last_leaderboard_sync, last_map_rotation
     log.info("GAME_LOOP_START")
 
     while True:
@@ -224,20 +239,19 @@ async def game_loop():
                      f"alive={alive} projectiles={proj_count} "
                      f"scores={{{', '.join(f'{_player_tag(pid)}:{pd.score}' for pid, pd in state.players.items())}}}")
 
-        # Check for map rotation signal (from Modal cron job)
-        if tick_count % 100 == 0:  # check every 5 seconds
-            try:
-                import os
-                if os.path.exists(MAP_ROTATION_FILE):
-                    with open(MAP_ROTATION_FILE) as f:
-                        rotation = json.load(f)
-                    os.remove(MAP_ROTATION_FILE)
-                    new_seed = rotation["seed"]
-                    state.resize_grid(state.grid_size, new_seed)
-                    log.info(f"MAP_ROTATED new_seed={new_seed} players_respawned={len(state.players)}")
-                    await broadcast(state_update_msg(state.to_world_state()))
-            except Exception as e:
-                log.error(f"MAP_ROTATION_CHECK_FAIL error={e}")
+        # Sync leaderboard to modal.Dict every 60 seconds (only while game loop is running)
+        now = time.time()
+        if now - last_leaderboard_sync >= 60 and session_stats:
+            last_leaderboard_sync = now
+            _sync_to_modal_dict()
+
+        # Map rotation (every MAP_ROTATION_INTERVAL seconds)
+        if now - last_map_rotation >= MAP_ROTATION_INTERVAL and conns:
+            last_map_rotation = now
+            new_seed = random.randint(0, 0xFFFFFFFF)
+            state.resize_grid(state.grid_size, new_seed)
+            log.info(f"MAP_ROTATED new_seed={new_seed} players_respawned={len(state.players)}")
+            await broadcast(state_update_msg(state.to_world_state()))
 
         dt = time.monotonic() - t0
         await asyncio.sleep(max(0, TICK_RATE - dt))
@@ -268,16 +282,23 @@ async def health():
 
 @app.get("/leaderboard")
 async def get_leaderboard():
-    """Return session leaderboard + any persisted data from the local file."""
-    # Merge session stats with file-persisted stats
-    combined = _load_leaderboard()
-    for name, stats in session_stats.items():
-        if name in combined:
-            combined[name]["kills"] = max(combined[name].get("kills", 0), stats["kills"])
-            combined[name]["deaths"] = max(combined[name].get("deaths", 0), stats["deaths"])
-            combined[name]["shots"] = max(combined[name].get("shots", 0), stats["shots"])
-        else:
-            combined[name] = {**stats}
+    """Return session leaderboard + persistent data from modal.Dict."""
+    # Start with session stats
+    combined = {name: {**stats} for name, stats in session_stats.items()}
+
+    # Merge in persistent stats from modal.Dict
+    d = _get_modal_dict()
+    if d is not None:
+        try:
+            for key in d.keys():
+                persistent = d[key]
+                if key in combined:
+                    # Session stats are current — show them, but note historical totals
+                    combined[key]["all_time_kills"] = persistent.get("kills", 0)
+                else:
+                    combined[key] = persistent
+        except Exception as e:
+            log.warning(f"LEADERBOARD_READ_FAIL error={e}")
 
     # Sort by kills desc
     sorted_lb = sorted(combined.items(), key=lambda x: x[1].get("kills", 0), reverse=True)
@@ -294,10 +315,15 @@ async def get_leaderboard():
 @app.get("/stats/{player_name}")
 async def get_player_stats(player_name: str):
     """Return stats for a specific player."""
-    combined = _load_leaderboard()
-    if player_name in session_stats:
-        combined[player_name] = session_stats[player_name]
-    stats = combined.get(player_name)
+    stats = session_stats.get(player_name)
+    # Also check modal.Dict for historical stats
+    if stats is None:
+        d = _get_modal_dict()
+        if d is not None:
+            try:
+                stats = d.get(player_name)
+            except Exception:
+                pass
     if stats is None:
         return JSONResponse({"error": "Player not found"}, status_code=404)
     kd = stats["kills"] / max(stats["deaths"], 1)
