@@ -2,7 +2,7 @@
 //  GameScene+GameLoop.swift
 //  Tank Game
 //
-//  Main game loop: movement input, rendering, respawn countdown.
+//  Main game loop: movement input with client-side prediction, rendering.
 //  Collision detection and projectile updates are handled by the server.
 //
 
@@ -21,9 +21,9 @@ extension GameScene {
             lastUpdateTime = currentTime
         }
 
-        // Send movement input to server at the movement interval
+        // Apply local movement prediction + send to server
         if let tank = game.players[game.localPeerId]?.tank, tank.isAlive {
-            updateLocalTankInput(currentTime: currentTime)
+            updateLocalTankInput(currentTime: currentTime, tank: tank, game: game)
         }
 
         lastUpdateTime = currentTime
@@ -41,12 +41,21 @@ extension GameScene {
         }
     }
 
-    // MARK: - Tank Movement Input
+    // MARK: - Tank Movement Input (with client-side prediction)
 
-    private func updateLocalTankInput(currentTime: TimeInterval) {
+    private func updateLocalTankInput(currentTime: TimeInterval, tank: Tank, game: Game) {
         if currentTime - lastMoveTime > moveInterval {
             if let dir = currentDirection {
-                // Send input to server via delegate (server validates and moves)
+                // Client-side prediction: apply move locally for instant feedback
+                var mutableTank = tank
+                let moved = mutableTank.move(dir, on: game.map.grid)
+
+                if moved || mutableTank.direction != tank.direction {
+                    game.players[game.localPeerId]?.tank = mutableTank
+                    renderTanksSmooth()
+                }
+
+                // Send input to server (server is authoritative, will correct if needed)
                 gameDelegate?.gameScene(self, playerMoved: dir)
                 lastMoveTime = currentTime
             }

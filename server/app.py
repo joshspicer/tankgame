@@ -58,9 +58,10 @@ except ImportError:
 
 TICK_RATE = 0.05  # 50ms = 20 ticks/sec
 MAP_ROTATION_INTERVAL = 3600  # rotate map every hour (seconds)
+DEFAULT_GRID_SIZE = 20
 
 seed = random.randint(0, 0xFFFFFFFF)
-state = GameState(seed=seed, grid_size=8)
+state = GameState(seed=seed, grid_size=DEFAULT_GRID_SIZE)
 conns: dict[str, WebSocket] = {}
 player_names: dict[str, str] = {}  # pid -> display name for logging
 q: asyncio.Queue = asyncio.Queue()

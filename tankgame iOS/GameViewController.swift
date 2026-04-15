@@ -77,11 +77,27 @@ class GameViewController: UIViewController {
             serverPlayerIds.insert(playerId)
 
             let dir = Direction(rawValue: ps.direction) ?? .down
+
+            // For the local player, only correct position if server disagrees
+            // (client-side prediction already moved the tank locally)
+            let isLocal = playerId == localPlayerId
+
             if game.players[playerId] != nil {
-                // Update existing
-                game.players[playerId]?.tank.row = ps.row
-                game.players[playerId]?.tank.col = ps.col
-                game.players[playerId]?.tank.direction = dir
+                // Update existing — skip local player position if prediction was correct
+                if !isLocal {
+                    game.players[playerId]?.tank.row = ps.row
+                    game.players[playerId]?.tank.col = ps.col
+                    game.players[playerId]?.tank.direction = dir
+                } else {
+                    // Server correction: only snap if position actually differs
+                    let localTank = game.players[playerId]!.tank
+                    if localTank.row != ps.row || localTank.col != ps.col {
+                        game.players[playerId]?.tank.row = ps.row
+                        game.players[playerId]?.tank.col = ps.col
+                    }
+                    // Always trust server for direction (it's cheap and prevents drift)
+                    game.players[playerId]?.tank.direction = dir
+                }
                 game.players[playerId]?.tank.isAlive = ps.isAlive
                 game.players[playerId]?.score = ps.score
                 game.players[playerId]?.displayName = ps.displayName
