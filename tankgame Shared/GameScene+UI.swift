@@ -151,19 +151,19 @@ extension GameScene {
                 youLabel.verticalAlignmentMode = .center
                 youLabel.position = CGPoint(x: startX + CGFloat(i) * spacing - 5, y: -15)
                 scoreboardNode.addChild(youLabel)
-            } else if isAI {
-                // Show AI difficulty level
-                if let difficulty = game.players[peerId]?.aiPlayer?.difficulty {
-                    let aiLabel = SKLabelNode(text: "AI-\(difficulty.displayName)")
-                    aiLabel.fontName = "AvenirNext-Bold"
-                    aiLabel.fontSize = 9
-                    aiLabel.fontColor = playerColor.withAlphaComponent(0.7)
-                    aiLabel.horizontalAlignmentMode = .center
-                    aiLabel.verticalAlignmentMode = .center
-                    aiLabel.position = CGPoint(x: startX + CGFloat(i) * spacing - 5, y: -15)
-                    scoreboardNode.addChild(aiLabel)
-                }
             }
+
+            // Show display name below score
+            let displayName = game.players[peerId]?.displayName
+            let nameText = displayName ?? (isAI ? "AI" : String(peerId.prefix(4)))
+            let nameLabel = SKLabelNode(text: nameText)
+            nameLabel.fontName = "AvenirNext-Medium"
+            nameLabel.fontSize = 9
+            nameLabel.fontColor = playerColor.withAlphaComponent(0.6)
+            nameLabel.horizontalAlignmentMode = .center
+            nameLabel.verticalAlignmentMode = .center
+            nameLabel.position = CGPoint(x: startX + CGFloat(i) * spacing - 5, y: isLocal ? -26 : -15)
+            scoreboardNode.addChild(nameLabel)
         }
 
         if sortedPlayers.count > maxDisplay {

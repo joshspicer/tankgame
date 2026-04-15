@@ -38,6 +38,7 @@ try:
         welcome_msg, state_update_msg,
         player_joined_msg, player_left_msg,
         hit_msg, respawn_msg, error_msg,
+        generate_fun_name, release_name,
     )
 except ImportError:
     import sys
@@ -50,6 +51,7 @@ except ImportError:
         welcome_msg, state_update_msg,
         player_joined_msg, player_left_msg,
         hit_msg, respawn_msg, error_msg,
+        generate_fun_name, release_name,
     )
 
 # ===== Shared State =====
@@ -356,7 +358,7 @@ async def ws_endpoint(ws: WebSocket):
             await ws.send_text(error_msg("First message must be 'join'"))
             return
 
-        name = msg.display_name or f"Tank-{pid[:4]}"
+        name = generate_fun_name()
         tank = state.add_player(pid, name)
 
         if tank is None:
@@ -409,7 +411,9 @@ async def ws_endpoint(ws: WebSocket):
     finally:
         if joined:
             conns.pop(pid, None)
-            player_names.pop(pid, None)
+            released_name = player_names.pop(pid, None)
+            if released_name:
+                release_name(released_name)
             remaining_tank = state.remove_player(pid)
             log.info(f"LEAVE player={_player_tag(pid)} total_players={len(conns)} "
                      f"last_pos=({remaining_tank.row},{remaining_tank.col} dir={remaining_tank.direction.name})"

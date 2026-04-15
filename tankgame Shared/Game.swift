@@ -12,6 +12,7 @@ struct PlayerData {
     var tank: Tank
     var score: Int
     var aiPlayer: AIPlayer?
+    var displayName: String?
 }
 
 /// Manages the state of the game

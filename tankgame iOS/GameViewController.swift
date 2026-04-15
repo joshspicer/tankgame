@@ -84,9 +84,11 @@ class GameViewController: UIViewController {
                 game.players[playerId]?.tank.direction = dir
                 game.players[playerId]?.tank.isAlive = ps.isAlive
                 game.players[playerId]?.score = ps.score
+                game.players[playerId]?.displayName = ps.displayName
             } else {
                 // Add new
                 game.addPlayer(peerId: playerId, row: ps.row, col: ps.col, direction: dir, isAlive: ps.isAlive, score: ps.score)
+                game.players[playerId]?.displayName = ps.displayName
             }
         }
 

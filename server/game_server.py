@@ -18,6 +18,52 @@ import modal
 # Direction
 # ---------------------------------------------------------------------------
 
+# ---------------------------------------------------------------------------
+# Fun Name Generator
+# ---------------------------------------------------------------------------
+
+_ADJECTIVES = [
+    "Swift", "Brave", "Sneaky", "Mighty", "Fierce", "Salty", "Rusty",
+    "Lucky", "Crispy", "Blazing", "Frozen", "Cosmic", "Turbo", "Stealth",
+    "Jolly", "Grumpy", "Dizzy", "Spicy", "Chunky", "Fluffy", "Bouncy",
+    "Hyper", "Chill", "Zippy", "Wobbly", "Gritty", "Shiny", "Foggy",
+    "Rapid", "Gentle", "Bold", "Wild", "Quiet", "Loud", "Tiny", "Grand",
+]
+
+_NOUNS = [
+    "Fox", "Tank", "Falcon", "Otter", "Cobra", "Badger", "Panda",
+    "Moose", "Shark", "Raven", "Tiger", "Wolf", "Eagle", "Squid",
+    "Goose", "Llama", "Yak", "Hippo", "Gecko", "Wasp", "Bison",
+    "Crane", "Newt", "Viper", "Owl", "Hawk", "Bear", "Lynx",
+    "Toad", "Mantis", "Heron", "Dingo", "Puma", "Crow", "Mole",
+]
+
+_used_names: set[str] = set()
+
+
+def generate_fun_name() -> str:
+    """Generate a unique adjective-noun name like 'SwiftFox'."""
+    import random as _r
+    for _ in range(100):
+        name = _r.choice(_ADJECTIVES) + _r.choice(_NOUNS)
+        if name not in _used_names:
+            _used_names.add(name)
+            return name
+    # Fallback: add a number
+    name = _r.choice(_ADJECTIVES) + _r.choice(_NOUNS) + str(_r.randint(1, 99))
+    _used_names.add(name)
+    return name
+
+
+def release_name(name: str):
+    """Release a name back to the pool when a player disconnects."""
+    _used_names.discard(name)
+
+
+# ---------------------------------------------------------------------------
+# Direction
+# ---------------------------------------------------------------------------
+
 class Direction(IntEnum):
     UP = 0
     RIGHT = 1
