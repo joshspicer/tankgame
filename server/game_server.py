@@ -6,6 +6,7 @@ import uuid
 from contextlib import asynccontextmanager
 from dataclasses import dataclass, field
 from enum import Enum, IntEnum
+from pathlib import Path
 from typing import Any, Optional
 
 import modal
@@ -553,127 +554,28 @@ def error_msg(message: str) -> str:
 
 # ===== Modal App =====
 
-image = modal.Image.debian_slim().pip_install("fastapi[standard]")
+server_dir = Path(__file__).parent.resolve()
+
+image = (
+    modal.Image.debian_slim()
+    .pip_install("fastapi[standard]")
+    .add_local_file(server_dir / "app.py", remote_path="/root/app.py", copy=True)
+    .add_local_file(server_dir / "game_server.py", remote_path="/root/game_server.py", copy=True)
+)
+
 app = modal.App("tankgame-server")
 
-TICK_RATE = 0.05  # 50ms = 20 ticks/sec
+PORT = 8000
 
 
-@app.function(image=image)
-@modal.asgi_app()
+@app.function(image=image, max_containers=1)
+@modal.concurrent(max_inputs=100)
+@modal.web_server(PORT, startup_timeout=30)
 def web():
-    from fastapi import FastAPI, WebSocket, WebSocketDisconnect
-    from fastapi.responses import JSONResponse
-
-    seed = random.randint(0, 0xFFFFFFFF)
-    state = GameState(seed=seed, grid_size=8)
-    conns: dict[str, WebSocket] = {}
-    q: asyncio.Queue = asyncio.Queue()
-
-    print(f"[Server] Initialized with map seed {seed}")
-
-    async def broadcast(msg: str, exclude: Optional[str] = None):
-        bad = []
-        for pid, ws in conns.items():
-            if pid == exclude:
-                continue
-            try:
-                await ws.send_text(msg)
-            except Exception:
-                bad.append(pid)
-        for pid in bad:
-            conns.pop(pid, None)
-            state.remove_player(pid)
-
-    async def game_loop():
-        while True:
-            t0 = time.monotonic()
-            while not q.empty():
-                try:
-                    pid, m = q.get_nowait()
-                except asyncio.QueueEmpty:
-                    break
-                if m.type == ClientMessageType.MOVE and m.direction is not None:
-                    try:
-                        state.move_player(pid, Direction(m.direction))
-                    except (ValueError, KeyError):
-                        pass
-                elif m.type == ClientMessageType.SHOOT:
-                    state.shoot(pid)
-
-            if state.projectiles:
-                hits = state.update_projectiles()
-                for h in hits:
-                    await broadcast(hit_msg(h.victim_id, h.shooter_id))
-                    state.schedule_respawn(h.victim_id)
-
-            for pid, row, col, d in state.check_respawns():
-                await broadcast(respawn_msg(pid, row, col, d.value))
-
-            if conns:
-                await broadcast(state_update_msg(state.to_world_state()))
-
-            dt = time.monotonic() - t0
-            await asyncio.sleep(max(0, TICK_RATE - dt))
-
-    loop_started = [False]
-
-    @asynccontextmanager
-    async def lifespan(application):
-        yield
-
-    fapp = FastAPI(lifespan=lifespan)
-
-    @fapp.get("/health")
-    async def health():
-        return JSONResponse({
-            "status": "ok",
-            "players": len(conns),
-            "mapSeed": state.map.seed,
-            "gridSize": state.grid_size,
-        })
-
-    @fapp.websocket("/ws")
-    async def ws_endpoint(ws: WebSocket):
-        await ws.accept()
-        pid = str(uuid.uuid4())
-        joined = False
-        try:
-            raw = await asyncio.wait_for(ws.receive_text(), timeout=10.0)
-            msg = ClientMessage.parse(raw)
-            if msg.type != ClientMessageType.JOIN:
-                await ws.send_text(error_msg("First message must be join"))
-                return
-            name = msg.display_name or f"Tank-{pid[:4]}"
-            tank = state.add_player(pid, name)
-            if tank is None:
-                await ws.send_text(error_msg("Failed to join"))
-                return
-            joined = True
-            if not loop_started[0]:
-                loop_started[0] = True
-                asyncio.create_task(game_loop())
-                print("[Server] Game loop started")
-            conns[pid] = ws
-            print(f"[Server] {name} ({pid[:8]}) joined. Total: {len(conns)}")
-            await ws.send_text(welcome_msg(pid, state.to_world_state()))
-            await broadcast(player_joined_msg(pid, name), exclude=pid)
-            while True:
-                raw = await ws.receive_text()
-                await q.put((pid, ClientMessage.parse(raw)))
-        except WebSocketDisconnect:
-            pass
-        except asyncio.TimeoutError:
-            pass
-        except asyncio.CancelledError:
-            pass
-        except Exception as e:
-            print(f"[Server] Error for {pid[:8]}: {e}")
-        finally:
-            if joined:
-                conns.pop(pid, None)
-                state.remove_player(pid)
-                print(f"[Server] {pid[:8]} left. Total: {len(conns)}")
-                await broadcast(player_left_msg(pid))
-
-    return fapp
+    import subprocess, sys
+    subprocess.Popen(
+        [sys.executable, "-m", "uvicorn", "app:app",
+         "--host", "0.0.0.0", "--port", str(PORT),
+         "--log-level", "info"],
+        cwd="/root",
+    )
