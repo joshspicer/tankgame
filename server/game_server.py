@@ -565,7 +565,14 @@ image = (
 
 app = modal.App("tankgame-server")
 
+# Persistent leaderboard — survives container restarts (7-day TTL per entry)
+leaderboard_dict = modal.Dict.from_name("tankgame-leaderboard", create_if_missing=True)
+
+# Persistent game event log
+event_queue = modal.Queue.from_name("tankgame-events", create_if_missing=True)
+
 PORT = 8000
+LEADERBOARD_FILE = "/root/leaderboard.json"
 
 
 @app.function(image=image, max_containers=1)
@@ -579,3 +586,59 @@ def web():
          "--log-level", "info"],
         cwd="/root",
     )
+
+
+# --- Scheduled: Sync leaderboard from container file to modal.Dict ---
+
+@app.function(image=image, schedule=modal.Period(minutes=1))
+def sync_leaderboard():
+    """Periodically sync the in-memory leaderboard to modal.Dict for persistence."""
+    import json, os
+
+    if not os.path.exists(LEADERBOARD_FILE):
+        print("[Sync] No leaderboard file yet")
+        return
+
+    with open(LEADERBOARD_FILE) as f:
+        data = json.load(f)
+
+    for player_name, stats in data.items():
+        existing = leaderboard_dict.get(player_name)
+        if existing is None or stats.get("kills", 0) > existing.get("kills", 0):
+            leaderboard_dict[player_name] = stats
+            print(f"[Sync] Updated {player_name}: {stats}")
+
+    print(f"[Sync] Synced {len(data)} players to modal.Dict")
+
+
+# --- Scheduled: Rotate map every hour ---
+
+@app.function(image=image, schedule=modal.Cron("0 * * * *"))
+def rotate_map():
+    """Rotate the game map every hour by writing a signal file."""
+    import random
+
+    new_seed = random.randint(0, 0xFFFFFFFF)
+    with open("/root/map_rotation_signal.json", "w") as f:
+        json.dump({"seed": new_seed, "time": time.time()}, f)
+    print(f"[MapRotation] New seed written: {new_seed}")
+
+
+# --- REST endpoint to read persistent leaderboard from modal.Dict ---
+
+@app.function(image=image)
+@modal.fastapi_endpoint(method="GET")
+def leaderboard():
+    """Return the all-time persistent leaderboard from modal.Dict."""
+    entries = {}
+    try:
+        for key in leaderboard_dict.keys():
+            entries[key] = leaderboard_dict[key]
+    except Exception as e:
+        print(f"[Leaderboard] Error reading dict: {e}")
+
+    # Sort by kills descending
+    sorted_entries = dict(
+        sorted(entries.items(), key=lambda x: x[1].get("kills", 0), reverse=True)
+    )
+    return {"leaderboard": sorted_entries, "count": len(sorted_entries)}
