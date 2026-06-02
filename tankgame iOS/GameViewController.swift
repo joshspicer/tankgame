@@ -26,6 +26,9 @@ class GameViewController: UIViewController {
     /// Periodic sync timer (elder only)
     private var syncTimer: Timer?
 
+    /// Periodic power-up spawn timer (elder / solo only)
+    private var powerUpTimer: Timer?
+
     // MARK: - Lifecycle
 
     override func viewDidLoad() {
@@ -47,6 +50,9 @@ class GameViewController: UIViewController {
 
         // Start periodic sync timer
         startSyncTimer()
+
+        // Start periodic power-up spawning
+        startPowerUpTimer()
     }
 
     /// Calculate deterministic jitter (0-1.5 seconds) based on peerId
@@ -73,6 +79,31 @@ class GameViewController: UIViewController {
         let worldState = game.createWorldState()
         NSLog("[Game] Elder periodic sync: broadcasting worldState with %d players", worldState.players.count)
         network.send(.worldState(worldState))
+    }
+
+    // MARK: - Power-Up Spawning
+
+    private func startPowerUpTimer() {
+        powerUpTimer?.invalidate()
+        powerUpTimer = Timer.scheduledTimer(withTimeInterval: 5.0, repeats: true) { [weak self] _ in
+            self?.maybeSpawnPowerUp()
+        }
+    }
+
+    private func maybeSpawnPowerUp() {
+        guard let game = game, let scene = gameScene else { return }
+
+        // The elder is authoritative for power-ups; when alone (not connected),
+        // the local player acts as the authority so the feature works solo.
+        let isAuthoritative = network.isElder || !network.isConnected
+        guard isAuthoritative else { return }
+
+        guard let powerUp = game.spawnRandomPowerUp() else { return }
+        scene.renderPowerUps()
+
+        if network.isConnected {
+            network.send(.powerUpSpawned(powerUp))
+        }
     }
 
     // MARK: - Game Start
@@ -282,6 +313,13 @@ extension GameViewController: NetworkDelegate {
             // Only process if player exists and is alive
             guard let playerData = game.players[victimId], playerData.tank.isAlive else { return }
 
+            // Shield absorbs the hit instead of eliminating the tank.
+            if playerData.shieldCharges > 0 {
+                game.players[victimId]?.shieldCharges = playerData.shieldCharges - 1
+                scene.updateShieldIndicators()
+                return
+            }
+
             game.players[victimId]?.tank.isAlive = false
 
             // Award point to shooter (so all peers have consistent scores)
@@ -313,6 +351,24 @@ extension GameViewController: NetworkDelegate {
             }
 
             scene.spawnTank(for: respawnPeerId, at: row, col: col, direction: direction)
+
+        case .powerUpSpawned(let powerUp):
+            guard let game = game, let scene = gameScene else { return }
+            // Add if we don't already have a pickup with this id or on this cell.
+            let alreadyKnown = game.powerUps.contains { $0.id == powerUp.id }
+            let cellOccupied = game.powerUp(at: powerUp.row, col: powerUp.col) != nil
+            if !alreadyKnown && !cellOccupied {
+                game.powerUps.append(powerUp)
+                scene.renderPowerUps()
+            }
+
+        case .powerUpCollected(let id, let collectorId):
+            guard let game = game, let scene = gameScene else { return }
+            if let powerUp = game.removePowerUp(id: id) {
+                game.applyCollectedEffect(powerUp.kind, to: collectorId)
+                scene.renderPowerUps()
+                scene.updateShieldIndicators()
+            }
         }
     }
 }
@@ -369,5 +425,10 @@ extension GameViewController: GameSceneDelegate {
         scene.updateSettingsUI()
 
         NSLog("[Game] Elder changed grid size to %d", newSize)
+    }
+
+    func gameScene(_ scene: GameScene, didCollectPowerUp powerUp: PowerUp) {
+        // Broadcast so all peers remove the pickup and apply the synced (shield) effect.
+        network.send(.powerUpCollected(id: powerUp.id, peerId: network.localPeerId))
     }
 }

@@ -17,6 +17,7 @@ struct PlayerState: Codable, Equatable {
     var isAlive: Bool
     var isAI: Bool = false
     var aiDifficulty: AIDifficulty? = nil
+    var shieldCharges: Int = 0
 }
 
 /// Projectile state for network sync
@@ -34,6 +35,7 @@ struct WorldState: Codable {
     let players: [PlayerState]
     let projectiles: [ProjectileState]
     let scores: [String: Int]
+    var powerUps: [PowerUp] = []
 }
 
 /// All network message types for the game
@@ -62,4 +64,10 @@ enum GameMessage: Codable, PeerMessage, @unchecked Sendable {
 
     /// Player respawned
     case respawn(peerId: String, row: Int, col: Int, direction: Direction)
+
+    /// A power-up appeared on the map (broadcast by the elder)
+    case powerUpSpawned(PowerUp)
+
+    /// A player collected a power-up
+    case powerUpCollected(id: String, peerId: String)
 }

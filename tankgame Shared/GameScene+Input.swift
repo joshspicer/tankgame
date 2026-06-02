@@ -152,10 +152,34 @@ extension GameScene {
 
     func fire() {
         guard let game = game else { return }
-        guard game.localTank.isAlive else { return }
+        let tank = game.localTank
+        guard tank.isAlive else { return }
 
-        var projectile = game.localTank.shoot()
-        projectile.ownerId = game.localPeerId
+        if isTripleShotActive {
+            for dir in tripleShotDirections(facing: tank.direction) {
+                fireProjectile(from: tank, direction: dir, ownerId: game.localPeerId)
+            }
+        } else {
+            fireProjectile(from: tank, direction: tank.direction, ownerId: game.localPeerId)
+        }
+    }
+
+    /// Spawn and broadcast a single projectile in the given direction.
+    private func fireProjectile(from tank: Tank, direction: Direction, ownerId: String) {
+        let projectile = Projectile(
+            row: tank.row + direction.offset.row,
+            col: tank.col + direction.offset.col,
+            direction: direction,
+            ownerId: ownerId
+        )
         gameDelegate?.gameScene(self, playerShot: projectile)
+    }
+
+    /// Facing direction plus the two perpendicular directions for triple shot.
+    private func tripleShotDirections(facing: Direction) -> [Direction] {
+        switch facing {
+        case .up, .down:    return [facing, .left, .right]
+        case .left, .right: return [facing, .up, .down]
+        }
     }
 }

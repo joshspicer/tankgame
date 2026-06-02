@@ -14,6 +14,7 @@ protocol GameSceneDelegate: AnyObject {
     func gameScene(_ scene: GameScene, playerShot projectile: Projectile)
     func gameScene(_ scene: GameScene, playerHit victimId: String, byShooter shooterId: String)
     func gameScene(_ scene: GameScene, didChangeGridSize delta: Int)
+    func gameScene(_ scene: GameScene, didCollectPowerUp powerUp: PowerUp)
 }
 
 /// Main game scene
@@ -46,6 +47,7 @@ class GameScene: SKScene {
     var gridNode: SKNode!
     var tanksNode: SKNode!
     var projectilesNode: SKNode!
+    var powerUpsNode: SKNode!
     var borderNode: SKShapeNode!
 
     // MARK: - UI Elements
@@ -79,6 +81,13 @@ class GameScene: SKScene {
     let moveInterval: TimeInterval = 0.15
     let projectileInterval: TimeInterval = 0.05
 
+    // MARK: - Power-Up Effect Timing (local player only)
+
+    /// Time until the local speed-boost effect expires (0 = inactive).
+    var speedBoostUntil: TimeInterval = 0
+    /// Time until the local triple-shot effect expires (0 = inactive).
+    var tripleShotUntil: TimeInterval = 0
+
     // MARK: - Color Cache
 
     var colorCache: [String: UIColor] = [:]
@@ -99,6 +108,7 @@ class GameScene: SKScene {
         if game != nil {
             renderGrid()
             renderTanks()
+            renderPowerUps()
             updateScores()
         }
     }
@@ -136,6 +146,11 @@ class GameScene: SKScene {
         projectilesNode.position = gridNode.position
         projectilesNode.zPosition = 5
         addChild(projectilesNode)
+
+        powerUpsNode = SKNode()
+        powerUpsNode.position = gridNode.position
+        powerUpsNode.zPosition = 4
+        addChild(powerUpsNode)
     }
 
     /// Full refresh for world state sync
@@ -143,6 +158,7 @@ class GameScene: SKScene {
         renderGrid()
         renderTanks()
         renderProjectiles()
+        renderPowerUps()
         updateScores()
     }
 

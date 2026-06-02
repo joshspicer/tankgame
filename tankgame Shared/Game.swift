@@ -12,6 +12,8 @@ struct PlayerData {
     var tank: Tank
     var score: Int
     var aiPlayer: AIPlayer?
+    /// Number of incoming hits the player's shield can absorb (from shield power-ups).
+    var shieldCharges: Int = 0
 }
 
 /// Manages the state of the game
@@ -19,6 +21,8 @@ final class Game {
     var map: Map
     var players: [String: PlayerData] = [:]  // Keyed by peerId
     var projectiles: [Projectile] = []
+    /// Power-ups currently lying on the map waiting to be collected.
+    var powerUps: [PowerUp] = []
     let localPeerId: String
     private(set) var gridSize: Int
 
@@ -207,7 +211,8 @@ final class Game {
                 direction: data.tank.direction,
                 isAlive: data.tank.isAlive,
                 isAI: data.tank.isAI,
-                aiDifficulty: data.aiPlayer?.difficulty
+                aiDifficulty: data.aiPlayer?.difficulty,
+                shieldCharges: data.shieldCharges
             )
         }
     }
@@ -223,6 +228,7 @@ final class Game {
                 data.tank.isAlive = playerState.isAlive
                 data.tank.isAI = playerState.isAI
                 data.score = syncScores[playerState.peerId] ?? data.score
+                data.shieldCharges = playerState.shieldCharges
                 // Update AI difficulty if changed
                 if playerState.isAI, let difficulty = playerState.aiDifficulty {
                     if data.aiPlayer == nil {
@@ -239,7 +245,7 @@ final class Game {
                 tank.isAI = playerState.isAI
                 let aiPlayer = playerState.isAI && playerState.aiDifficulty != nil ?
                     AIPlayer(id: playerState.peerId, difficulty: playerState.aiDifficulty!) : nil
-                players[playerState.peerId] = PlayerData(tank: tank, score: syncScores[playerState.peerId] ?? 0, aiPlayer: aiPlayer)
+                players[playerState.peerId] = PlayerData(tank: tank, score: syncScores[playerState.peerId] ?? 0, aiPlayer: aiPlayer, shieldCharges: playerState.shieldCharges)
             }
         }
 
@@ -262,7 +268,8 @@ final class Game {
                 direction: data.tank.direction,
                 isAlive: data.tank.isAlive,
                 isAI: data.tank.isAI,
-                aiDifficulty: data.aiPlayer?.difficulty
+                aiDifficulty: data.aiPlayer?.difficulty,
+                shieldCharges: data.shieldCharges
             )
         }
 
@@ -273,7 +280,8 @@ final class Game {
             gridSize: gridSize,
             players: playerStates,
             projectiles: projectileStates,
-            scores: scores
+            scores: scores,
+            powerUps: powerUps
         )
     }
 
@@ -296,10 +304,14 @@ final class Game {
                 isAI: playerState.isAI,
                 aiDifficulty: playerState.aiDifficulty
             )
+            players[playerState.peerId]?.shieldCharges = playerState.shieldCharges
         }
 
         // Rebuild projectiles
         self.projectiles = state.projectiles.map { Projectile.from($0) }
+
+        // Rebuild power-ups
+        self.powerUps = state.powerUps
     }
 
     /// Resize the grid (elder only) - returns new world state
@@ -307,6 +319,7 @@ final class Game {
         self.gridSize = newSize
         self.map = Map.generate(seed: newSeed, size: newSize)
         self.projectiles.removeAll()
+        self.powerUps.removeAll()
 
         // Respawn all players at new positions
         for peerId in players.keys {
@@ -328,6 +341,30 @@ final class Game {
         let shooterId: String
     }
 
+    /// Resolve a projectile striking a tank, honoring shields.
+    /// Returns true if the projectile should be consumed (eliminated tank or absorbed by shield).
+    private func resolveProjectileHit(projectile: Projectile, victimId: String, into hits: inout [HitInfo]) -> Bool {
+        // Shield absorbs the hit without eliminating the tank.
+        if let charges = players[victimId]?.shieldCharges, charges > 0 {
+            players[victimId]?.shieldCharges = charges - 1
+            return true
+        }
+
+        players[victimId]?.tank.isAlive = false
+        hits.append(HitInfo(victimId: victimId, shooterId: projectile.ownerId))
+
+        // Award point to shooter
+        if let shooterData = players[projectile.ownerId] {
+            players[projectile.ownerId]?.score = shooterData.score + 1
+        }
+
+        // If AI was killed, level it up
+        if let aiPlayer = players[victimId]?.aiPlayer {
+            aiPlayer.levelUp()
+        }
+        return true
+    }
+
     /// Update all projectiles, returns hit info for each destroyed tank
     func updateProjectiles() -> [HitInfo] {
         var hits: [HitInfo] = []
@@ -347,19 +384,7 @@ final class Game {
                 if peerId == projectile.ownerId { continue }
 
                 if projectile.hitsTank(data.tank) {
-                    players[peerId]?.tank.isAlive = false
-                    hits.append(HitInfo(victimId: peerId, shooterId: projectile.ownerId))
-                    hitSomething = true
-
-                    // Award point to shooter
-                    if let shooterData = players[projectile.ownerId] {
-                        players[projectile.ownerId]?.score = shooterData.score + 1
-                    }
-
-                    // If AI was killed, level it up
-                    if let aiPlayer = players[peerId]?.aiPlayer {
-                        aiPlayer.levelUp()
-                    }
+                    hitSomething = resolveProjectileHit(projectile: projectile, victimId: peerId, into: &hits)
                     break
                 }
             }
@@ -379,19 +404,7 @@ final class Game {
             // Check tank collisions at NEW position (after advancing)
             for (peerId, data) in players {
                 if projectile.hitsTank(data.tank) {
-                    players[peerId]?.tank.isAlive = false
-                    hits.append(HitInfo(victimId: peerId, shooterId: projectile.ownerId))
-                    hitSomething = true
-
-                    // Award point to shooter
-                    if let shooterData = players[projectile.ownerId] {
-                        players[projectile.ownerId]?.score = shooterData.score + 1
-                    }
-
-                    // If AI was killed, level it up
-                    if let aiPlayer = players[peerId]?.aiPlayer {
-                        aiPlayer.levelUp()
-                    }
+                    hitSomething = resolveProjectileHit(projectile: projectile, victimId: peerId, into: &hits)
                     break
                 }
             }

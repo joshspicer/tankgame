@@ -23,6 +23,9 @@ extension GameScene {
         // Update AI players
         updateAIPlayers(currentTime: currentTime)
 
+        // Expire any timed power-up effects
+        updatePowerUpEffects()
+
         // Update local tank movement
         if let tank = game.players[game.localPeerId]?.tank, tank.isAlive {
             var mutableTank = tank
@@ -30,6 +33,7 @@ extension GameScene {
         }
 
         updateProjectiles(currentTime: currentTime, game: game)
+        updateShieldIndicators()
 
         lastUpdateTime = currentTime
     }
@@ -49,7 +53,7 @@ extension GameScene {
     // MARK: - Tank Movement
 
     private func updateLocalTankMovement(currentTime: TimeInterval, tank: inout Tank, game: Game) {
-        if currentTime - lastMoveTime > moveInterval {
+        if currentTime - lastMoveTime > effectiveMoveInterval {
             if let dir = currentDirection {
                 let oldDir = tank.direction
                 let moved = tank.move(dir, on: game.map.grid)
@@ -58,6 +62,9 @@ extension GameScene {
                     self.game?.players[game.localPeerId]?.tank = tank
                     gameDelegate?.gameScene(self, playerMoved: dir)
                     renderTanksSmooth()
+                }
+                if moved {
+                    collectPowerUpsForLocalTank()
                 }
                 lastMoveTime = currentTime
             }
