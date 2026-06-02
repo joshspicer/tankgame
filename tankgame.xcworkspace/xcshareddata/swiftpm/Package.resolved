@@ -1,0 +1,15 @@
+{
+  "originHash" : "7e223d14159b63ce8d3b83e3827574e85ba20eb63a6bbf1d2492c7f63fcf397e",
+  "pins" : [
+    {
+      "identity" : "multiplaykit",
+      "kind" : "remoteSourceControl",
+      "location" : "https://github.com/joshspicer/MultiPlayKit.git",
+      "state" : {
+        "revision" : "9608a51aedeb9963f8c2ca6c2b0baecf8f6c275b",
+        "version" : "1.0.0"
+      }
+    }
+  ],
+  "version" : 3
+}
