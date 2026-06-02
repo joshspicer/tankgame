@@ -29,6 +29,9 @@ class GameViewController: UIViewController {
     /// Periodic power-up spawn timer (elder / solo only)
     private var powerUpTimer: Timer?
 
+    /// Interval between power-up spawn attempts (seconds)
+    private let powerUpSpawnInterval: TimeInterval = 5.0
+
     // MARK: - Lifecycle
 
     override func viewDidLoad() {
@@ -85,7 +88,7 @@ class GameViewController: UIViewController {
 
     private func startPowerUpTimer() {
         powerUpTimer?.invalidate()
-        powerUpTimer = Timer.scheduledTimer(withTimeInterval: 5.0, repeats: true) { [weak self] _ in
+        powerUpTimer = Timer.scheduledTimer(withTimeInterval: powerUpSpawnInterval, repeats: true) { [weak self] _ in
             self?.maybeSpawnPowerUp()
         }
     }
